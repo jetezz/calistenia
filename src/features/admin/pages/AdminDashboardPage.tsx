@@ -168,9 +168,12 @@ export function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {stats.pendingPaymentRequests > 0 && (
-              <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+              <Link 
+                to="/admin/payment-requests"
+                className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors cursor-pointer"
+              >
                 <CreditCard className="size-5 text-orange-600" />
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium">
                     {stats.pendingPaymentRequests} solicitudes de pago pendientes
                   </p>
@@ -178,14 +181,17 @@ export function AdminDashboardPage() {
                     Revisa las recargas de bonos
                   </p>
                 </div>
-                <Badge variant="secondary" className="ml-auto">
+                <Badge variant="secondary">
                   {stats.pendingPaymentRequests}
                 </Badge>
-              </div>
+              </Link>
             )}
             
             {stats.todayBookings === 0 && (
-              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <Link
+                to="/admin/bookings"
+                className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"
+              >
                 <Calendar className="size-5 text-blue-600" />
                 <div>
                   <p className="text-sm font-medium">
@@ -195,11 +201,14 @@ export function AdminDashboardPage() {
                     Los clientes pueden reservar en cualquier momento
                   </p>
                 </div>
-              </div>
+              </Link>
             )}
 
             {stats.activeTimeSlots === 0 && (
-              <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+              <Link
+                to="/admin/slots"
+                className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
+              >
                 <Clock className="size-5 text-red-600" />
                 <div>
                   <p className="text-sm font-medium">
@@ -209,7 +218,7 @@ export function AdminDashboardPage() {
                     Crea franjas horarias para permitir reservas
                   </p>
                 </div>
-              </div>
+              </Link>
             )}
 
             {stats.pendingPaymentRequests === 0 && stats.todayBookings > 0 && stats.activeTimeSlots > 0 && (

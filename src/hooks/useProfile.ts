@@ -96,7 +96,6 @@ export const useProfile = () => {
   }, [])
 
   const updateCredits = useCallback(async (id: string, credits: number) => {
-    setLoading(true)
     setError(null)
     try {
       const updatedProfile = await profileService.updateCredits(id, credits)
@@ -105,13 +104,10 @@ export const useProfile = () => {
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to update credits')
       throw error
-    } finally {
-      setLoading(false)
     }
   }, [])
 
   const updatePaymentStatus = useCallback(async (id: string, paymentStatus: string) => {
-    setLoading(true)
     setError(null)
     try {
       const updatedProfile = await profileService.updatePaymentStatus(id, paymentStatus)
@@ -120,8 +116,6 @@ export const useProfile = () => {
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to update payment status')
       throw error
-    } finally {
-      setLoading(false)
     }
   }, [])
 

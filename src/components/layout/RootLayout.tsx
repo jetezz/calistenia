@@ -6,9 +6,9 @@ import { AuthGuard } from '@/features/auth'
 export function RootLayout() {
   return (
     <AuthGuard>
-      <div className="min-h-screen flex flex-col">
+      <div className="h-screen flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 pb-24">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 custom-scrollbar">
           <Outlet />
         </main>
         <MobileNav />

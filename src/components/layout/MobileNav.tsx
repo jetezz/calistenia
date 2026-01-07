@@ -35,6 +35,7 @@ export function MobileNav() {
           <NavLink
             key={item.to}
             to={item.to}
+            end
             className={({ isActive }) =>
               cn(
                 'flex flex-col items-center justify-center flex-1 h-full gap-1.5 text-xs font-medium transition-all duration-200 rounded-lg mx-1 min-w-[60px]',
