@@ -133,6 +133,35 @@ export const useProfile = () => {
     }
   }, [])
 
+  const createUser = useCallback(async (email: string, password: string, fullName: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await profileService.createUser(email, password, fullName)
+      await fetchProfiles()
+      return result
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to create user')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchProfiles])
+
+  const deleteUser = useCallback(async (userId: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await profileService.deleteUser(userId)
+      await fetchProfiles()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete user')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchProfiles])
+
   return {
     // State
     profiles,
@@ -149,6 +178,8 @@ export const useProfile = () => {
     updateCredits,
     updatePaymentStatus,
     deleteProfile,
+    createUser,
+    deleteUser,
     setCurrentProfile,
   }
 }

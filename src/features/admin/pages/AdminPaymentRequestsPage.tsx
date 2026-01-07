@@ -140,51 +140,64 @@ export function AdminPaymentRequestsPage() {
               {pendingRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg bg-yellow-50 border-yellow-200"
+                  className="flex flex-col p-4 border rounded-lg bg-yellow-50 border-yellow-200 gap-3"
                 >
-                  <div className="flex items-center gap-4">
-                    <Avatar className="size-12">
-                      <AvatarFallback className="text-sm">
-                        {getInitials(request.user.full_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">
-                        {request.user.full_name || 'Sin nombre'}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {request.user.email}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Solicitado: {formatDate(request.created_at)}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <Avatar className="size-10 flex-shrink-0">
+                        <AvatarFallback className="text-xs">
+                          {getInitials(request.user.full_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {request.user.full_name || 'Sin nombre'}
+                        </div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {request.user.email}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Solicitado: {formatDate(request.created_at)}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">
+                    <div className="text-center flex-shrink-0 bg-white rounded-lg px-3 py-2 border">
+                      <div className="text-2xl font-bold text-primary leading-none">
                         {request.credits_requested}
                       </div>
-                      <div className="text-xs text-muted-foreground">créditos</div>
+                      <div className="text-xs text-muted-foreground mt-1">créditos</div>
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 mt-4 sm:mt-0">
+                  <div className="flex gap-2 w-full">
                     <Button
                       size="sm"
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 flex-1"
                       onClick={() => handleProcessRequest(request, 'approved')}
                       disabled={processingId === request.id}
                     >
-                      <Check className="size-4 mr-1" />
-                      {processingId === request.id ? 'Procesando...' : 'Aprobar'}
+                      <Check className="size-4 sm:mr-1" />
+                      <span className="hidden sm:inline">
+                        {processingId === request.id ? 'Procesando...' : 'Aprobar'}
+                      </span>
+                      <span className="sm:hidden">
+                        {processingId === request.id ? 'Procesando...' : 'Aprobar'}
+                      </span>
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
+                      className="flex-1"
                       onClick={() => handleProcessRequest(request, 'rejected')}
                       disabled={processingId === request.id}
                     >
-                      <X className="size-4 mr-1" />
-                      {processingId === request.id ? 'Procesando...' : 'Rechazar'}
+                      <X className="size-4 sm:mr-1" />
+                      <span className="hidden sm:inline">
+                        {processingId === request.id ? 'Procesando...' : 'Rechazar'}
+                      </span>
+                      <span className="sm:hidden">
+                        {processingId === request.id ? 'Procesando...' : 'Rechazar'}
+                      </span>
                     </Button>
                   </div>
                 </div>

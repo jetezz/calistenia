@@ -167,37 +167,39 @@ export function BookingPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Reservar Clase</h1>
-          <p className="text-muted-foreground">
-            Tienes {profile?.credits ?? 0} créditos disponibles
-          </p>
+    <div className="container mx-auto px-3 py-4 pb-20 space-y-4 max-w-4xl">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold">Reservar Clase</h1>
+            <p className="text-sm text-muted-foreground">
+              {profile?.credits ?? 0} créditos disponibles
+            </p>
+          </div>
+          <Button onClick={goToToday} variant="outline" size="sm">
+            <Calendar className="size-4 mr-1" />
+            Hoy
+          </Button>
         </div>
-        <Button onClick={goToToday} variant="outline">
-          <Calendar className="size-4 mr-2" />
-          Ir a hoy
-        </Button>
       </div>
 
       {/* Week Navigation */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <Button onClick={goToPreviousWeek} variant="ghost" size="sm">
+            <Button onClick={goToPreviousWeek} variant="ghost" size="sm" className="h-8 w-8 p-0">
               <ChevronLeft className="size-4" />
             </Button>
-            <CardTitle className="text-center">
+            <CardTitle className="text-center text-base">
               {weekDates[0].toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
             </CardTitle>
-            <Button onClick={goToNextWeek} variant="ghost" size="sm">
+            <Button onClick={goToNextWeek} variant="ghost" size="sm" className="h-8 w-8 p-0">
               <ChevronRight className="size-4" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-7 gap-2">
+        <CardContent className="pt-2 px-2">
+          <div className="grid grid-cols-7 gap-1">
             {weekDates.map((date, index) => {
               const hasSlots = hasAvailableSlots(date)
               const isTodayDate = isToday(date)
@@ -208,40 +210,30 @@ export function BookingPage() {
                   key={index}
                   onClick={() => setSelectedDate(date)}
                   disabled={isPastDate(date)}
-                  className={`p-3 text-center rounded-lg border transition-colors relative ${
+                  className={`p-1.5 text-center rounded-md border transition-colors relative h-16 flex flex-col justify-center ${
                     isPastDate(date)
-                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-60'
                       : isSelectedDate(date)
-                      ? 'bg-primary text-primary-foreground border-primary'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                       : isBooked
-                      ? 'border-blue-500 border-2 bg-blue-50'
+                      ? 'border-blue-400 bg-blue-50'
                       : isTodayDate
-                      ? 'border-primary border-2 bg-primary/5'
+                      ? 'border-primary bg-primary/5'
                       : 'hover:bg-muted border-border'
                   }`}
                 >
-                  <div className={`text-xs ${
+                  <div className={`text-[9px] leading-none mb-1 uppercase ${
                     isBooked && !isSelectedDate(date) ? 'text-blue-600 font-medium' :
                     isTodayDate && !isSelectedDate(date) ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}>
                     {DAYS_SHORT[date.getDay()]}
                   </div>
-                  <div className="text-lg font-medium">
+                  <div className="text-sm font-bold leading-none">
                     {date.getDate()}
                   </div>
-                  {isTodayDate && !isSelectedDate(date) && !isBooked && (
-                    <div className="absolute top-1 right-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    </div>
-                  )}
-                  {isBooked && !isSelectedDate(date) && (
-                    <div className="absolute top-1 right-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    </div>
-                  )}
                   {hasSlots && !isPastDate(date) && (
                     <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${
+                      <div className={`w-1 h-1 rounded-full ${
                         isSelectedDate(date) ? 'bg-primary-foreground' : 'bg-green-500'
                       }`} />
                     </div>
@@ -254,86 +246,87 @@ export function BookingPage() {
       </Card>
 
       {/* Available Slots for Selected Date */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="size-5" />
-            Horarios para {selectedDate.toLocaleDateString('es-ES', {
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 px-1">
+          <Clock className="size-4 text-muted-foreground" />
+          <h2 className="font-semibold text-base">
+            {selectedDate.toLocaleDateString('es-ES', {
               weekday: 'long',
               day: 'numeric',
               month: 'long'
             })}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {(() => {
-            const dayOfWeek = selectedDate.getDay()
-            const daySlots = getSlotsForDay(dayOfWeek)
-            
-            if (daySlots.length === 0) {
-              return (
-                <div className="text-center py-8">
+          </h2>
+        </div>
+
+        {(() => {
+          const dayOfWeek = selectedDate.getDay()
+          const daySlots = getSlotsForDay(dayOfWeek)
+          
+          if (daySlots.length === 0) {
+            return (
+              <Card>
+                <CardContent className="py-8 text-center">
                   <Clock className="size-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     No hay horarios disponibles para este día
                   </p>
-                </div>
-              )
-            }
+                </CardContent>
+              </Card>
+            )
+          }
 
-            return (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {daySlots
-                  .sort((a, b) => a.start_time.localeCompare(b.start_time))
-                  .map((slot) => {
-                    const availability = getAvailability(slot.id, formatDate(selectedDate))
-                    const isAvailable = availability && availability.available > 0
-                    const slotBooked = isSlotBooked(slot.id, selectedDate)
-                    const canBook = !isPastDate(selectedDate) && 
-                                  isAvailable && 
-                                  (profile?.credits ?? 0) > 0 && 
-                                  !isBooking &&
-                                  !slotBooked
+          return (
+            <div className="space-y-2">
+              {daySlots
+                .sort((a, b) => a.start_time.localeCompare(b.start_time))
+                .map((slot) => {
+                  const availability = getAvailability(slot.id, formatDate(selectedDate))
+                  const isAvailable = availability && availability.available > 0
+                  const slotBooked = isSlotBooked(slot.id, selectedDate)
+                  const canBook = !isPastDate(selectedDate) && 
+                                isAvailable && 
+                                (profile?.credits ?? 0) > 0 && 
+                                !isBooking &&
+                                !slotBooked
 
-                    return (
-                      <div
-                        key={slot.id}
-                        className={`p-4 rounded-lg border ${
-                          slotBooked
-                            ? 'border-blue-200 bg-blue-50'
-                            : isAvailable 
-                            ? 'border-green-200 bg-green-50' 
-                            : 'border-gray-200 bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-3">
+                  return (
+                    <div
+                      key={slot.id}
+                      className={`p-3 rounded-lg border ${
+                        slotBooked
+                          ? 'border-blue-200 bg-blue-50'
+                          : isAvailable 
+                          ? 'border-green-200 bg-green-50' 
+                          : 'border-gray-200 bg-gray-50'
+                      }`}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium text-lg">
+                            <div className="font-semibold text-base">
                               {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                             </div>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Users className="size-4" />
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Users className="size-3" />
                               {availability ? (
                                 <span>
-                                  {availability.available} de {availability.capacity} plazas
+                                  {availability.available}/{availability.capacity} plazas
                                 </span>
                               ) : (
                                 <span>Cargando...</span>
                               )}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <Badge 
-                              variant={slotBooked ? 'default' : isAvailable ? 'default' : 'secondary'}
-                              className={slotBooked ? 'bg-blue-500 text-white' : isAvailable ? 'bg-green-500 text-white' : ''}
-                            >
-                              {slotBooked ? 'Reservado' : availability && availability.available > 0 ? 'Disponible' : 'Completo'}
-                            </Badge>
-                          </div>
+                          <Badge 
+                            variant={slotBooked ? 'default' : isAvailable ? 'default' : 'secondary'}
+                            className={`text-xs ${slotBooked ? 'bg-blue-500 text-white' : isAvailable ? 'bg-green-500 text-white' : ''}`}
+                          >
+                            {slotBooked ? 'Reservado' : availability && availability.available > 0 ? 'Disponible' : 'Completo'}
+                          </Badge>
                         </div>
 
                         <Button
-                          className="w-full"
+                          className="w-full h-9 text-sm"
                           disabled={!canBook}
                           onClick={() => handleBooking(slot.id, formatDate(selectedDate))}
                         >
@@ -346,13 +339,13 @@ export function BookingPage() {
                               : 'Reservar (1 crédito)'}
                         </Button>
                       </div>
-                    )
-                  })}
-              </div>
-            )
-          })()}
-        </CardContent>
-      </Card>
+                    </div>
+                  )
+                })}
+            </div>
+          )
+        })()}
+      </div>
     </div>
   )
 }

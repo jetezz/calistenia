@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, Users, Plus, Minus, UserCheck } from 'lucide-react'
+import { Search, Users, Plus, Minus, UserCheck, UserPlus, Trash } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,8 +7,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { PageLoadingState } from '@/components/common'
 import { useAdminUsers } from '../hooks'
+import { CreateUserDialog } from '../components/CreateUserDialog'
 
 export function AdminUsersPage() {
   const {
@@ -20,10 +22,14 @@ export function AdminUsersPage() {
     paymentStatusFilter,
     setPaymentStatusFilter,
     updateUserCredits,
-    updateUserPaymentStatus
+    updateUserPaymentStatus,
+    createUser,
+    deleteUser
   } = useAdminUsers()
 
   const [updatingCredits, setUpdatingCredits] = useState<Record<string, boolean>>({})
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null)
 
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
@@ -72,18 +78,39 @@ export function AdminUsersPage() {
     }
   }
 
+  const handleCreateUser = async (email: string, password: string, fullName: string) => {
+    await createUser(email, password, fullName)
+  }
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return
+    
+    try {
+      await deleteUser(userToDelete.id)
+      setUserToDelete(null)
+    } catch (error) {
+      console.error('Error deleting user:', error)
+    }
+  }
+
   if (isLoading) {
     return <PageLoadingState message="Cargando usuarios..." />
   }
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-20 space-y-4 max-w-4xl">
+    <div className="container mx-auto px-3 py-4  space-y-4 max-w-4xl">
       <div className="space-y-3">
-        <div>
-          <h1 className="text-2xl font-bold">Gestión de Usuarios</h1>
-          <p className="text-sm text-muted-foreground">
-            Administra los clientes y sus créditos
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold">Gestión de Usuarios</h1>
+            <p className="text-sm text-muted-foreground">
+              Administra los clientes y sus créditos
+            </p>
+          </div>
+          <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+            <UserPlus className="size-4 mr-2" />
+            Crear Usuario
+          </Button>
         </div>
 
         <div className="space-y-3">
@@ -213,18 +240,55 @@ export function AdminUsersPage() {
                     </Select>
                   </div>
 
-                  <Button asChild className="w-full h-11" variant="outline">
-                    <Link to={`/admin/users/${user.id}`}>
-                      <UserCheck className="size-4 mr-2" />
-                      Ver detalle
-                    </Link>
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full h-11"
+                      onClick={() => setUserToDelete({ id: user.id, name: user.full_name || user.email })}
+                    >
+                      <Trash className="size-4 mr-2" />
+                      Eliminar
+                    </Button>
+                    <Button asChild className="w-full h-11" variant="outline">
+                      <Link to={`/admin/users/${user.id}`}>
+                        <UserCheck className="size-4 mr-2" />
+                        Ver detalle
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <CreateUserDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onUserCreated={handleCreateUser}
+      />
+
+      <Dialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar usuario?</DialogTitle>
+            <DialogDescription>
+              Estás a punto de eliminar a <strong>{userToDelete?.name}</strong>.
+              Esta acción no se puede deshacer y eliminará todos los datos asociados
+              (reservas, solicitudes de pago, etc.).
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setUserToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser}>
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

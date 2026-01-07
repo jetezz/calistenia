@@ -31,7 +31,7 @@ export function MobileNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border safe-area-bottom">
-      <div className="flex items-center justify-around h-20 px-2">
+      <div className="flex items-center justify-around h-16">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -39,7 +39,7 @@ export function MobileNav() {
             end
             className={({ isActive }) =>
               cn(
-                'flex flex-col items-center justify-center flex-1 h-full gap-1.5 text-xs font-medium transition-all duration-200 rounded-lg mx-1 min-w-[60px]',
+                'flex flex-col items-center justify-center flex-1 h-full gap-1 text-xs font-medium transition-all duration-200',
                 'hover:bg-accent/50 active:bg-accent active:scale-95 transform',
                 'focus:outline-none focus:ring-2 focus:ring-primary/50',
                 isActive
@@ -54,7 +54,7 @@ export function MobileNav() {
             )}>
               {item.icon}
             </div>
-            <span className="text-[11px] leading-tight">{item.label}</span>
+            <span className="text-[10px] leading-tight">{item.label}</span>
           </NavLink>
         ))}
       </div>

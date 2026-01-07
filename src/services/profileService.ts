@@ -95,5 +95,25 @@ export const profileService = {
     
     if (error) throw error
     return data
+  },
+
+  async createUser(email: string, password: string, fullName: string) {
+    const { data, error } = await supabase.rpc('admin_create_user', {
+      p_email: email,
+      p_password: password,
+      p_full_name: fullName
+    })
+    
+    if (error) throw error
+    return data
+  },
+
+  async deleteUser(userId: string) {
+    const { data, error } = await supabase.rpc('admin_delete_user', {
+      p_user_id: userId
+    })
+    
+    if (error) throw error
+    return data
   }
 }

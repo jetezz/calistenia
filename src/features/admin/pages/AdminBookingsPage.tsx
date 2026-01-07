@@ -1,9 +1,8 @@
 import { useEffect } from 'react'
-import { Calendar, Clock, Plus } from 'lucide-react'
+import { Calendar, Clock, Plus, User, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { PageLoadingState } from '@/components/common'
 import { useBooking, useToast } from '@/hooks'
 
@@ -101,18 +100,18 @@ export function AdminBookingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Reservas</h1>
-          <p className="text-muted-foreground">
-            Administra todas las reservas del sistema
-          </p>
+    <div className="container mx-auto px-3 py-4 pb-20 space-y-4 max-w-4xl">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold">Reservas</h1>
+          <Button onClick={fetchBookings} size="sm">
+            <Plus className="size-4 mr-1" />
+            Actualizar
+          </Button>
         </div>
-        <Button onClick={fetchBookings}>
-          <Plus className="size-4 mr-2" />
-          Actualizar Lista
-        </Button>
+        <p className="text-sm text-muted-foreground">
+          Administra todas las reservas del sistema
+        </p>
       </div>
 
       {typedBookings.length === 0 ? (
@@ -120,112 +119,107 @@ export function AdminBookingsPage() {
           <CardContent className="py-12 text-center">
             <Calendar className="size-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No hay reservas registradas</h3>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Las reservas aparecerán aquí cuando los usuarios las realicen
             </p>
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="size-5" />
-              Todas las Reservas ({typedBookings.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Horario</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Creada</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {typedBookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {booking.user.full_name || 'Sin nombre'}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {booking.user.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {formatDate(booking.booking_date)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {DAYS_OF_WEEK[convertDayOfWeekToDisplayIndex(booking.time_slot.day_of_week)]}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Clock className="size-3" />
-                          <span>
-                            {formatTime(booking.time_slot.start_time)} - {formatTime(booking.time_slot.end_time)}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getBookingStatusBadge(booking.status)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(booking.created_at)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {booking.status === 'confirmed' && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => updateBookingStatus(booking.id, 'completed')}
-                              >
-                                Completar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                              >
-                                Cancelar
-                              </Button>
-                            </>
-                          )}
-                          {booking.status === 'cancelled' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateBookingStatus(booking.id, 'confirmed')}
-                            >
-                              Restaurar
-                            </Button>
-                          )}
-                          {booking.status === 'completed' && (
-                            <span className="text-xs text-muted-foreground">
-                              Finalizada
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <Calendar className="size-4 text-muted-foreground" />
+            <h2 className="font-semibold text-base">Todas las Reservas</h2>
+            <Badge variant="outline" className="text-xs">
+              {typedBookings.length}
+            </Badge>
+          </div>
+
+          <div className="space-y-2">
+            {typedBookings.map((booking) => (
+              <div
+                key={booking.id}
+                className="p-3 rounded-lg border bg-card"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <User className="size-3 text-muted-foreground shrink-0" />
+                        <span className="font-semibold text-sm truncate">
+                          {booking.user.full_name || 'Sin nombre'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Mail className="size-3 shrink-0" />
+                        <span className="truncate">{booking.user.email}</span>
+                      </div>
+                    </div>
+                    {getBookingStatusBadge(booking.status)}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Fecha</div>
+                      <div className="font-medium">
+                        {formatDate(booking.booking_date)}
+                      </div>
+                      <div className="text-muted-foreground text-[10px]">
+                        {DAYS_OF_WEEK[convertDayOfWeekToDisplayIndex(booking.time_slot.day_of_week)]}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Horario</div>
+                      <div className="flex items-center gap-1 font-medium">
+                        <Clock className="size-3" />
+                        <span>
+                          {formatTime(booking.time_slot.start_time)} - {formatTime(booking.time_slot.end_time)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 pt-2 border-t">
+                    {booking.status === 'confirmed' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateBookingStatus(booking.id, 'completed')}
+                          className="flex-1 h-8 text-xs"
+                        >
+                          Completar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                          className="flex-1 h-8 text-xs"
+                        >
+                          Cancelar
+                        </Button>
+                      </>
+                    )}
+                    {booking.status === 'cancelled' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                        className="w-full h-8 text-xs"
+                      >
+                        Restaurar
+                      </Button>
+                    )}
+                    {booking.status === 'completed' && (
+                      <div className="w-full text-center text-xs text-muted-foreground py-1">
+                        Finalizada
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

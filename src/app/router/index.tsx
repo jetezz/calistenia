@@ -11,7 +11,8 @@ import {
   AdminBookingsPage,
   AdminPaymentRequestsPage,
   AdminPricingPage,
-  AdminPaymentMethodsPage
+  AdminPaymentMethodsPage,
+  AdminSettingsPage
 } from '@/features/admin'
 import {
   BookingPage,
@@ -80,6 +81,10 @@ export const router = createBrowserRouter([
       {
         path: 'admin/payment-methods',
         element: <AdminPaymentMethodsPage />,
+      },
+      {
+        path: 'admin/settings',
+        element: <AdminSettingsPage />,
       },
       {
         path: '*',

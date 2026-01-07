@@ -799,6 +799,22 @@ export function useClientDashboard() {
 - **IMPROVED**: Counter resets when admin visits bookings page
 - **IMPROVED**: Clean and simple implementation using in-memory state
 
+### [2025-01-08] - Cancellation Policy Configuration Feature
+- **NEW**: Admin can configure minimum time required before booking cancellation
+- **NEW**: Database table `app_settings` for application-wide configuration
+- **NEW**: Service layer `appSettingsService` for settings CRUD operations
+- **NEW**: Zustand store `appSettingsStore` for settings state management
+- **NEW**: Hook `useAppSettings` for component integration
+- **NEW**: Admin page `AdminSettingsPage` for cancellation policy configuration
+- **NEW**: Route `/admin/settings` added to admin panel
+- **NEW**: Quick action "Configuración" in admin dashboard
+- **IMPROVED**: `useUserBookings` hook now validates cancellation against dynamic policy
+- **IMPROVED**: `MyBookingsPage` displays actual policy (not hardcoded 2 hours)
+- **IMPROVED**: Cancel button disabled when outside policy window with clear feedback
+- **IMPROVED**: Policy can be configured in hours or days
+- **MIGRATION**: `20250108000000_app_settings_cancellation_policy.sql` created with default 2-hour policy
+- **DOCUMENTATION**: Full feature documentation in `docs/CANCELLATION_POLICY_FEATURE.md`
+
 ### [2025-01-07] - Payment Methods Management System
 - **NEW**: Dynamic payment methods configuration in admin panel
 - **NEW**: Admin page for managing payment methods (Bizum, PayPal, Bank Transfer, Cash, etc.)

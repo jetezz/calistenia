@@ -165,122 +165,117 @@ export function EnhancedAdminSlotsPage() {
     const bookedCount = bookings.length
 
     return (
-      <Card key={slot.id} className={`${!slot.is_active ? 'opacity-60' : ''}`}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
+      <div key={slot.id} className={`p-3 rounded-lg border bg-card ${!slot.is_active ? 'opacity-60' : ''}`}>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Clock className="size-4 text-muted-foreground" />
-              <span className="font-medium">
+              <Clock className="size-4 text-muted-foreground shrink-0" />
+              <span className="font-medium text-sm">
                 {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={slot.is_active ? 'default' : 'secondary'}>
-                {slot.is_active ? 'Activo' : 'Inactivo'}
-              </Badge>
-              <Badge 
-                variant="outline"
-                className={slot.slot_type === 'recurring' ? 'border-blue-300 text-blue-700' : 'border-purple-300 text-purple-700'}
-              >
-                {slot.slot_type === 'recurring' ? 'Recurrente' : 'Específico'}
-              </Badge>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="size-4" />
-              <span>Capacidad: {slot.capacity} personas</span>
-              {showBookings && (
-                <Badge variant={bookedCount >= slot.capacity ? 'destructive' : 'secondary'} className="ml-2">
-                  {bookedCount}/{slot.capacity} reservadas
-                </Badge>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleToggleStatus(slot)}
-              >
-                {slot.is_active ? 'Desactivar' : 'Activar'}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleEdit(slot)}
-              >
-                <Edit2 className="size-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDelete(slot.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
+            <Badge variant={slot.is_active ? 'default' : 'secondary'} className="text-xs">
+              {slot.is_active ? 'Activo' : 'Inactivo'}
+            </Badge>
           </div>
 
-          {showBookings && (
-            <div className="mt-3 pt-3 border-t">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <User className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Usuarios reservados:</span>
-                </div>
-                {selectedDateSlots && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setAddUserDialog({
-                      isOpen: true,
-                      slotId: slot.id,
-                      bookingDate: selectedDateSlots.date,
-                      slotTime: `${formatTime(slot.start_time)} - ${formatTime(slot.end_time)}`
-                    })}
-                  >
-                    <UserPlus className="size-4 mr-1" />
-                    Añadir
-                  </Button>
-                )}
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Users className="size-3" />
+              <span>{slot.capacity} plazas</span>
+            </div>
+            {showBookings && (
+              <Badge variant={bookedCount >= slot.capacity ? 'destructive' : 'secondary'} className="text-xs">
+                {bookedCount}/{slot.capacity}
+              </Badge>
+            )}
+          </div>
+        
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleToggleStatus(slot)}
+              className="flex-1 h-8 text-xs"
+            >
+              {slot.is_active ? 'Desactivar' : 'Activar'}
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => handleEdit(slot)}
+              className="h-8 w-8 shrink-0"
+            >
+              <Edit2 className="size-3" />
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => handleDelete(slot.id)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 shrink-0"
+            >
+              <Trash2 className="size-3" />
+            </Button>
+          </div>
+        </div>
+
+        {showBookings && (
+          <div className="mt-3 pt-3 border-t space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <User className="size-3 text-muted-foreground" />
+                <span className="text-xs font-medium">Reservados:</span>
               </div>
-              {bookings.length > 0 ? (
-                <div className="space-y-1">
-                  {bookings.map((booking) => (
-                    <div key={booking.id} className="flex items-center gap-2 text-sm pl-6">
-                      <div className="size-1.5 rounded-full bg-primary" />
-                      <span>{booking.user.full_name || booking.user.email}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground pl-6">
-                  No hay usuarios reservados
-                </p>
+              {selectedDateSlots && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setAddUserDialog({
+                    isOpen: true,
+                    slotId: slot.id,
+                    bookingDate: selectedDateSlots.date,
+                    slotTime: `${formatTime(slot.start_time)} - ${formatTime(slot.end_time)}`
+                  })}
+                  className="h-7 text-xs"
+                >
+                  <UserPlus className="size-3 mr-1" />
+                  Añadir
+                </Button>
               )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {bookings.length > 0 ? (
+              <div className="space-y-1">
+                {bookings.map((booking) => (
+                  <div key={booking.id} className="flex items-center gap-2 text-xs pl-4">
+                    <div className="size-1 rounded-full bg-primary shrink-0" />
+                    <span className="truncate">{booking.user.full_name || booking.user.email}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground pl-4">
+                No hay usuarios reservados
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Horarios</h1>
-          <p className="text-muted-foreground">
-            Administra horarios semanales y días específicos
-          </p>
+    <div className="container mx-auto px-3 py-4  space-y-4 max-w-4xl">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold">Horarios</h1>
+          <Button onClick={handleCreate} size="sm">
+            <Plus className="size-4 mr-1" />
+            Nuevo
+          </Button>
         </div>
-        <Button onClick={handleCreate} className="shrink-0">
-          <Plus className="size-4 mr-2" />
-          Nuevo Horario
-        </Button>
+        <p className="text-sm text-muted-foreground">
+          Administra horarios semanales y días específicos
+        </p>
       </div>
 
       {timeSlots.length === 0 ? (
@@ -298,39 +293,39 @@ export function EnhancedAdminSlotsPage() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="calendar" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-[600px]">
-            <TabsTrigger value="calendar" className="flex items-center gap-2">
+        <Tabs defaultValue="calendar" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3 h-full">
+            <TabsTrigger value="calendar" className="gap-1.5">
               <Calendar className="size-4" />
-              Calendario
+              <span className="hidden sm:inline">Calendario</span>
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="flex items-center gap-2">
+            <TabsTrigger value="recurring" className="gap-1.5">
               <Clock className="size-4" />
-              Semanales
+              <span className="hidden sm:inline">Semanales</span>
             </TabsTrigger>
-            <TabsTrigger value="specific" className="flex items-center gap-2">
+            <TabsTrigger value="specific" className="gap-1.5">
               <CalendarDays className="size-4" />
-              Específicos
+              <span className="hidden sm:inline">Específicos</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="calendar" className="space-y-6">
+          <TabsContent value="calendar" className="space-y-4">
             <AvailabilityCalendar onDateClick={handleCalendarDateClick} />
             
             {selectedDateSlots && (
               <Card>
-                <CardHeader>
-                  <CardTitle>
-                    Horarios para {formatDate(selectedDateSlots.date)}
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">
+                    {formatDate(selectedDateSlots.date)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {selectedDateSlots.slots.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">
+                    <p className="text-sm text-muted-foreground text-center py-4">
                       No hay horarios configurados para este día
                     </p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {selectedDateSlots.slots.map(slot => (
                         <TimeSlotCard key={slot.id} slot={slot} showBookings={true} />
                       ))}
@@ -341,7 +336,7 @@ export function EnhancedAdminSlotsPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="recurring" className="space-y-6">
+          <TabsContent value="recurring" className="space-y-4">
             {Object.keys(groupedRecurringSlots).length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
@@ -357,38 +352,34 @@ export function EnhancedAdminSlotsPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {DAYS_OF_WEEK.map((dayName, dayIndex) => {
                   const slotsForDay = groupedRecurringSlots[dayIndex] || []
                   
                   if (slotsForDay.length === 0) return null
                   
                   return (
-                    <Card key={dayIndex}>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Calendar className="size-5" />
-                          {dayName}
-                          <Badge variant="outline" className="ml-auto">
-                            {slotsForDay.length} horario{slotsForDay.length !== 1 ? 's' : ''}
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {slotsForDay.map(slot => (
-                            <TimeSlotCard key={slot.id} slot={slot} />
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <div key={dayIndex} className="space-y-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <Calendar className="size-4 text-muted-foreground" />
+                        <h3 className="font-semibold text-base">{dayName}</h3>
+                        <Badge variant="outline" className="text-xs">
+                          {slotsForDay.length}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        {slotsForDay.map(slot => (
+                          <TimeSlotCard key={slot.id} slot={slot} />
+                        ))}
+                      </div>
+                    </div>
                   )
                 })}
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="specific" className="space-y-6">
+          <TabsContent value="specific" className="space-y-4">
             {Object.keys(groupedSpecificSlots).length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
@@ -404,28 +395,24 @@ export function EnhancedAdminSlotsPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {Object.entries(groupedSpecificSlots)
                   .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
                   .map(([date, slots]) => (
-                    <Card key={date}>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <CalendarDays className="size-5" />
-                          {formatDate(date)}
-                          <Badge variant="outline" className="ml-auto">
-                            {slots.length} horario{slots.length !== 1 ? 's' : ''}
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {slots.map(slot => (
-                            <TimeSlotCard key={slot.id} slot={slot} />
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <div key={date} className="space-y-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <CalendarDays className="size-4 text-muted-foreground" />
+                        <h3 className="font-semibold text-base">{formatDate(date)}</h3>
+                        <Badge variant="outline" className="text-xs">
+                          {slots.length}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        {slots.map(slot => (
+                          <TimeSlotCard key={slot.id} slot={slot} />
+                        ))}
+                      </div>
+                    </div>
                   ))}
               </div>
             )}

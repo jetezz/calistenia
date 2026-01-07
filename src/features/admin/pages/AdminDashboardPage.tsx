@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Calendar, Users, Clock, CreditCard, AlertCircle, TrendingUp, DollarSign, Wallet } from 'lucide-react'
+import { Calendar, Users, Clock, CreditCard, AlertCircle, TrendingUp, DollarSign, Wallet, Settings } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -78,6 +78,12 @@ export function AdminDashboardPage() {
       description: 'Configurar formas de pago',
       href: '/admin/payment-methods',
       icon: Wallet
+    },
+    {
+      title: 'Configuración',
+      description: 'Políticas de cancelación',
+      href: '/admin/settings',
+      icon: Settings
     },
     {
       title: 'Solicitudes de Pago',

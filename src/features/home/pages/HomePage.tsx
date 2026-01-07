@@ -66,7 +66,7 @@ export function HomePage() {
         <p className="text-muted-foreground">Bienvenido a Calistenia Emérita</p>
       </div>
 
-      {/* Credits and Payment Status */}
+      {/* 1. Credits and Payment Status */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between">
@@ -94,7 +94,56 @@ export function HomePage() {
         </CardContent>
       </Card>
 
-      {/* Payment Request Status */}
+      {/* 2. Upcoming Bookings */}
+      {upcomingBookings.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="size-5" />
+              Próximas Clases
+            </CardTitle>
+            <CardDescription>
+              Tus reservas confirmadas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {upcomingBookings.map((booking) => (
+                <div 
+                  key={booking.id}
+                  className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Clock className="size-4 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium">
+                        {formatDate(booking.booking_date)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatTime(booking.time_slot.start_time)} - {formatTime(booking.time_slot.end_time)}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge className="bg-green-500 text-white">
+                    Confirmada
+                  </Badge>
+                </div>
+              ))}
+              {upcomingBookings.length >= 3 && (
+                <Button asChild variant="ghost" size="sm" className="w-full">
+                  <Link to="/my-bookings">
+                    Ver todas las reservas
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 3. Payment Request Status */}
       {recentPaymentRequests.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -163,55 +212,6 @@ export function HomePage() {
                   onClick={() => setShowAllRequests(false)}
                 >
                   Mostrar menos
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Upcoming Bookings */}
-      {upcomingBookings.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="size-5" />
-              Próximas Clases
-            </CardTitle>
-            <CardDescription>
-              Tus reservas confirmadas
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingBookings.map((booking) => (
-                <div 
-                  key={booking.id}
-                  className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Clock className="size-4 text-green-600" />
-                    </div>
-                    <div>
-                      <div className="font-medium">
-                        {formatDate(booking.booking_date)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatTime(booking.time_slot.start_time)} - {formatTime(booking.time_slot.end_time)}
-                      </div>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-500 text-white">
-                    Confirmada
-                  </Badge>
-                </div>
-              ))}
-              {upcomingBookings.length >= 3 && (
-                <Button asChild variant="ghost" size="sm" className="w-full">
-                  <Link to="/my-bookings">
-                    Ver todas las reservas
-                  </Link>
                 </Button>
               )}
             </div>

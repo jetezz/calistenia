@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useToast, useBooking } from '@/hooks'
+import { useToast, useBooking, useAppSettings } from '@/hooks'
 import { useAuth, useProfile } from '@/features/auth'
 import type { Database } from '@/types/database'
 
@@ -11,6 +11,7 @@ export function useUserBookings() {
   const { user } = useAuth()
   const { refreshProfile } = useProfile()
   const { success, error: showError } = useToast()
+  const { getCancellationPolicy } = useAppSettings()
   
   const {
     userBookings: bookings,
@@ -67,11 +68,25 @@ export function useUserBookings() {
   }
 
   const canCancelBooking = (booking: Booking) => {
+    if (booking.status !== 'confirmed') return false
+    
+    const policy = getCancellationPolicy()
+    
+    if (policy.value === 0) return true
+    
     const bookingDateTime = new Date(`${booking.booking_date}T${booking.time_slot.start_time}`)
     const now = new Date()
+    
+    let minAdvanceTime: number
+    if (policy.unit === 'hours') {
+      minAdvanceTime = policy.value
+    } else {
+      minAdvanceTime = policy.value * 24
+    }
+    
     const hoursDiff = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
     
-    return booking.status === 'confirmed' && hoursDiff > 2
+    return hoursDiff > minAdvanceTime
   }
 
   useEffect(() => {

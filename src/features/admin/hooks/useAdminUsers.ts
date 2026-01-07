@@ -13,6 +13,8 @@ export function useAdminUsers() {
     fetchProfiles,
     updateCredits,
     updatePaymentStatus,
+    createUser: createUserProfile,
+    deleteUser: deleteUserProfile,
   } = useProfile()
   
   const [searchQuery, setSearchQuery] = useState('')
@@ -67,6 +69,28 @@ export function useAdminUsers() {
     }
   }, [updatePaymentStatus, success, showError])
 
+  const createUser = useCallback(async (email: string, password: string, fullName: string) => {
+    try {
+      await createUserProfile(email, password, fullName)
+      success('Usuario creado correctamente')
+    } catch (error) {
+      console.error('Error creating user:', error)
+      showError('Error al crear el usuario')
+      throw error
+    }
+  }, [createUserProfile, success, showError])
+
+  const deleteUser = useCallback(async (userId: string) => {
+    try {
+      await deleteUserProfile(userId)
+      success('Usuario eliminado correctamente')
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      showError('Error al eliminar el usuario')
+      throw error
+    }
+  }, [deleteUserProfile, success, showError])
+
   useEffect(() => {
     fetchProfiles()
   }, [])
@@ -83,5 +107,7 @@ export function useAdminUsers() {
     refreshUsers: fetchUsers,
     updateUserCredits,
     updateUserPaymentStatus,
+    createUser,
+    deleteUser,
   }
 }
