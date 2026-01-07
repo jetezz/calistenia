@@ -1,0 +1,7 @@
+export { AdminDashboardPage } from './pages/AdminDashboardPage'
+export { AdminSlotsPage } from './pages/AdminSlotsPage'
+export { EnhancedAdminSlotsPage } from './pages/EnhancedAdminSlotsPage'
+export { AdminUsersPage } from './pages/AdminUsersPage'
+export { AdminUserDetailPage } from './pages/AdminUserDetailPage'
+export { AdminBookingsPage } from './pages/AdminBookingsPage'
+export { AdminPaymentRequestsPage } from './pages/AdminPaymentRequestsPage'

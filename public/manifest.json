@@ -1,0 +1,26 @@
+{
+  "name": "Calistenia Emérita",
+  "short_name": "Calistenia",
+  "description": "Tu centro de calistenia en Mérida - Reserva clases y gestiona tu entrenamiento",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "health",
+    "fitness",
+    "sports"
+  ],
+  "lang": "es-ES",
+  "dir": "ltr"
+}
