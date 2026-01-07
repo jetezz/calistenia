@@ -1,4 +1,4 @@
-import { CreditCard, Send, AlertCircle } from 'lucide-react'
+import { CreditCard, Send, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,29 +6,32 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/features/auth'
-import { usePaymentRequest } from '@/hooks'
+import { usePaymentRequest, usePricingPackage, usePaymentMethod } from '@/hooks'
 import { toast } from 'sonner'
+import { PageLoadingState } from '@/components/common'
+import { getPaymentMethodIcon } from '@/features/admin/pages/AdminPaymentMethodsPage'
+import type { Database } from '@/types/database'
 
-const creditPackages = [
-  { value: '4', label: '4 clases', price: '40€' },
-  { value: '8', label: '8 clases', price: '70€' },
-  { value: '12', label: '12 clases', price: '100€' },
-  { value: '20', label: '20 clases', price: '160€' }
-]
+type PaymentMethod = Database['public']['Tables']['payment_methods']['Row']
 
 export function RequestCreditsPage() {
   const { user } = useAuth()
+  const { packages, isLoading: isLoadingPackages } = usePricingPackage()
+  const { methods, isLoading: isLoadingMethods } = usePaymentMethod()
+  const [step, setStep] = useState<1 | 2 | 3>(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     credits: '',
+    paymentMethod: '',
     notes: ''
   })
   
   const { createPaymentRequest } = usePaymentRequest()
 
-  const selectedPackage = creditPackages.find(pkg => pkg.value === formData.credits)
+  const selectedPackage = packages.find(pkg => pkg.credits.toString() === formData.credits)
+  const selectedMethod = methods.find(m => m.id === formData.paymentMethod)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!formData.credits) {
@@ -36,6 +39,21 @@ export function RequestCreditsPage() {
       return
     }
 
+    setStep(2)
+  }
+
+  const handleStep2Submit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.paymentMethod) {
+      toast.error('Por favor selecciona un método de pago')
+      return
+    }
+
+    setStep(3)
+  }
+
+  const handleFinalSubmit = async () => {
     if (!user) {
       toast.error('Error de autenticación')
       return
@@ -47,18 +65,18 @@ export function RequestCreditsPage() {
       await createPaymentRequest({
         user_id: user.id,
         credits_requested: parseInt(formData.credits),
+        payment_method_id: formData.paymentMethod,
         admin_notes: formData.notes || undefined
       })
 
       toast.success('Solicitud de créditos enviada correctamente')
       
-      // Reset form
       setFormData({
         credits: '',
+        paymentMethod: '',
         notes: ''
       })
       
-      // Redirect to home to see the request status
       window.location.href = '/'
     } catch (error) {
       console.error('Error submitting credit request:', error)
@@ -68,126 +86,249 @@ export function RequestCreditsPage() {
     }
   }
 
+  const renderPaymentDetails = (method: PaymentMethod) => {
+    const details = []
+    
+    if (method.contact_phone) {
+      details.push({ label: 'Teléfono', value: method.contact_phone })
+    }
+    if (method.contact_email) {
+      details.push({ label: 'Email', value: method.contact_email })
+    }
+    if (method.bank_account) {
+      details.push({ label: 'Cuenta bancaria', value: method.bank_account })
+    }
+    
+    return details
+  }
+
+  if (isLoadingPackages || isLoadingMethods) {
+    return <PageLoadingState message="Cargando información..." />
+  }
+
+  if (packages.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <AlertCircle className="size-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No hay paquetes disponibles</h3>
+            <p className="text-muted-foreground">
+              Por favor, contacta con el administrador
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <div className="space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Solicitar Créditos</h1>
           <p className="text-muted-foreground">
-            Selecciona el paquete de clases que necesitas
+            {step === 1 && 'Selecciona el paquete de clases que necesitas'}
+            {step === 2 && 'Realiza el pago y selecciona el método utilizado'}
+            {step === 3 && 'Confirma tu solicitud'}
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="size-5" />
-              Paquetes de Clases
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="credits">Selecciona un paquete</Label>
-                <Select
-                  value={formData.credits}
-                  onValueChange={(value) => setFormData({ ...formData, credits: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Elige el número de clases" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {creditPackages.map((pkg) => (
-                      <SelectItem key={pkg.value} value={pkg.value}>
-                        <div className="flex justify-between items-center w-full">
-                          <span>{pkg.label}</span>
-                          <span className="font-medium text-green-600 ml-4">{pkg.price}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedPackage && (
-                  <p className="text-sm text-muted-foreground">
-                    Precio: <span className="font-medium text-green-600">{selectedPackage.price}</span>
-                  </p>
-                )}
-              </div>
+        {step === 1 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="size-5" />
+                Paquetes de Clases
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleStep1Submit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="credits">Selecciona un paquete</Label>
+                  <Select
+                    value={formData.credits}
+                    onValueChange={(value) => setFormData({ ...formData, credits: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Elige el número de clases" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {packages.map((pkg) => (
+                        <SelectItem key={pkg.id} value={pkg.credits.toString()}>
+                          <div className="flex justify-between items-center w-full">
+                            <span>
+                              {pkg.package_name && <strong>{pkg.package_name} - </strong>}
+                              {pkg.name}
+                            </span>
+                            <span className="font-medium text-green-600 ml-4">{pkg.price}€</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedPackage && (
+                    <p className="text-sm text-muted-foreground">
+                      Precio: <span className="font-medium text-green-600">{selectedPackage.price}€</span>
+                    </p>
+                  )}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notas adicionales (opcional)</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Añade cualquier comentario o solicitud especial..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="min-h-[100px]"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notas adicionales (opcional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Añade cualquier comentario o solicitud especial..."
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="min-h-[100px]"
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={!formData.credits}
+                >
+                  <ArrowRight className="size-4 mr-2" />
+                  Solicitar Créditos
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 2 && selectedPackage && (
+          <>
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="text-blue-900">Realiza el pago</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center py-4">
+                  <div className="text-4xl font-bold text-blue-900 mb-2">
+                    {selectedPackage.price}€
+                  </div>
+                  <div className="text-blue-700">
+                    {selectedPackage.package_name && <strong>{selectedPackage.package_name} - </strong>}
+                    {selectedPackage.name}
+                  </div>
+                </div>
+
+                {selectedMethod && (
+                  <div className="bg-white rounded-lg p-4 space-y-3">
+                    <h3 className="font-semibold text-blue-900">
+                      Datos para realizar el pago:
+                    </h3>
+                    {renderPaymentDetails(selectedMethod).map((detail, idx) => (
+                      <div key={idx} className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">{detail.label}:</span>
+                        <span className="font-medium">{detail.value}</span>
+                      </div>
+                    ))}
+                    {selectedMethod.instructions && (
+                      <div className="pt-2 border-t">
+                        <p className="text-sm text-muted-foreground">{selectedMethod.instructions}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Selecciona el método de pago</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleStep2Submit} className="space-y-4">
+                  <div className="space-y-3">
+                    {methods.map((method) => {
+                      const Icon = getPaymentMethodIcon(method.type)
+                      const isSelected = formData.paymentMethod === method.id
+                      return (
+                        <button
+                          key={method.id}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, paymentMethod: method.id })}
+                          className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                            isSelected 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className={`size-6 ${
+                              isSelected ? 'text-primary' : 'text-muted-foreground'
+                            }`} />
+                            <div className="flex-1">
+                              <div className="font-medium">{method.name}</div>
+                              {method.description && (
+                                <div className="text-sm text-muted-foreground">{method.description}</div>
+                              )}
+                            </div>
+                            {isSelected && (
+                              <CheckCircle2 className="size-5 text-primary" />
+                            )}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={!formData.paymentMethod}
+                  >
+                    <CheckCircle2 className="size-4 mr-2" />
+                    Ya he realizado el pago
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {step === 3 && (
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="text-green-900 flex items-center gap-2">
+                <CheckCircle2 className="size-6" />
+                Información importante
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3 text-green-800">
+                <p className="flex items-start gap-2">
+                  <span className="mt-1">•</span>
+                  <span>Tu solicitud será revisada por el administrador</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="mt-1">•</span>
+                  <span>Recibirás información de pago una vez aprobada la solicitud</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="mt-1">•</span>
+                  <span>Los créditos se activarán tras confirmar el pago</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="mt-1">•</span>
+                  <span>Puedes ver el estado de tu solicitud en la página principal</span>
+                </p>
               </div>
 
               <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isSubmitting || !formData.credits}
+                onClick={handleFinalSubmit}
+                className="w-full"
+                disabled={isSubmitting}
               >
-                <Send className="size-4 mr-2" />
-                {isSubmitting ? 'Enviando solicitud...' : 'Solicitar Créditos'}
+                <CheckCircle2 className="size-4 mr-2" />
+                {isSubmitting ? 'Enviando solicitud...' : 'Aceptar'}
               </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card className="border-orange-200 bg-orange-50">
-          <CardContent className="pt-6">
-            <div className="flex gap-3">
-              <AlertCircle className="size-5 text-orange-600 shrink-0 mt-0.5" />
-              <div className="space-y-3 text-sm">
-                <h3 className="font-medium text-orange-800">
-                  Información importante
-                </h3>
-                <div className="space-y-2 text-orange-700">
-                  <p>• Tu solicitud será revisada por el administrador</p>
-                  <p>• Recibirás información de pago una vez aprobada la solicitud</p>
-                  <p>• Los créditos se activarán tras confirmar el pago</p>
-                  <p>• Puedes ver el estado de tu solicitud en la página principal</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Métodos de Pago</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold text-xs">
-                    B
-                  </div>
-                  <span className="font-medium">Bizum</span>
-                </div>
-                <span className="text-blue-600">Recomendado</span>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-xs">
-                    PP
-                  </div>
-                  <span className="font-medium">PayPal</span>
-                </div>
-                <span className="text-muted-foreground">También disponible</span>
-              </div>
-
-              <p className="text-muted-foreground text-center pt-2">
-                Recibirás los detalles de pago tras la aprobación
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

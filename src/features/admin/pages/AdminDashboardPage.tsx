@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Calendar, Users, Clock, CreditCard, AlertCircle, TrendingUp } from 'lucide-react'
+import { Calendar, Users, Clock, CreditCard, AlertCircle, TrendingUp, DollarSign, Wallet } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -57,6 +57,20 @@ export function AdminDashboardPage() {
       description: 'Lista de todos los clientes',
       href: '/admin/users',
       icon: Users,
+      variant: 'secondary' as const
+    },
+    {
+      title: 'Gestionar Precios',
+      description: 'Configurar paquetes de clases',
+      href: '/admin/pricing',
+      icon: DollarSign,
+      variant: 'secondary' as const
+    },
+    {
+      title: 'Métodos de Pago',
+      description: 'Configurar formas de pago',
+      href: '/admin/payment-methods',
+      icon: Wallet,
       variant: 'secondary' as const
     },
     {

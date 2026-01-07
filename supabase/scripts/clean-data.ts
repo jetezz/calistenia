@@ -64,7 +64,33 @@ async function cleanAllData() {
       console.log('✅ No payment requests to delete')
     }
 
-    console.log('🕐 Deleting time slots...')
+    console.log('� Deleting pricing packages...')
+    const { data: pricingPackages } = await supabase.from('pricing_packages').select('id')
+    if (pricingPackages && pricingPackages.length > 0) {
+      const { error: pricingError } = await supabase
+        .from('pricing_packages')
+        .delete()
+        .in('id', pricingPackages.map(p => p.id))
+      if (pricingError) throw pricingError
+      console.log(`✅ ${pricingPackages.length} pricing packages deleted`)
+    } else {
+      console.log('✅ No pricing packages to delete')
+    }
+
+    console.log('💰 Deleting payment methods...')
+    const { data: paymentMethods } = await supabase.from('payment_methods').select('id')
+    if (paymentMethods && paymentMethods.length > 0) {
+      const { error: paymentMethodsError } = await supabase
+        .from('payment_methods')
+        .delete()
+        .in('id', paymentMethods.map(m => m.id))
+      if (paymentMethodsError) throw paymentMethodsError
+      console.log(`✅ ${paymentMethods.length} payment methods deleted`)
+    } else {
+      console.log('✅ No payment methods to delete')
+    }
+
+    console.log('�🕐 Deleting time slots...')
     const { data: timeSlots } = await supabase.from('time_slots').select('id')
     if (timeSlots && timeSlots.length > 0) {
       const { error: timeSlotsError } = await supabase

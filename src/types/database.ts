@@ -87,12 +87,55 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          bank_account: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          display_order: number
+          id: string
+          instructions: string | null
+          is_active: boolean
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          bank_account?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          bank_account?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_requests: {
         Row: {
           admin_notes: string | null
           created_at: string
           credits_requested: number
           id: string
+          payment_method_id: string | null
           processed_at: string | null
           processed_by: string | null
           status: string
@@ -104,6 +147,7 @@ export type Database = {
           created_at?: string
           credits_requested: number
           id?: string
+          payment_method_id?: string | null
           processed_at?: string | null
           processed_by?: string | null
           status?: string
@@ -115,6 +159,7 @@ export type Database = {
           created_at?: string
           credits_requested?: number
           id?: string
+          payment_method_id?: string | null
           processed_at?: string | null
           processed_by?: string | null
           status?: string
@@ -137,6 +182,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pricing_packages: {
+        Row: {
+          created_at: string
+          credits: number
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          package_name: string | null
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          package_name?: string | null
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          package_name?: string | null
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

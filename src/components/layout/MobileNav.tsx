@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, CalendarDays, CreditCard, LayoutDashboard, Users, Clock, Calendar } from 'lucide-react'
+import { Home, CalendarDays, CreditCard, LayoutDashboard, Users, Clock, Calendar, DollarSign } from 'lucide-react'
 import { useProfile } from '@/features/auth'
 import { cn } from '@/lib/utils'
 
@@ -23,6 +23,7 @@ export function MobileNav() {
     { to: '/admin', icon: <LayoutDashboard className="size-5" />, label: 'Panel' },
     { to: '/admin/slots', icon: <Clock className="size-5" />, label: 'Horarios' },
     { to: '/admin/users', icon: <Users className="size-5" />, label: 'Usuarios' },
+    { to: '/admin/pricing', icon: <DollarSign className="size-5" />, label: 'Precios' },
     { to: '/admin/bookings', icon: <CalendarDays className="size-5" />, label: 'Reservas' },
   ]
 

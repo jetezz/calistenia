@@ -9,7 +9,9 @@ import {
   AdminUsersPage,
   AdminUserDetailPage,
   AdminBookingsPage,
-  AdminPaymentRequestsPage
+  AdminPaymentRequestsPage,
+  AdminPricingPage,
+  AdminPaymentMethodsPage
 } from '@/features/admin'
 import {
   BookingPage,
@@ -70,6 +72,14 @@ export const router = createBrowserRouter([
       {
         path: 'admin/payment-requests',
         element: <AdminPaymentRequestsPage />,
+      },
+      {
+        path: 'admin/pricing',
+        element: <AdminPricingPage />,
+      },
+      {
+        path: 'admin/payment-methods',
+        element: <AdminPaymentMethodsPage />,
       },
       {
         path: '*',
