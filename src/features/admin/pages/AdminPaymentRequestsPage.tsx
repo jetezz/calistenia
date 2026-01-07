@@ -3,10 +3,7 @@ import { CreditCard, Check, X, Clock, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { PageLoadingState } from '@/components/common'
 import { usePaymentRequest, useProfile as useProfileHook, useToast } from '@/hooks'
 import { useProfile } from '@/features/auth'
@@ -17,9 +14,7 @@ type PaymentRequestWithUser = Database['public']['Tables']['payment_requests']['
 }
 
 export function AdminPaymentRequestsPage() {
-  const [processingRequest, setProcessingRequest] = useState<PaymentRequestWithUser | null>(null)
-  const [adminNotes, setAdminNotes] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingId, setProcessingId] = useState<string | null>(null)
   
   const { success, error: showError } = useToast()
   const { profile: adminProfile } = useProfile()
@@ -30,42 +25,38 @@ export function AdminPaymentRequestsPage() {
     updatePaymentRequest: updatePaymentRequestStatus
   } = usePaymentRequest()
   
-  // Cast to include user relations since service returns joined data
   const typedRequests = requests as PaymentRequestWithUser[]
   const { updateCredits } = useProfileHook()
 
-  const handleProcessRequest = async (status: 'approved' | 'rejected') => {
-    if (!processingRequest || !adminProfile) return
+  const handleProcessRequest = async (request: PaymentRequestWithUser, status: 'approved' | 'rejected') => {
+    if (!adminProfile || processingId) return
 
     try {
-      setIsProcessing(true)
+      setProcessingId(request.id)
       
       await updatePaymentRequestStatus(
-        processingRequest.id,
+        request.id,
         {
           status,
-          admin_notes: adminNotes || null,
+          admin_notes: null,
           processed_by: adminProfile.id,
           processed_at: new Date().toISOString()
         }
       )
       
-      // If approved, also update user credits
       if (status === 'approved') {
         await updateCredits(
-          processingRequest.user_id,
-          processingRequest.credits_requested
+          request.user_id,
+          request.credits_requested
         )
       }
       
       success(`Solicitud ${status === 'approved' ? 'aprobada' : 'rechazada'}`)
-      setProcessingRequest(null)
-      setAdminNotes('')
     } catch (error) {
       console.error('Error processing payment request:', error)
       showError('Error al procesar la solicitud')
     } finally {
-      setIsProcessing(false)
+      setProcessingId(null)
     }
   }
 
@@ -107,7 +98,7 @@ export function AdminPaymentRequestsPage() {
 
   useEffect(() => {
     fetchPaymentRequests()
-  }, [fetchPaymentRequests])
+  }, [])
 
   if (isLoading) {
     return <PageLoadingState message="Cargando solicitudes de pago..." />
@@ -180,18 +171,20 @@ export function AdminPaymentRequestsPage() {
                     <Button
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"
-                      onClick={() => setProcessingRequest(request)}
+                      onClick={() => handleProcessRequest(request, 'approved')}
+                      disabled={processingId === request.id}
                     >
                       <Check className="size-4 mr-1" />
-                      Aprobar
+                      {processingId === request.id ? 'Procesando...' : 'Aprobar'}
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => setProcessingRequest(request)}
+                      onClick={() => handleProcessRequest(request, 'rejected')}
+                      disabled={processingId === request.id}
                     >
                       <X className="size-4 mr-1" />
-                      Rechazar
+                      {processingId === request.id ? 'Procesando...' : 'Rechazar'}
                     </Button>
                   </div>
                 </div>
@@ -252,78 +245,6 @@ export function AdminPaymentRequestsPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* Processing Dialog */}
-      <Dialog 
-        open={!!processingRequest} 
-        onOpenChange={() => !isProcessing && setProcessingRequest(null)}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Procesar Solicitud de Pago</DialogTitle>
-          </DialogHeader>
-          
-          {processingRequest && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <Avatar className="size-12">
-                  <AvatarFallback>
-                    {getInitials(processingRequest.user.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium">
-                    {processingRequest.user.full_name || 'Sin nombre'}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {processingRequest.user.email}
-                  </div>
-                  <div className="text-sm font-medium">
-                    Solicita: {processingRequest.credits_requested} créditos
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="admin_notes">Notas del administrador (opcional)</Label>
-                <Textarea
-                  id="admin_notes"
-                  placeholder="Agregar notas sobre esta decisión..."
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setProcessingRequest(null)}
-              disabled={isProcessing}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => handleProcessRequest('rejected')}
-              disabled={isProcessing}
-            >
-              <X className="size-4 mr-1" />
-              Rechazar
-            </Button>
-            <Button
-              className="bg-green-600 hover:bg-green-700"
-              onClick={() => handleProcessRequest('approved')}
-              disabled={isProcessing}
-            >
-              <Check className="size-4 mr-1" />
-              Aprobar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

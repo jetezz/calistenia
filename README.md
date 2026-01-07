@@ -786,6 +786,19 @@ export function useClientDashboard() {
 
 ## Changelog
 
+### [2025-01-07] - Admin Notification System for Bookings
+- **NEW**: Simple real-time notification system for admin users
+- **NEW**: Notification badge in admin header showing new bookings count
+- **NEW**: System alerts section in admin dashboard showing new bookings
+- **NEW**: Automatic notification when client creates a booking (via Supabase realtime)
+- **NEW**: Click on notification navigates to bookings page and clears counter
+- **NEW**: Zustand store `notificationStore` for tracking new bookings count
+- **NEW**: Hook `useNotifications` with Supabase realtime subscriptions
+- **NEW**: Component `NotificationBell` for notification badge in header
+- **IMPROVED**: Admin receives immediate visual feedback for new bookings
+- **IMPROVED**: Counter resets when admin visits bookings page
+- **IMPROVED**: Clean and simple implementation using in-memory state
+
 ### [2025-01-07] - Payment Methods Management System
 - **NEW**: Dynamic payment methods configuration in admin panel
 - **NEW**: Admin page for managing payment methods (Bizum, PayPal, Bank Transfer, Cash, etc.)
@@ -851,38 +864,3 @@ export function useClientDashboard() {
 - **FIXED**: localStorage corruption issues by letting Supabase handle session storage
 - **IMPROVED**: AuthGuard component simplified (no admin role checking)
 - **IMPROVED**: Clean session management without manual state clearing on signOut
-
- 
- # #   C h a n g e l o g 
- 
- 
- 
- # # #   F i x e s 
- 
- -   * * A d m i n   S l o t s   P a g e * * :   F i x e d   i n f i n i t e   l o o p   c a u s e d   b y   u n s t a b l e   ` u s e T o a s t `   h o o k   r e f e r e n c e s   t r i g g e r i n g   u n n e c e s s a r y   r e - r e n d e r s   a n d   A P I   c a l l s . 
- 
- -   * * u s e T o a s t   H o o k * * :   M e m o i z e d   r e t u r n e d   f u n c t i o n s   t o   e n s u r e   s t a b i l i t y   a n d   p r e v e n t   d e p e n d e n c y   c y c l e s   i n   c o n s u m i n g   c o m p o n e n t s . 
- 
- 
- 
- # #   C h a n g e l o g 
- 
- 
- 
- # # #   F i x e s 
- 
- -   * * A d m i n   S l o t s   P a g e * * :   F i x e d   i n f i n i t e   l o o p   c a u s e d   b y   ` g e t A v a i l a b l e D a t e s I n R a n g e `   t r i g g e r i n g   g l o b a l   s t o r e   u p d a t e s ,   w h i c h   c a u s e d   ` A v a i l a b i l i t y C a l e n d a r `   t o   r e - r e n d e r   a n d   r e - f e t c h   i n   a   l o o p .   R e m o v e d   g l o b a l   l o a d i n g   s t a t e   u p d a t e s   f r o m   t h i s   s p e c i f i c   d a t a   f e t c h i n g   m e t h o d   a s   t h e   c o n s u m i n g   c o m p o n e n t   h a n d l e s   i t s   o w n   l o a d i n g   s t a t e . 
- 
- 
- 
- # #   C h a n g e l o g 
- 
- 
- 
- # # #   F i x e s 
- 
- -   * * C l i e n t   B o o k i n g   P a g e * * :   F i x e d   i n f i n i t e   l o o p   c a u s e d   b y   ` w e e k D a t e s `   b e i n g   r e c r e a t e d   o n   e v e r y   r e n d e r ,   t r i g g e r i n g   t h e   a v a i l a b i l i t y   f e t c h i n g   e f f e c t   r e p e a t e d l y .   M e m o i z e d   ` w e e k D a t e s `   u s i n g   ` u s e M e m o ` . 
- 
- -   * * T i m e   S l o t   H o o k * * :   R e m o v e d   g l o b a l   l o a d i n g   s t a t e   u p d a t e s   f r o m   ` f e t c h A v a i l a b l e S p o t s `   t o   p r e v e n t   u n n e c e s s a r y   r e - r e n d e r s   i n   c o n s u m i n g   c o m p o n e n t s ,   s i m i l a r   t o   t h e   f i x   f o r   ` g e t A v a i l a b l e D a t e s I n R a n g e ` . 
- 
- 

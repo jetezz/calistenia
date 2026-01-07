@@ -77,23 +77,23 @@ export function AdminUsersPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex flex-col gap-4">
+    <div className="container mx-auto px-3 py-4 pb-20 space-y-4 max-w-4xl">
+      <div className="space-y-3">
         <div>
-          <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold">Gestión de Usuarios</h1>
+          <p className="text-sm text-muted-foreground">
             Administra los clientes y sus créditos
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
+        <div className="space-y-3">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
             <Input
               placeholder="Buscar por nombre o email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-11"
             />
           </div>
           
@@ -101,7 +101,7 @@ export function AdminUsersPage() {
             value={paymentStatusFilter}
             onValueChange={setPaymentStatusFilter}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-11">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -114,9 +114,10 @@ export function AdminUsersPage() {
           </Select>
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span>Total: {allUsers.length} usuarios</span>
-          <span>Mostrando: {users.length} usuarios</span>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span>Total: {allUsers.length}</span>
+          <span>•</span>
+          <span>Mostrando: {users.length}</span>
         </div>
       </div>
 
@@ -125,7 +126,7 @@ export function AdminUsersPage() {
           <CardContent className="py-12 text-center">
             <Users className="size-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No hay usuarios registrados</h3>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Los nuevos usuarios aparecerán aquí cuando se registren
             </p>
           </CardContent>
@@ -135,89 +136,89 @@ export function AdminUsersPage() {
           <CardContent className="py-12 text-center">
             <Search className="size-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No se encontraron usuarios</h3>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Intenta ajustar los filtros de búsqueda
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="space-y-3">
           {users.map((user) => (
-            <Card key={user.id}>
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="flex items-center gap-3 flex-1">
-                    <Avatar className="size-12">
-                      <AvatarFallback className="text-lg font-medium">
+            <Card key={user.id} className="overflow-hidden">
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="size-12 shrink-0">
+                      <AvatarFallback className="text-base font-medium">
                         {getInitials(user.full_name)}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-lg truncate">
+                      <h3 className="font-semibold text-base leading-tight mb-1">
                         {user.full_name || 'Sin nombre'}
                       </h3>
                       <p className="text-sm text-muted-foreground truncate">
                         {user.email}
                       </p>
-                      {user.phone && (
-                        <p className="text-sm text-muted-foreground">
-                          {user.phone}
-                        </p>
-                      )}
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">{user.credits}</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col items-center justify-center bg-muted/50 rounded-lg p-3">
+                      <div className="text-2xl font-bold leading-none mb-1">{user.credits}</div>
                       <div className="text-xs text-muted-foreground">créditos</div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <Button
-                        size="sm"
+                        size="icon"
                         variant="outline"
+                        className="h-12 w-12"
                         onClick={() => handleCreditsChange(user.id, -1)}
                         disabled={user.credits === 0 || updatingCredits[user.id]}
                       >
-                        <Minus className="size-4" />
+                        <Minus className="size-5" />
                       </Button>
                       <Button
-                        size="sm"
+                        size="icon"
                         variant="outline"
+                        className="h-12 w-12"
                         onClick={() => handleCreditsChange(user.id, 1)}
                         disabled={updatingCredits[user.id]}
                       >
-                        <Plus className="size-4" />
+                        <Plus className="size-5" />
                       </Button>
                     </div>
-
-                    <div className="flex flex-col gap-2">
-                      {getPaymentStatusBadge(user.payment_status)}
-                      <Select
-                        value={user.payment_status}
-                        onValueChange={(value) => handlePaymentStatusChange(user.id, value)}
-                      >
-                        <SelectTrigger className="text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Sin definir</SelectItem>
-                          <SelectItem value="paid">Al día</SelectItem>
-                          <SelectItem value="pending">Pendiente</SelectItem>
-                          <SelectItem value="unpaid">No pagado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Button asChild size="sm" variant="ghost">
-                      <Link to={`/admin/users/${user.id}`}>
-                        <UserCheck className="size-4 mr-2" />
-                        Ver detalle
-                      </Link>
-                    </Button>
                   </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Estado de pago</span>
+                      {getPaymentStatusBadge(user.payment_status)}
+                    </div>
+                    <Select
+                      value={user.payment_status}
+                      onValueChange={(value) => handlePaymentStatusChange(user.id, value)}
+                    >
+                      <SelectTrigger className="h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin definir</SelectItem>
+                        <SelectItem value="paid">Al día</SelectItem>
+                        <SelectItem value="pending">Pendiente</SelectItem>
+                        <SelectItem value="unpaid">No pagado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button asChild className="w-full h-11" variant="outline">
+                    <Link to={`/admin/users/${user.id}`}>
+                      <UserCheck className="size-4 mr-2" />
+                      Ver detalle
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

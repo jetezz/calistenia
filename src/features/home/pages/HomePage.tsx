@@ -1,15 +1,18 @@
 import { Link, Navigate } from 'react-router-dom'
-import { CalendarDays, CreditCard, Info, Clock, AlertCircle, Calendar } from 'lucide-react'
+import { CalendarDays, CreditCard, Info, Clock, AlertCircle, Calendar, RefreshCw, ChevronDown } from 'lucide-react'
 import { useProfile } from '@/features/auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { PageLoadingState } from '@/components/common'
 import { useClientDashboard } from '@/features/client/hooks'
+import { useState } from 'react'
 
 export function HomePage() {
   const { profile, isAdmin, isLoading } = useProfile()
-  const { upcomingBookings, recentPaymentRequest, isLoading: dashboardLoading } = useClientDashboard()
+  const { upcomingBookings, recentPaymentRequests, allPaymentRequests, isLoading: dashboardLoading, refreshDashboard } = useClientDashboard()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showAllRequests, setShowAllRequests] = useState(false)
 
   if (isAdmin && !isLoading) {
     return <Navigate to="/admin" replace />
@@ -46,6 +49,12 @@ export function HomePage() {
 
   if (isLoading || dashboardLoading) {
     return <PageLoadingState message="Cargando tu perfil..." />
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await refreshDashboard()
+    setIsRefreshing(false)
   }
 
   return (
@@ -86,40 +95,76 @@ export function HomePage() {
       </Card>
 
       {/* Payment Request Status */}
-      {recentPaymentRequest && (
+      {recentPaymentRequests.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="size-5" />
-              Estado de tu Solicitud
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CreditCard className="size-5" />
+                Estado de tus Solicitudes
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="h-8 w-8"
+              >
+                <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div>
-                <div className="font-medium">
-                  Solicitud de {recentPaymentRequest.credits_requested} créditos
+            <div className="space-y-3">
+              {(showAllRequests ? allPaymentRequests : recentPaymentRequests).map((request) => (
+                <div key={request.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div>
+                    <div className="font-medium">
+                      Solicitud de {request.credits_requested} créditos
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatDate(request.created_at)}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge 
+                      variant={request.status === 'approved' ? 'default' : 
+                              request.status === 'pending' ? 'secondary' : 'destructive'}
+                      className={request.status === 'approved' ? 'bg-green-500 text-white' :
+                                request.status === 'pending' ? 'bg-yellow-500 text-white' : ''}
+                    >
+                      {request.status === 'approved' ? 'Aprobada' :
+                       request.status === 'pending' ? 'Pendiente' : 'Rechazada'}
+                    </Badge>
+                    {request.admin_notes && (
+                      <p className="text-xs text-muted-foreground italic">
+                        "{request.admin_notes}"
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {formatDate(recentPaymentRequest.created_at)}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <Badge 
-                  variant={recentPaymentRequest.status === 'approved' ? 'default' : 
-                          recentPaymentRequest.status === 'pending' ? 'secondary' : 'destructive'}
-                  className={recentPaymentRequest.status === 'approved' ? 'bg-green-500 text-white' :
-                            recentPaymentRequest.status === 'pending' ? 'bg-yellow-500 text-white' : ''}
+              ))}
+              {!showAllRequests && allPaymentRequests.length > 3 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => setShowAllRequests(true)}
                 >
-                  {recentPaymentRequest.status === 'approved' ? 'Aprobada' :
-                   recentPaymentRequest.status === 'pending' ? 'Pendiente' : 'Rechazada'}
-                </Badge>
-                {recentPaymentRequest.admin_notes && (
-                  <p className="text-xs text-muted-foreground italic">
-                    "{recentPaymentRequest.admin_notes}"
-                  </p>
-                )}
-              </div>
+                  <ChevronDown className="size-4 mr-2" />
+                  Cargar más ({allPaymentRequests.length - 3} más)
+                </Button>
+              )}
+              {showAllRequests && allPaymentRequests.length > 3 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => setShowAllRequests(false)}
+                >
+                  Mostrar menos
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

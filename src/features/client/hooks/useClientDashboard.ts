@@ -22,8 +22,8 @@ export function useClientDashboard() {
   } = usePaymentRequest()
   
   const isLoading = bookingsLoading || paymentsLoading
-  const upcomingBookings = allUpcomingBookings.slice(0, 3) // Show only next 3
-  const recentPaymentRequest = allPaymentRequests.length > 0 ? allPaymentRequests[0] : null
+  const upcomingBookings = allUpcomingBookings.slice(0, 3)
+  const recentPaymentRequests = allPaymentRequests.slice(0, 3)
 
   const fetchDashboardData = async () => {
     if (!user) return
@@ -43,7 +43,8 @@ export function useClientDashboard() {
 
   return {
     upcomingBookings,
-    recentPaymentRequest,
+    recentPaymentRequests,
+    allPaymentRequests,
     isLoading,
     refreshDashboard: fetchDashboardData
   }

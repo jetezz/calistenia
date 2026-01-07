@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAdminDashboard } from '../hooks'
+import { useNotifications } from '@/hooks'
 import { PageLoadingState } from '@/components/common'
 
 export function AdminDashboardPage() {
   const { stats, isLoading, refreshStats } = useAdminDashboard()
+  const { newBookingsCount, markAsSeen } = useNotifications(true, stats.todayBookings)
 
   if (isLoading) {
     return <PageLoadingState message="Cargando panel de administración..." />
@@ -19,28 +21,36 @@ export function AdminDashboardPage() {
       value: stats.todayBookings,
       description: 'Reservas confirmadas',
       icon: Calendar,
-      color: 'text-blue-600'
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      href: '/admin/bookings'
     },
     {
       title: 'Solicitudes Pendientes',
       value: stats.pendingPaymentRequests,
       description: 'Recargas por aprobar',
       icon: AlertCircle,
-      color: 'text-orange-600'
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      href: '/admin/payment-requests'
     },
     {
       title: 'Usuarios Totales',
       value: stats.totalUsers,
       description: 'Clientes registrados',
       icon: Users,
-      color: 'text-green-600'
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      href: '/admin/users'
     },
     {
       title: 'Horarios Activos',
       value: stats.activeTimeSlots,
       description: 'Franjas disponibles',
       icon: Clock,
-      color: 'text-purple-600'
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      href: '/admin/slots'
     }
   ]
 
@@ -49,122 +59,115 @@ export function AdminDashboardPage() {
       title: 'Gestionar Horarios',
       description: 'Crear y editar franjas horarias',
       href: '/admin/slots',
-      icon: Clock,
-      variant: 'default' as const
+      icon: Clock
     },
     {
       title: 'Ver Usuarios',
       description: 'Lista de todos los clientes',
       href: '/admin/users',
-      icon: Users,
-      variant: 'secondary' as const
+      icon: Users
     },
     {
       title: 'Gestionar Precios',
       description: 'Configurar paquetes de clases',
       href: '/admin/pricing',
-      icon: DollarSign,
-      variant: 'secondary' as const
+      icon: DollarSign
     },
     {
       title: 'Métodos de Pago',
       description: 'Configurar formas de pago',
       href: '/admin/payment-methods',
-      icon: Wallet,
-      variant: 'secondary' as const
+      icon: Wallet
     },
     {
       title: 'Solicitudes de Pago',
       description: 'Aprobar recargas de bonos',
       href: '/admin/payment-requests',
-      icon: CreditCard,
-      variant: 'outline' as const
+      icon: CreditCard
     },
     {
       title: 'Todas las Reservas',
       description: 'Historial completo',
       href: '/admin/bookings',
-      icon: Calendar,
-      variant: 'ghost' as const
+      icon: Calendar
     }
   ]
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-8">
+    <div className="container mx-auto px-3 py-4 pb-20 space-y-6 max-w-4xl">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Panel de Administración</h1>
+          <h1 className="text-2xl font-bold">Panel de Administración</h1>
           <Button onClick={refreshStats} variant="outline" size="sm">
             <TrendingUp className="size-4 mr-2" />
             Actualizar
           </Button>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Gestiona tu centro de calistenia desde aquí
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         {statsCards.map((stat) => {
           const Icon = stat.icon
           return (
-            <Card key={stat.title}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-muted ${stat.color}`}>
-                    <Icon className="size-5" />
+            <Link key={stat.title} to={stat.href} className="block">
+              <Card className="h-full transition-all hover:shadow-md hover:border-primary/50 active:scale-[0.98]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                      <Icon className={`size-6 ${stat.color}`} />
+                    </div>
+                    <div>
+                      <div className="text-3xl font-bold leading-none mb-1">{stat.value}</div>
+                      <p className="text-xs text-muted-foreground">
+                        {stat.description}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-2xl font-bold">{stat.value}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {stat.description}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           )
         })}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-3 md:gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Calendar className="size-5" />
               Acciones Rápidas
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs">
               Accede a las funciones más utilizadas
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3">
+          <CardContent className="grid gap-2">
             {quickActions.map((action) => {
               const Icon = action.icon
               return (
-                <Button
+                <Link
                   key={action.href}
-                  asChild
-                  variant={action.variant}
-                  className="justify-start h-auto p-4"
+                  to={action.href}
+                  className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent transition-colors"
                 >
-                  <Link to={action.href}>
-                    <div className="flex items-start gap-3">
-                      <Icon className="size-5 mt-0.5 shrink-0" />
-                      <div className="text-left">
-                        <div className="font-medium">{action.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {action.description}
-                        </div>
-                      </div>
+                  <div className="p-2 rounded-lg bg-muted shrink-0">
+                    <Icon className="size-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{action.title}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {action.description}
                     </div>
-                  </Link>
-                </Button>
+                  </div>
+                </Link>
               )
             })}
           </CardContent>
@@ -181,6 +184,27 @@ export function AdminDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            {newBookingsCount > 0 && (
+              <Link 
+                to="/admin/bookings"
+                onClick={markAsSeen}
+                className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"
+              >
+                <Calendar className="size-5 text-blue-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">
+                    {newBookingsCount} nueva{newBookingsCount > 1 ? 's' : ''} reserva{newBookingsCount > 1 ? 's' : ''}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Click para ver las reservas
+                  </p>
+                </div>
+                <Badge variant="secondary">
+                  {newBookingsCount}
+                </Badge>
+              </Link>
+            )}
+
             {stats.pendingPaymentRequests > 0 && (
               <Link 
                 to="/admin/payment-requests"
@@ -201,7 +225,7 @@ export function AdminDashboardPage() {
               </Link>
             )}
             
-            {stats.todayBookings === 0 && (
+            {newBookingsCount === 0 && stats.todayBookings === 0 && (
               <Link
                 to="/admin/bookings"
                 className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"

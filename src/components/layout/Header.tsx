@@ -1,6 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useAuth, useProfile } from '@/features/auth'
+import { NotificationBell } from '@/features/admin/components'
+import { useAdminDashboard } from '@/features/admin/hooks'
+import { useNotifications } from '@/hooks'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +13,8 @@ export function Header() {
   const { signOut } = useAuth()
   const { profile, isAdmin } = useProfile()
   const navigate = useNavigate()
+  const { stats } = useAdminDashboard()
+  const { markAsSeen } = useNotifications(isAdmin, stats.todayBookings)
 
   const handleSignOut = async () => {
     try {
@@ -44,6 +49,7 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <NotificationBell isAdmin={isAdmin} onMarkAsSeen={markAsSeen} />
           <div className="flex items-center gap-2">
             <Avatar className="size-9">
               <AvatarFallback className="text-sm font-medium">

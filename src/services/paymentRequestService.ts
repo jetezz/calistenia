@@ -79,7 +79,10 @@ export const paymentRequestService = {
       .from('payment_requests')
       .update(updates)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        user:profiles!payment_requests_user_id_fkey(id, full_name, email)
+      `)
       .single()
     
     if (error) throw error
