@@ -1,67 +1,72 @@
-import { Plus, Edit2, Trash2, Power, DollarSign } from 'lucide-react'
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { PageLoadingState } from '@/components/common'
-import { usePricingPackage } from '@/hooks'
-import { PricingPackageDialog } from '../components/PricingPackageDialog'
-import { toast } from 'sonner'
-import type { Database } from '@/types/database'
+import { Plus, Edit2, Trash2, Power, DollarSign } from "lucide-react";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageLoadingState } from "@/components/common";
+import { usePricingPackage } from "@/hooks";
+import { PricingPackageDialog } from "../components/PricingPackageDialog";
+import { toast } from "sonner";
+import type { Database } from "@/types/database";
 
-type PricingPackage = Database['public']['Tables']['pricing_packages']['Row']
+type PricingPackage = Database["public"]["Tables"]["pricing_packages"]["Row"];
 
 export function AdminPricingPage() {
-  const { packages, isLoading, refreshPackages, deletePackage, toggleActive } = usePricingPackage()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingPackage, setEditingPackage] = useState<PricingPackage | null>(null)
+  const { packages, isLoading, refreshPackages, deletePackage, toggleActive } =
+    usePricingPackage(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<PricingPackage | null>(
+    null
+  );
 
   const handleCreate = () => {
-    setEditingPackage(null)
-    setIsDialogOpen(true)
-  }
+    setEditingPackage(null);
+    setIsDialogOpen(true);
+  };
 
   const handleEdit = (pkg: PricingPackage) => {
-    setEditingPackage(pkg)
-    setIsDialogOpen(true)
-  }
+    setEditingPackage(pkg);
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar el paquete "${name}"?`)) {
-      return
+    if (
+      !confirm(`¿Estás seguro de que quieres eliminar el paquete "${name}"?`)
+    ) {
+      return;
     }
 
     try {
-      await deletePackage(id)
-      toast.success('Paquete eliminado correctamente')
-      await refreshPackages()
+      await deletePackage(id);
+      toast.success("Paquete eliminado correctamente");
+      await refreshPackages();
     } catch (error) {
-      console.error('Error deleting package:', error)
-      toast.error('Error al eliminar el paquete')
+      console.error("Error deleting package:", error);
+      toast.error("Error al eliminar el paquete");
     }
-  }
+  };
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      await toggleActive(id, !currentStatus)
-      toast.success(currentStatus ? 'Paquete desactivado' : 'Paquete activado')
-      await refreshPackages()
+      await toggleActive(id, !currentStatus);
+      toast.success(currentStatus ? "Paquete desactivado" : "Paquete activado");
+      await refreshPackages();
     } catch (error) {
-      console.error('Error toggling package status:', error)
-      toast.error('Error al cambiar el estado del paquete')
+      console.error("Error toggling package status:", error);
+      toast.error("Error al cambiar el estado del paquete");
     }
-  }
+  };
 
   const handleDialogClose = async (shouldRefresh: boolean) => {
-    setIsDialogOpen(false)
-    setEditingPackage(null)
+    setIsDialogOpen(false);
+    setEditingPackage(null);
     if (shouldRefresh) {
-      await refreshPackages()
+      await refreshPackages();
     }
-  }
+  };
 
   if (isLoading && packages.length === 0) {
-    return <PageLoadingState message="Cargando paquetes de precios..." />
+    return <PageLoadingState message="Cargando paquetes de precios..." />;
   }
 
   return (
@@ -81,20 +86,22 @@ export function AdminPricingPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {packages.map((pkg) => (
-          <Card key={pkg.id} className={!pkg.is_active ? 'opacity-60' : ''}>
+          <Card key={pkg.id} className={!pkg.is_active ? "opacity-60" : ""}>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="flex items-center gap-2">
                     <DollarSign className="size-5 text-green-600" />
                     {pkg.package_name && (
-                      <span className="text-primary">{pkg.package_name} - </span>
+                      <span className="text-primary">
+                        {pkg.package_name} -{" "}
+                      </span>
                     )}
                     {pkg.name}
                   </CardTitle>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant={pkg.is_active ? 'default' : 'secondary'}>
-                      {pkg.is_active ? 'Activo' : 'Inactivo'}
+                    <Badge variant={pkg.is_active ? "default" : "secondary"}>
+                      {pkg.is_active ? "Activo" : "Inactivo"}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       Orden: {pkg.display_order}
@@ -129,7 +136,7 @@ export function AdminPricingPage() {
                   onClick={() => handleToggleActive(pkg.id, pkg.is_active)}
                 >
                   <Power className="size-4 mr-1" />
-                  {pkg.is_active ? 'Desactivar' : 'Activar'}
+                  {pkg.is_active ? "Desactivar" : "Activar"}
                 </Button>
                 <Button
                   variant="outline"
@@ -155,7 +162,9 @@ export function AdminPricingPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <DollarSign className="size-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay paquetes configurados</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              No hay paquetes configurados
+            </h3>
             <p className="text-muted-foreground mb-4">
               Crea el primer paquete de precios para tus clientes
             </p>
@@ -173,5 +182,5 @@ export function AdminPricingPage() {
         editingPackage={editingPackage}
       />
     </div>
-  )
+  );
 }

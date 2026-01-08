@@ -1,108 +1,122 @@
-import { Plus, Edit2, Trash2, Power, Wallet, Mail, Phone, Landmark } from 'lucide-react'
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { PageLoadingState } from '@/components/common'
-import { usePaymentMethod } from '@/hooks'
-import { PaymentMethodDialog } from '../components/PaymentMethodDialog'
-import { toast } from 'sonner'
-import type { Database } from '@/types/database'
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Power,
+  Wallet,
+  Mail,
+  Phone,
+  Landmark,
+} from "lucide-react";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageLoadingState } from "@/components/common";
+import { usePaymentMethod } from "@/hooks";
+import { PaymentMethodDialog } from "../components/PaymentMethodDialog";
+import { toast } from "sonner";
+import type { Database } from "@/types/database";
 
-type PaymentMethod = Database['public']['Tables']['payment_methods']['Row']
+type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
 export const getPaymentMethodIcon = (type: string) => {
   switch (type) {
-    case 'bizum':
-      return Phone
-    case 'paypal':
-      return Mail
-    case 'bank_transfer':
-      return Landmark
-    case 'cash':
-      return Wallet
+    case "bizum":
+      return Phone;
+    case "paypal":
+      return Mail;
+    case "bank_transfer":
+      return Landmark;
+    case "cash":
+      return Wallet;
     default:
-      return Wallet
+      return Wallet;
   }
-}
+};
 
 const getPaymentIcon = (type: string) => {
   switch (type) {
-    case 'bizum':
-      return <Phone className="size-5 text-green-600" />
-    case 'paypal':
-      return <Mail className="size-5 text-blue-600" />
-    case 'bank_transfer':
-      return <Landmark className="size-5 text-purple-600" />
-    case 'cash':
-      return <Wallet className="size-5 text-orange-600" />
+    case "bizum":
+      return <Phone className="size-5 text-green-600" />;
+    case "paypal":
+      return <Mail className="size-5 text-blue-600" />;
+    case "bank_transfer":
+      return <Landmark className="size-5 text-purple-600" />;
+    case "cash":
+      return <Wallet className="size-5 text-orange-600" />;
     default:
-      return <Wallet className="size-5 text-gray-600" />
+      return <Wallet className="size-5 text-gray-600" />;
   }
-}
+};
 
 const getPaymentTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    bizum: 'Bizum',
-    paypal: 'PayPal',
-    bank_transfer: 'Transferencia',
-    cash: 'Efectivo',
-    other: 'Otro'
-  }
-  return labels[type] || type
-}
+    bizum: "Bizum",
+    paypal: "PayPal",
+    bank_transfer: "Transferencia",
+    cash: "Efectivo",
+    other: "Otro",
+  };
+  return labels[type] || type;
+};
 
 export function AdminPaymentMethodsPage() {
-  const { methods, isLoading, refreshMethods, deleteMethod, toggleActive } = usePaymentMethod()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null)
+  const { methods, isLoading, refreshMethods, deleteMethod, toggleActive } =
+    usePaymentMethod(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(
+    null
+  );
 
   const handleCreate = () => {
-    setEditingMethod(null)
-    setIsDialogOpen(true)
-  }
+    setEditingMethod(null);
+    setIsDialogOpen(true);
+  };
 
   const handleEdit = (method: PaymentMethod) => {
-    setEditingMethod(method)
-    setIsDialogOpen(true)
-  }
+    setEditingMethod(method);
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar el método "${name}"?`)) {
-      return
+    if (
+      !confirm(`¿Estás seguro de que quieres eliminar el método "${name}"?`)
+    ) {
+      return;
     }
 
     try {
-      await deleteMethod(id)
-      toast.success('Método de pago eliminado correctamente')
-      await refreshMethods()
+      await deleteMethod(id);
+      toast.success("Método de pago eliminado correctamente");
+      await refreshMethods();
     } catch (error) {
-      console.error('Error deleting payment method:', error)
-      toast.error('Error al eliminar el método de pago')
+      console.error("Error deleting payment method:", error);
+      toast.error("Error al eliminar el método de pago");
     }
-  }
+  };
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      await toggleActive(id, !currentStatus)
-      toast.success(currentStatus ? 'Método desactivado' : 'Método activado')
-      await refreshMethods()
+      await toggleActive(id, !currentStatus);
+      toast.success(currentStatus ? "Método desactivado" : "Método activado");
+      await refreshMethods();
     } catch (error) {
-      console.error('Error toggling method status:', error)
-      toast.error('Error al cambiar el estado del método')
+      console.error("Error toggling method status:", error);
+      toast.error("Error al cambiar el estado del método");
     }
-  }
+  };
 
   const handleDialogClose = async (shouldRefresh: boolean) => {
-    setIsDialogOpen(false)
-    setEditingMethod(null)
+    setIsDialogOpen(false);
+    setEditingMethod(null);
     if (shouldRefresh) {
-      await refreshMethods()
+      await refreshMethods();
     }
-  }
+  };
 
   if (isLoading && methods.length === 0) {
-    return <PageLoadingState message="Cargando métodos de pago..." />
+    return <PageLoadingState message="Cargando métodos de pago..." />;
   }
 
   return (
@@ -122,7 +136,10 @@ export function AdminPaymentMethodsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {methods.map((method) => (
-          <Card key={method.id} className={!method.is_active ? 'opacity-60' : ''}>
+          <Card
+            key={method.id}
+            className={!method.is_active ? "opacity-60" : ""}
+          >
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -131,8 +148,8 @@ export function AdminPaymentMethodsPage() {
                     {method.name}
                   </CardTitle>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant={method.is_active ? 'default' : 'secondary'}>
-                      {method.is_active ? 'Activo' : 'Inactivo'}
+                    <Badge variant={method.is_active ? "default" : "secondary"}>
+                      {method.is_active ? "Activo" : "Inactivo"}
                     </Badge>
                     <Badge variant="outline" className="text-xs">
                       {getPaymentTypeLabel(method.type)}
@@ -155,13 +172,17 @@ export function AdminPaymentMethodsPage() {
                 {method.contact_email && (
                   <div className="flex items-center gap-2">
                     <Mail className="size-4 text-muted-foreground" />
-                    <span className="font-mono text-xs break-all">{method.contact_email}</span>
+                    <span className="font-mono text-xs break-all">
+                      {method.contact_email}
+                    </span>
                   </div>
                 )}
                 {method.bank_account && (
                   <div className="flex items-center gap-2">
                     <Landmark className="size-4 text-muted-foreground" />
-                    <span className="font-mono text-xs">{method.bank_account}</span>
+                    <span className="font-mono text-xs">
+                      {method.bank_account}
+                    </span>
                   </div>
                 )}
                 {method.instructions && (
@@ -176,10 +197,12 @@ export function AdminPaymentMethodsPage() {
                   variant="outline"
                   size="sm"
                   className="flex-1"
-                  onClick={() => handleToggleActive(method.id, method.is_active)}
+                  onClick={() =>
+                    handleToggleActive(method.id, method.is_active)
+                  }
                 >
                   <Power className="size-4 mr-1" />
-                  {method.is_active ? 'Desactivar' : 'Activar'}
+                  {method.is_active ? "Desactivar" : "Activar"}
                 </Button>
                 <Button
                   variant="outline"
@@ -205,7 +228,9 @@ export function AdminPaymentMethodsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Wallet className="size-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay métodos de pago configurados</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              No hay métodos de pago configurados
+            </h3>
             <p className="text-muted-foreground mb-4">
               Crea el primer método de pago para tus clientes
             </p>
@@ -223,5 +248,5 @@ export function AdminPaymentMethodsPage() {
         editingMethod={editingMethod}
       />
     </div>
-  )
+  );
 }

@@ -1,52 +1,59 @@
-import { useEffect } from 'react'
-import { usePricingPackageStore } from '@/stores'
-import type { Database } from '@/types/database'
+import { useEffect } from "react";
+import { usePricingPackageStore } from "@/stores";
+import type { Database } from "@/types/database";
 
-type PricingPackageInsert = Database['public']['Tables']['pricing_packages']['Insert']
-type PricingPackageUpdate = Database['public']['Tables']['pricing_packages']['Update']
+type PricingPackageInsert =
+  Database["public"]["Tables"]["pricing_packages"]["Insert"];
+type PricingPackageUpdate =
+  Database["public"]["Tables"]["pricing_packages"]["Update"];
 
-export function usePricingPackage() {
-  const { 
-    packages, 
-    isLoading, 
+export function usePricingPackage(loadAll = false) {
+  const {
+    packages,
+    isLoading,
     error,
+    initialized,
     fetchPackages,
     fetchActivePackages,
     createPackage,
     updatePackage,
     deletePackage,
-    toggleActive
-  } = usePricingPackageStore()
+    toggleActive,
+  } = usePricingPackageStore();
 
   useEffect(() => {
-    if (packages.length === 0 && !isLoading) {
-      fetchActivePackages()
+    if (!initialized && !isLoading) {
+      if (loadAll) {
+        fetchPackages();
+      } else {
+        fetchActivePackages();
+      }
     }
-  }, [])
+  }, [initialized, isLoading, loadAll, fetchPackages, fetchActivePackages]);
 
   const handleCreate = async (pricingPackage: PricingPackageInsert) => {
-    return createPackage(pricingPackage)
-  }
+    return createPackage(pricingPackage);
+  };
 
   const handleUpdate = async (id: string, updates: PricingPackageUpdate) => {
-    return updatePackage(id, updates)
-  }
+    return updatePackage(id, updates);
+  };
 
   const handleDelete = async (id: string) => {
-    return deletePackage(id)
-  }
+    return deletePackage(id);
+  };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
-    return toggleActive(id, isActive)
-  }
+    return toggleActive(id, isActive);
+  };
 
   const refreshPackages = () => {
-    return fetchPackages()
-  }
+    return fetchPackages();
+  };
 
   const refreshActivePackages = () => {
-    return fetchActivePackages()
-  }
+    return fetchActivePackages();
+  };
 
   return {
     packages,
@@ -57,6 +64,6 @@ export function usePricingPackage() {
     deletePackage: handleDelete,
     toggleActive: handleToggleActive,
     refreshPackages,
-    refreshActivePackages
-  }
+    refreshActivePackages,
+  };
 }
