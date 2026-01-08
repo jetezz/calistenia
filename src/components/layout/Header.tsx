@@ -1,45 +1,51 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { LogOut } from 'lucide-react'
-import { useAuth, useProfile } from '@/features/auth'
-import { NotificationBell } from '@/features/admin/components'
-import { useAdminDashboard } from '@/features/admin/hooks'
-import { useNotifications } from '@/hooks'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
+import { Link, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import { useAuth, useProfile } from "@/features/auth";
+import { NotificationBell } from "@/features/admin/components";
+import { useAdminData, useNotifications } from "@/hooks";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export function Header() {
-  const { signOut } = useAuth()
-  const { profile, isAdmin } = useProfile()
-  const navigate = useNavigate()
-  const { stats } = useAdminDashboard()
-  const { markAsSeen } = useNotifications(isAdmin, stats.todayBookings)
+  const { signOut } = useAuth();
+  const { profile, isAdmin } = useProfile();
+  const navigate = useNavigate();
+  const { bookings } = useAdminData();
+  const today = new Date().toISOString().split("T")[0];
+  const todayBookingsCount = bookings.filter(
+    (b) => b.booking_date === today && b.status === "confirmed"
+  ).length;
+  const { markAsSeen } = useNotifications(isAdmin, todayBookingsCount);
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      navigate('/login', { replace: true })
+      await signOut();
+      navigate("/login", { replace: true });
     } catch (error) {
-      toast.error('Error al cerrar sesión')
-      console.error('Error signing out:', error)
+      toast.error("Error al cerrar sesión");
+      console.error("Error signing out:", error);
     }
-  }
+  };
 
   const getInitials = (name: string | null) => {
-    if (!name) return 'U'
+    if (!name) return "U";
     return name
-      .split(' ')
+      .split(" ")
       .map((n) => n[0])
-      .join('')
+      .join("")
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between min-h-[64px]">
-        <Link to={isAdmin ? "/admin" : "/"} className="flex items-center gap-2 touch-none">
+        <Link
+          to={isAdmin ? "/admin" : "/"}
+          className="flex items-center gap-2 touch-none"
+        >
           <span className="text-lg font-bold">Calistenia Emérita</span>
           {isAdmin && (
             <Badge variant="secondary" className="text-xs">
@@ -72,5 +78,5 @@ export function Header() {
         </div>
       </nav>
     </header>
-  )
+  );
 }

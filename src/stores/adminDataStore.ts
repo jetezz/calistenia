@@ -39,8 +39,11 @@ export const useAdminDataStore = create<AdminDataStore>((set, get) => ({
 
   // Load critical dashboard data
   loadDashboardData: async () => {
-    // Don't reload if already loaded
-    if (get().dashboardInitialized && !get().dashboardError) {
+    // Don't reload if already loaded or loading
+    if (
+      (get().dashboardInitialized && !get().dashboardError) ||
+      get().isDashboardLoading
+    ) {
       return;
     }
 
@@ -67,8 +70,11 @@ export const useAdminDataStore = create<AdminDataStore>((set, get) => ({
 
   // Load secondary data in background
   loadSecondaryData: async () => {
-    // Don't reload if already loaded
-    if (get().secondaryInitialized && !get().secondaryError) {
+    // Don't reload if already loaded or loading
+    if (
+      (get().secondaryInitialized && !get().secondaryError) ||
+      get().isSecondaryLoading
+    ) {
       return;
     }
 

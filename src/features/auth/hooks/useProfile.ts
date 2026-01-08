@@ -1,80 +1,97 @@
-import { useState, useEffect } from 'react'
-import type { Database } from '@/types/database'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from './useAuth'
-
-type Profile = Database['public']['Tables']['profiles']['Row']
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "./useAuth";
+import { useProfileStore } from "@/stores/profileStore";
 
 export function useProfile() {
-  const { user } = useAuth()
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const { user } = useAuth();
+  const {
+    currentProfile: profile,
+    setCurrentProfile,
+    loading: isLoading,
+    setLoading: setIsLoading,
+  } = useProfileStore();
 
   useEffect(() => {
     if (!user) {
-      setProfile(null)
-      return
+      // If there's a profile in the store but no user, clear it
+      if (useProfileStore.getState().currentProfile) {
+        setCurrentProfile(null);
+      }
+      return;
     }
 
-    let mounted = true
+    const checkAndFetchProfile = async () => {
+      // Access the most current state directly from the store to avoid race conditions
+      // where multiple components might call this effect simultaneously with stale closure values
+      const state = useProfileStore.getState();
 
-    const fetchProfile = async () => {
-      setIsLoading(true)
+      // If we already have the correct profile loaded, don't fetch
+      if (state.currentProfile?.id === user.id) {
+        return;
+      }
+
+      // If a fetch is already in progress, don't start another one
+      if (state.loading) {
+        return;
+      }
+
+      setIsLoading(true);
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
 
         if (error) {
-          console.error('Error fetching profile:', error)
-          if (mounted) setProfile(null)
+          console.error("Error fetching profile:", error);
+          setCurrentProfile(null);
         } else {
-          if (mounted) setProfile(data)
+          setCurrentProfile(data);
         }
       } catch (error) {
-        console.error('Profile fetch failed:', error)
-        if (mounted) setProfile(null)
+        console.error("Profile fetch failed:", error);
+        setCurrentProfile(null);
       } finally {
-        if (mounted) setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchProfile()
+    checkAndFetchProfile();
 
     return () => {
-      mounted = false
-    }
-  }, [user])
+      // No cleanup needed
+    };
+  }, [user, setCurrentProfile, setIsLoading]);
 
   const refreshProfile = async () => {
-    if (!user) return
+    if (!user) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
       if (error) {
-        console.error('Error refreshing profile:', error)
+        console.error("Error refreshing profile:", error);
       } else {
-        setProfile(data)
+        setCurrentProfile(data);
       }
     } catch (error) {
-      console.error('Profile refresh failed:', error)
+      console.error("Profile refresh failed:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return {
     profile,
     isLoading,
-    isAdmin: profile?.role === 'admin',
-    refreshProfile
-  }
+    isAdmin: profile?.role === "admin",
+    refreshProfile,
+  };
 }
