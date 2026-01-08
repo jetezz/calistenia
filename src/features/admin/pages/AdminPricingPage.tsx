@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoadingState } from "@/components/common";
-import { usePricingPackage } from "@/hooks";
+import { useAdminData } from "@/hooks";
+import { usePricingPackageStore } from "@/stores";
 import { PricingPackageDialog } from "../components/PricingPackageDialog";
 import { toast } from "sonner";
 import type { Database } from "@/types/database";
@@ -12,8 +13,12 @@ import type { Database } from "@/types/database";
 type PricingPackage = Database["public"]["Tables"]["pricing_packages"]["Row"];
 
 export function AdminPricingPage() {
-  const { packages, isLoading, refreshPackages, deletePackage, toggleActive } =
-    usePricingPackage(true);
+  const {
+    pricingPackages: packages,
+    isSecondaryLoading: isLoading,
+    refresh,
+  } = useAdminData();
+  const { deletePackage, toggleActive } = usePricingPackageStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<PricingPackage | null>(
     null
@@ -39,7 +44,7 @@ export function AdminPricingPage() {
     try {
       await deletePackage(id);
       toast.success("Paquete eliminado correctamente");
-      await refreshPackages();
+      await refresh();
     } catch (error) {
       console.error("Error deleting package:", error);
       toast.error("Error al eliminar el paquete");
@@ -49,8 +54,10 @@ export function AdminPricingPage() {
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
       await toggleActive(id, !currentStatus);
-      toast.success(currentStatus ? "Paquete desactivado" : "Paquete activado");
-      await refreshPackages();
+      toast.success(
+        `Paquete ${!currentStatus ? "activado" : "desactivado"} correctamente`
+      );
+      await refresh();
     } catch (error) {
       console.error("Error toggling package status:", error);
       toast.error("Error al cambiar el estado del paquete");
@@ -61,7 +68,7 @@ export function AdminPricingPage() {
     setIsDialogOpen(false);
     setEditingPackage(null);
     if (shouldRefresh) {
-      await refreshPackages();
+      await refresh();
     }
   };
 

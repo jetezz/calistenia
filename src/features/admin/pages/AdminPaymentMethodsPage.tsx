@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoadingState } from "@/components/common";
-import { usePaymentMethod } from "@/hooks";
+import { useAdminData } from "@/hooks";
+import { usePaymentMethodStore } from "@/stores";
 import { PaymentMethodDialog } from "../components/PaymentMethodDialog";
 import { toast } from "sonner";
 import type { Database } from "@/types/database";
@@ -62,8 +63,12 @@ const getPaymentTypeLabel = (type: string) => {
 };
 
 export function AdminPaymentMethodsPage() {
-  const { methods, isLoading, refreshMethods, deleteMethod, toggleActive } =
-    usePaymentMethod(true);
+  const {
+    paymentMethods: methods,
+    isSecondaryLoading: isLoading,
+    refresh,
+  } = useAdminData();
+  const { deleteMethod, toggleActive } = usePaymentMethodStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(
     null
@@ -89,7 +94,7 @@ export function AdminPaymentMethodsPage() {
     try {
       await deleteMethod(id);
       toast.success("Método de pago eliminado correctamente");
-      await refreshMethods();
+      await refresh();
     } catch (error) {
       console.error("Error deleting payment method:", error);
       toast.error("Error al eliminar el método de pago");
@@ -100,7 +105,7 @@ export function AdminPaymentMethodsPage() {
     try {
       await toggleActive(id, !currentStatus);
       toast.success(currentStatus ? "Método desactivado" : "Método activado");
-      await refreshMethods();
+      await refresh();
     } catch (error) {
       console.error("Error toggling method status:", error);
       toast.error("Error al cambiar el estado del método");
@@ -111,7 +116,7 @@ export function AdminPaymentMethodsPage() {
     setIsDialogOpen(false);
     setEditingMethod(null);
     if (shouldRefresh) {
-      await refreshMethods();
+      await refresh();
     }
   };
 
