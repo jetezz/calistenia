@@ -1,110 +1,148 @@
-import { Link } from 'react-router-dom'
-import { Calendar, Users, Clock, CreditCard, AlertCircle, TrendingUp, DollarSign, Wallet, Settings } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useAdminDashboard } from '../hooks'
-import { useNotifications } from '@/hooks'
-import { PageLoadingState } from '@/components/common'
+import { Link } from "react-router-dom";
+import {
+  Calendar,
+  Users,
+  Clock,
+  CreditCard,
+  AlertCircle,
+  TrendingUp,
+  DollarSign,
+  Wallet,
+  Settings,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useAdminData } from "@/hooks";
+import { useNotifications } from "@/hooks";
+import { PageLoadingState } from "@/components/common";
 
 export function AdminDashboardPage() {
-  const { stats, isLoading, refreshStats } = useAdminDashboard()
-  const { newBookingsCount, markAsSeen } = useNotifications(true, stats.todayBookings)
+  const {
+    profiles,
+    bookings,
+    pendingPaymentRequests,
+    activeTimeSlots,
+    isDashboardLoading,
+    refresh,
+  } = useAdminData();
 
-  if (isLoading) {
-    return <PageLoadingState message="Cargando panel de administración..." />
+  // Calculate stats from the data
+  const stats = {
+    todayBookings: bookings.filter((b) => {
+      const today = new Date().toISOString().split("T")[0];
+      return b.booking_date === today && b.status === "confirmed";
+    }).length,
+    pendingPaymentRequests: pendingPaymentRequests.length,
+    totalUsers: profiles.filter((p) => p.role === "client").length,
+    activeTimeSlots: activeTimeSlots.length,
+  };
+
+  const { newBookingsCount, markAsSeen } = useNotifications(
+    true,
+    stats.todayBookings
+  );
+
+  if (isDashboardLoading) {
+    return <PageLoadingState message="Cargando panel de administración..." />;
   }
 
   const statsCards = [
     {
-      title: 'Clases de Hoy',
+      title: "Clases de Hoy",
       value: stats.todayBookings,
-      description: 'Reservas confirmadas',
+      description: "Reservas confirmadas",
       icon: Calendar,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      href: '/admin/bookings'
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      href: "/admin/bookings",
     },
     {
-      title: 'Solicitudes Pendientes',
+      title: "Solicitudes Pendientes",
       value: stats.pendingPaymentRequests,
-      description: 'Recargas por aprobar',
+      description: "Recargas por aprobar",
       icon: AlertCircle,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      href: '/admin/payment-requests'
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      href: "/admin/payment-requests",
     },
     {
-      title: 'Usuarios Totales',
+      title: "Usuarios Totales",
       value: stats.totalUsers,
-      description: 'Clientes registrados',
+      description: "Clientes registrados",
       icon: Users,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      href: '/admin/users'
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      href: "/admin/users",
     },
     {
-      title: 'Horarios Activos',
+      title: "Horarios Activos",
       value: stats.activeTimeSlots,
-      description: 'Franjas disponibles',
+      description: "Franjas disponibles",
       icon: Clock,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      href: '/admin/slots'
-    }
-  ]
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      href: "/admin/slots",
+    },
+  ];
 
   const quickActions = [
     {
-      title: 'Gestionar Horarios',
-      description: 'Crear y editar franjas horarias',
-      href: '/admin/slots',
-      icon: Clock
+      title: "Gestionar Horarios",
+      description: "Crear y editar franjas horarias",
+      href: "/admin/slots",
+      icon: Clock,
     },
     {
-      title: 'Ver Usuarios',
-      description: 'Lista de todos los clientes',
-      href: '/admin/users',
-      icon: Users
+      title: "Ver Usuarios",
+      description: "Lista de todos los clientes",
+      href: "/admin/users",
+      icon: Users,
     },
     {
-      title: 'Gestionar Precios',
-      description: 'Configurar paquetes de clases',
-      href: '/admin/pricing',
-      icon: DollarSign
+      title: "Gestionar Precios",
+      description: "Configurar paquetes de clases",
+      href: "/admin/pricing",
+      icon: DollarSign,
     },
     {
-      title: 'Métodos de Pago',
-      description: 'Configurar formas de pago',
-      href: '/admin/payment-methods',
-      icon: Wallet
+      title: "Métodos de Pago",
+      description: "Configurar formas de pago",
+      href: "/admin/payment-methods",
+      icon: Wallet,
     },
     {
-      title: 'Configuración',
-      description: 'Políticas de cancelación',
-      href: '/admin/settings',
-      icon: Settings
+      title: "Configuración",
+      description: "Políticas de cancelación",
+      href: "/admin/settings",
+      icon: Settings,
     },
     {
-      title: 'Solicitudes de Pago',
-      description: 'Aprobar recargas de bonos',
-      href: '/admin/payment-requests',
-      icon: CreditCard
+      title: "Solicitudes de Pago",
+      description: "Aprobar recargas de bonos",
+      href: "/admin/payment-requests",
+      icon: CreditCard,
     },
     {
-      title: 'Todas las Reservas',
-      description: 'Historial completo',
-      href: '/admin/bookings',
-      icon: Calendar
-    }
-  ]
+      title: "Todas las Reservas",
+      description: "Historial completo",
+      href: "/admin/bookings",
+      icon: Calendar,
+    },
+  ];
 
   return (
     <div className="container mx-auto px-3 py-4 pb-20 space-y-6 max-w-4xl">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Panel de Administración</h1>
-          <Button onClick={refreshStats} variant="outline" size="sm">
+          <Button onClick={refresh} variant="outline" size="sm">
             <TrendingUp className="size-4 mr-2" />
             Actualizar
           </Button>
@@ -116,7 +154,7 @@ export function AdminDashboardPage() {
 
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         {statsCards.map((stat) => {
-          const Icon = stat.icon
+          const Icon = stat.icon;
           return (
             <Link key={stat.title} to={stat.href} className="block">
               <Card className="h-full transition-all hover:shadow-md hover:border-primary/50 active:scale-[0.98]">
@@ -131,7 +169,9 @@ export function AdminDashboardPage() {
                       <Icon className={`size-6 ${stat.color}`} />
                     </div>
                     <div>
-                      <div className="text-3xl font-bold leading-none mb-1">{stat.value}</div>
+                      <div className="text-3xl font-bold leading-none mb-1">
+                        {stat.value}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {stat.description}
                       </p>
@@ -140,7 +180,7 @@ export function AdminDashboardPage() {
                 </CardContent>
               </Card>
             </Link>
-          )
+          );
         })}
       </div>
 
@@ -157,7 +197,7 @@ export function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="grid gap-2">
             {quickActions.map((action) => {
-              const Icon = action.icon
+              const Icon = action.icon;
               return (
                 <Link
                   key={action.href}
@@ -174,7 +214,7 @@ export function AdminDashboardPage() {
                     </div>
                   </div>
                 </Link>
-              )
+              );
             })}
           </CardContent>
         </Card>
@@ -185,13 +225,11 @@ export function AdminDashboardPage() {
               <AlertCircle className="size-5" />
               Alertas del Sistema
             </CardTitle>
-            <CardDescription>
-              Notificaciones importantes
-            </CardDescription>
+            <CardDescription>Notificaciones importantes</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {newBookingsCount > 0 && (
-              <Link 
+              <Link
                 to="/admin/bookings"
                 onClick={markAsSeen}
                 className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"
@@ -199,27 +237,27 @@ export function AdminDashboardPage() {
                 <Calendar className="size-5 text-blue-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">
-                    {newBookingsCount} nueva{newBookingsCount > 1 ? 's' : ''} reserva{newBookingsCount > 1 ? 's' : ''}
+                    {newBookingsCount} nueva{newBookingsCount > 1 ? "s" : ""}{" "}
+                    reserva{newBookingsCount > 1 ? "s" : ""}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Click para ver las reservas
                   </p>
                 </div>
-                <Badge variant="secondary">
-                  {newBookingsCount}
-                </Badge>
+                <Badge variant="secondary">{newBookingsCount}</Badge>
               </Link>
             )}
 
             {stats.pendingPaymentRequests > 0 && (
-              <Link 
+              <Link
                 to="/admin/payment-requests"
                 className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors cursor-pointer"
               >
                 <CreditCard className="size-5 text-orange-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">
-                    {stats.pendingPaymentRequests} solicitudes de pago pendientes
+                    {stats.pendingPaymentRequests} solicitudes de pago
+                    pendientes
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Revisa las recargas de bonos
@@ -230,7 +268,7 @@ export function AdminDashboardPage() {
                 </Badge>
               </Link>
             )}
-            
+
             {newBookingsCount === 0 && stats.todayBookings === 0 && (
               <Link
                 to="/admin/bookings"
@@ -255,9 +293,7 @@ export function AdminDashboardPage() {
               >
                 <Clock className="size-5 text-red-600" />
                 <div>
-                  <p className="text-sm font-medium">
-                    No hay horarios activos
-                  </p>
+                  <p className="text-sm font-medium">No hay horarios activos</p>
                   <p className="text-xs text-muted-foreground">
                     Crea franjas horarias para permitir reservas
                   </p>
@@ -265,22 +301,24 @@ export function AdminDashboardPage() {
               </Link>
             )}
 
-            {stats.pendingPaymentRequests === 0 && stats.todayBookings > 0 && stats.activeTimeSlots > 0 && (
-              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                <TrendingUp className="size-5 text-green-600" />
-                <div>
-                  <p className="text-sm font-medium">
-                    Todo funcionando correctamente
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Sistema operativo sin alertas
-                  </p>
+            {stats.pendingPaymentRequests === 0 &&
+              stats.todayBookings > 0 &&
+              stats.activeTimeSlots > 0 && (
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <TrendingUp className="size-5 text-green-600" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      Todo funcionando correctamente
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Sistema operativo sin alertas
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }

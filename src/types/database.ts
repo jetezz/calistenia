@@ -16,31 +16,31 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          created_at: string | null
+          description: string | null
           id: string
           key: string
-          value: Json
-          description: string | null
-          updated_at: string
+          updated_at: string | null
           updated_by: string | null
-          created_at: string
+          value: Json
         }
         Insert: {
+          created_at?: string | null
+          description?: string | null
           id?: string
           key: string
-          value: Json
-          description?: string | null
-          updated_at?: string
+          updated_at?: string | null
           updated_by?: string | null
-          created_at?: string
+          value: Json
         }
         Update: {
+          created_at?: string | null
+          description?: string | null
           id?: string
           key?: string
-          value?: Json
-          description?: string | null
-          updated_at?: string
+          updated_at?: string | null
           updated_by?: string | null
-          created_at?: string
+          value?: Json
         }
         Relationships: [
           {
@@ -206,6 +206,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "payment_requests_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "payment_requests_processed_by_fkey"
             columns: ["processed_by"]
             isOneToOne: false
@@ -348,6 +355,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_user: {
+        Args: { p_email: string; p_full_name: string; p_password: string }
+        Returns: string
+      }
+      admin_delete_user: { Args: { p_user_id: string }; Returns: boolean }
+      get_admin_dashboard_data: { Args: never; Returns: Json }
+      get_admin_secondary_data: { Args: never; Returns: Json }
       get_available_spots: {
         Args: { slot_id: string; target_date: string }
         Returns: number
@@ -355,14 +369,6 @@ export type Database = {
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { user_id: string }; Returns: boolean }
-      admin_create_user: {
-        Args: { p_email: string; p_password: string; p_full_name: string }
-        Returns: string
-      }
-      admin_delete_user: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
     }
     Enums: {
       [_ in never]: never
