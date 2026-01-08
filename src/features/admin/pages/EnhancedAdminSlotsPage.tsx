@@ -1,171 +1,205 @@
-import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Clock, Users, Calendar, CalendarDays, User, UserPlus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PageLoadingState } from '@/components/common'
-import { useTimeSlots } from '../hooks'
-import { EnhancedTimeSlotDialog, AddUserToSlotDialog } from '../components'
-import { AvailabilityCalendar } from '../components/AvailabilityCalendar'
-import { bookingService } from '@/services'
-import type { Database } from '@/types/database'
+import { useState, useEffect } from "react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Clock,
+  Users,
+  Calendar,
+  CalendarDays,
+  User,
+  UserPlus,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageLoadingState } from "@/components/common";
+import { useAdminData } from "@/hooks";
+import { timeSlotService } from "@/services/timeSlotService";
+import { EnhancedTimeSlotDialog, AddUserToSlotDialog } from "../components";
+import { AvailabilityCalendar } from "../components/AvailabilityCalendar";
+import { bookingService } from "@/services";
+import type { Database } from "@/types/database";
 
-type TimeSlot = Database['public']['Tables']['time_slots']['Row']
-type Booking = Database['public']['Tables']['bookings']['Row']
+type TimeSlot = Database["public"]["Tables"]["time_slots"]["Row"];
+type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 type BookingWithUser = Booking & {
-  user: { id: string; full_name: string | null; email: string }
-}
+  user: { id: string; full_name: string | null; email: string };
+};
 
 const DAYS_OF_WEEK = [
-  'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'
-]
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+];
 
 export function EnhancedAdminSlotsPage() {
   const {
-    timeSlots,
-    isLoading,
-    refreshTimeSlots,
-    deleteTimeSlot,
-    toggleTimeSlotActive: toggleSlotStatus
-  } = useTimeSlots()
-  
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null)
+    allTimeSlots: timeSlots,
+    isSecondaryLoading: isLoading,
+    refresh,
+  } = useAdminData();
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null);
   const [selectedDateSlots, setSelectedDateSlots] = useState<{
-    date: string
-    slots: TimeSlot[]
-  } | null>(null)
-  const [slotBookings, setSlotBookings] = useState<Record<string, BookingWithUser[]>>({})
+    date: string;
+    slots: TimeSlot[];
+  } | null>(null);
+  const [slotBookings, setSlotBookings] = useState<
+    Record<string, BookingWithUser[]>
+  >({});
   const [addUserDialog, setAddUserDialog] = useState<{
-    isOpen: boolean
-    slotId: string
-    bookingDate: string
-    slotTime: string
+    isOpen: boolean;
+    slotId: string;
+    bookingDate: string;
+    slotTime: string;
   }>({
     isOpen: false,
-    slotId: '',
-    bookingDate: '',
-    slotTime: ''
-  })
+    slotId: "",
+    bookingDate: "",
+    slotTime: "",
+  });
 
   const handleEdit = (slot: TimeSlot) => {
-    setEditingSlot(slot)
-    setIsDialogOpen(true)
-  }
+    setEditingSlot(slot);
+    setIsDialogOpen(true);
+  };
 
   const handleCreate = () => {
-    setEditingSlot(null)
-    setIsDialogOpen(true)
-  }
+    setEditingSlot(null);
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este horario?')) {
-      await deleteTimeSlot(id)
+    if (confirm("¿Estás seguro de que quieres eliminar este horario?")) {
+      await timeSlotService.delete(id);
+      await refresh();
     }
-  }
+  };
 
   const handleToggleStatus = async (slot: TimeSlot) => {
-    await toggleSlotStatus(slot.id, !slot.is_active)
-  }
+    await timeSlotService.toggleActive(slot.id, !slot.is_active);
+    await refresh();
+  };
 
   const handleCalendarDateClick = (date: string, slots: TimeSlot[]) => {
-    setSelectedDateSlots({ date, slots })
-    loadBookingsForSlots(slots, date)
-  }
+    setSelectedDateSlots({ date, slots });
+    loadBookingsForSlots(slots, date);
+  };
 
   const loadBookingsForSlots = async (slots: TimeSlot[], date: string) => {
-    const bookingsMap: Record<string, BookingWithUser[]> = {}
-    
+    const bookingsMap: Record<string, BookingWithUser[]> = {};
+
     try {
-      const allBookingsForDate = await bookingService.getBookingsByDate(date)
-      
+      const allBookingsForDate = await bookingService.getBookingsByDate(date);
+
       for (const slot of slots) {
-        const matchingBookings = allBookingsForDate.filter(booking => {
-          const bookingSlot = booking.time_slot
-          if (!bookingSlot) return false
-          
+        const matchingBookings = allBookingsForDate.filter((booking) => {
+          const bookingSlot = booking.time_slot;
+          if (!bookingSlot) return false;
+
           return (
             bookingSlot.start_time === slot.start_time &&
             bookingSlot.end_time === slot.end_time
-          )
-        })
-        
-        bookingsMap[slot.id] = matchingBookings
+          );
+        });
+
+        bookingsMap[slot.id] = matchingBookings;
       }
     } catch (error) {
-      console.error('Error loading bookings:', error)
-      slots.forEach(slot => {
-        bookingsMap[slot.id] = []
-      })
+      console.error("Error loading bookings:", error);
+      slots.forEach((slot) => {
+        bookingsMap[slot.id] = [];
+      });
     }
-    
-    setSlotBookings(bookingsMap)
-  }
+
+    setSlotBookings(bookingsMap);
+  };
 
   useEffect(() => {
     if (selectedDateSlots) {
-      loadBookingsForSlots(selectedDateSlots.slots, selectedDateSlots.date)
+      loadBookingsForSlots(selectedDateSlots.slots, selectedDateSlots.date);
     }
-  }, [timeSlots, selectedDateSlots])
+  }, [timeSlots, selectedDateSlots]);
 
   // Convert database day_of_week (0=Sunday) to display index (0=Monday)
   const convertDayOfWeekToDisplayIndex = (dbDayOfWeek: number) => {
-    return dbDayOfWeek === 0 ? 6 : dbDayOfWeek - 1
-  }
+    return dbDayOfWeek === 0 ? 6 : dbDayOfWeek - 1;
+  };
 
   const formatTime = (time: string) => {
-    return new Date(`1970-01-01T${time}`).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    })
-  }
+    return new Date(`1970-01-01T${time}`).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   // Separate recurring and specific date slots
-  const recurringSlots = timeSlots.filter(slot => slot.slot_type === 'recurring')
-  const specificDateSlots = timeSlots.filter(slot => slot.slot_type === 'specific_date')
+  const recurringSlots = timeSlots.filter(
+    (slot) => slot.slot_type === "recurring"
+  );
+  const specificDateSlots = timeSlots.filter(
+    (slot) => slot.slot_type === "specific_date"
+  );
 
   // Group recurring slots by day of week (converted to Monday-first display index)
   const groupedRecurringSlots = recurringSlots.reduce((acc, slot) => {
-    const displayIndex = convertDayOfWeekToDisplayIndex(slot.day_of_week)
+    const displayIndex = convertDayOfWeekToDisplayIndex(slot.day_of_week);
     if (!acc[displayIndex]) {
-      acc[displayIndex] = []
+      acc[displayIndex] = [];
     }
-    acc[displayIndex].push(slot)
-    return acc
-  }, {} as Record<number, TimeSlot[]>)
+    acc[displayIndex].push(slot);
+    return acc;
+  }, {} as Record<number, TimeSlot[]>);
 
   // Group specific date slots by date
   const groupedSpecificSlots = specificDateSlots.reduce((acc, slot) => {
-    const date = slot.specific_date!
+    const date = slot.specific_date!;
     if (!acc[date]) {
-      acc[date] = []
+      acc[date] = [];
     }
-    acc[date].push(slot)
-    return acc
-  }, {} as Record<string, TimeSlot[]>)
+    acc[date].push(slot);
+    return acc;
+  }, {} as Record<string, TimeSlot[]>);
 
   if (isLoading) {
-    return <PageLoadingState message="Cargando horarios..." />
+    return <PageLoadingState message="Cargando horarios..." />;
   }
 
-  const TimeSlotCard = ({ slot, showBookings = false }: { slot: TimeSlot; showBookings?: boolean }) => {
-    const bookings = showBookings ? slotBookings[slot.id] || [] : []
-    const bookedCount = bookings.length
+  const TimeSlotCard = ({
+    slot,
+    showBookings = false,
+  }: {
+    slot: TimeSlot;
+    showBookings?: boolean;
+  }) => {
+    const bookings = showBookings ? slotBookings[slot.id] || [] : [];
+    const bookedCount = bookings.length;
 
     return (
-      <div key={slot.id} className={`p-3 rounded-lg border bg-card ${!slot.is_active ? 'opacity-60' : ''}`}>
+      <div
+        key={slot.id}
+        className={`p-3 rounded-lg border bg-card ${
+          !slot.is_active ? "opacity-60" : ""
+        }`}
+      >
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -174,8 +208,11 @@ export function EnhancedAdminSlotsPage() {
                 {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
               </span>
             </div>
-            <Badge variant={slot.is_active ? 'default' : 'secondary'} className="text-xs">
-              {slot.is_active ? 'Activo' : 'Inactivo'}
+            <Badge
+              variant={slot.is_active ? "default" : "secondary"}
+              className="text-xs"
+            >
+              {slot.is_active ? "Activo" : "Inactivo"}
             </Badge>
           </div>
 
@@ -185,12 +222,17 @@ export function EnhancedAdminSlotsPage() {
               <span>{slot.capacity} plazas</span>
             </div>
             {showBookings && (
-              <Badge variant={bookedCount >= slot.capacity ? 'destructive' : 'secondary'} className="text-xs">
+              <Badge
+                variant={
+                  bookedCount >= slot.capacity ? "destructive" : "secondary"
+                }
+                className="text-xs"
+              >
                 {bookedCount}/{slot.capacity}
               </Badge>
             )}
           </div>
-        
+
           <div className="flex items-center gap-1">
             <Button
               size="sm"
@@ -198,7 +240,7 @@ export function EnhancedAdminSlotsPage() {
               onClick={() => handleToggleStatus(slot)}
               className="flex-1 h-8 text-xs"
             >
-              {slot.is_active ? 'Desactivar' : 'Activar'}
+              {slot.is_active ? "Desactivar" : "Activar"}
             </Button>
             <Button
               size="icon"
@@ -230,12 +272,16 @@ export function EnhancedAdminSlotsPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setAddUserDialog({
-                    isOpen: true,
-                    slotId: slot.id,
-                    bookingDate: selectedDateSlots.date,
-                    slotTime: `${formatTime(slot.start_time)} - ${formatTime(slot.end_time)}`
-                  })}
+                  onClick={() =>
+                    setAddUserDialog({
+                      isOpen: true,
+                      slotId: slot.id,
+                      bookingDate: selectedDateSlots.date,
+                      slotTime: `${formatTime(slot.start_time)} - ${formatTime(
+                        slot.end_time
+                      )}`,
+                    })
+                  }
                   className="h-7 text-xs"
                 >
                   <UserPlus className="size-3 mr-1" />
@@ -246,9 +292,14 @@ export function EnhancedAdminSlotsPage() {
             {bookings.length > 0 ? (
               <div className="space-y-1">
                 {bookings.map((booking) => (
-                  <div key={booking.id} className="flex items-center gap-2 text-xs pl-4">
+                  <div
+                    key={booking.id}
+                    className="flex items-center gap-2 text-xs pl-4"
+                  >
                     <div className="size-1 rounded-full bg-primary shrink-0" />
-                    <span className="truncate">{booking.user.full_name || booking.user.email}</span>
+                    <span className="truncate">
+                      {booking.user.full_name || booking.user.email}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -260,8 +311,8 @@ export function EnhancedAdminSlotsPage() {
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="container mx-auto px-3 py-4  space-y-4 max-w-4xl">
@@ -282,9 +333,12 @@ export function EnhancedAdminSlotsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Clock className="size-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No hay horarios configurados</h3>
+            <h3 className="text-lg font-medium mb-2">
+              No hay horarios configurados
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Crea tu primer horario para permitir que los usuarios reserven clases
+              Crea tu primer horario para permitir que los usuarios reserven
+              clases
             </p>
             <Button onClick={handleCreate}>
               <Plus className="size-4 mr-2" />
@@ -311,7 +365,7 @@ export function EnhancedAdminSlotsPage() {
 
           <TabsContent value="calendar" className="space-y-4">
             <AvailabilityCalendar onDateClick={handleCalendarDateClick} />
-            
+
             {selectedDateSlots && (
               <Card>
                 <CardHeader className="pb-3">
@@ -326,8 +380,12 @@ export function EnhancedAdminSlotsPage() {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {selectedDateSlots.slots.map(slot => (
-                        <TimeSlotCard key={slot.id} slot={slot} showBookings={true} />
+                      {selectedDateSlots.slots.map((slot) => (
+                        <TimeSlotCard
+                          key={slot.id}
+                          slot={slot}
+                          showBookings={true}
+                        />
                       ))}
                     </div>
                   )}
@@ -341,9 +399,12 @@ export function EnhancedAdminSlotsPage() {
               <Card>
                 <CardContent className="py-8 text-center">
                   <Clock className="size-8 mx-auto text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-2">No hay horarios semanales</h3>
+                  <h3 className="font-medium mb-2">
+                    No hay horarios semanales
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    Los horarios semanales se repiten cada semana automáticamente
+                    Los horarios semanales se repiten cada semana
+                    automáticamente
                   </p>
                   <Button onClick={handleCreate}>
                     <Plus className="size-4 mr-2" />
@@ -354,10 +415,10 @@ export function EnhancedAdminSlotsPage() {
             ) : (
               <div className="space-y-4">
                 {DAYS_OF_WEEK.map((dayName, dayIndex) => {
-                  const slotsForDay = groupedRecurringSlots[dayIndex] || []
-                  
-                  if (slotsForDay.length === 0) return null
-                  
+                  const slotsForDay = groupedRecurringSlots[dayIndex] || [];
+
+                  if (slotsForDay.length === 0) return null;
+
                   return (
                     <div key={dayIndex} className="space-y-2">
                       <div className="flex items-center gap-2 px-1">
@@ -368,12 +429,12 @@ export function EnhancedAdminSlotsPage() {
                         </Badge>
                       </div>
                       <div className="space-y-2">
-                        {slotsForDay.map(slot => (
+                        {slotsForDay.map((slot) => (
                           <TimeSlotCard key={slot.id} slot={slot} />
                         ))}
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             )}
@@ -384,9 +445,12 @@ export function EnhancedAdminSlotsPage() {
               <Card>
                 <CardContent className="py-8 text-center">
                   <CalendarDays className="size-8 mx-auto text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-2">No hay horarios específicos</h3>
+                  <h3 className="font-medium mb-2">
+                    No hay horarios específicos
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    Los horarios específicos son para fechas concretas y no se repiten
+                    Los horarios específicos son para fechas concretas y no se
+                    repiten
                   </p>
                   <Button onClick={handleCreate}>
                     <Plus className="size-4 mr-2" />
@@ -397,18 +461,22 @@ export function EnhancedAdminSlotsPage() {
             ) : (
               <div className="space-y-3">
                 {Object.entries(groupedSpecificSlots)
-                  .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+                  .sort(
+                    ([a], [b]) => new Date(a).getTime() - new Date(b).getTime()
+                  )
                   .map(([date, slots]) => (
                     <div key={date} className="space-y-2">
                       <div className="flex items-center gap-2 px-1">
                         <CalendarDays className="size-4 text-muted-foreground" />
-                        <h3 className="font-semibold text-base">{formatDate(date)}</h3>
+                        <h3 className="font-semibold text-base">
+                          {formatDate(date)}
+                        </h3>
                         <Badge variant="outline" className="text-xs">
                           {slots.length}
                         </Badge>
                       </div>
                       <div className="space-y-2">
-                        {slots.map(slot => (
+                        {slots.map((slot) => (
                           <TimeSlotCard key={slot.id} slot={slot} />
                         ))}
                       </div>
@@ -425,7 +493,10 @@ export function EnhancedAdminSlotsPage() {
         onClose={() => setAddUserDialog({ ...addUserDialog, isOpen: false })}
         onSuccess={() => {
           if (selectedDateSlots) {
-            loadBookingsForSlots(selectedDateSlots.slots, selectedDateSlots.date)
+            loadBookingsForSlots(
+              selectedDateSlots.slots,
+              selectedDateSlots.date
+            );
           }
         }}
         slotId={addUserDialog.slotId}
@@ -436,12 +507,12 @@ export function EnhancedAdminSlotsPage() {
       <EnhancedTimeSlotDialog
         isOpen={isDialogOpen}
         onClose={() => {
-          setIsDialogOpen(false)
-          setEditingSlot(null)
+          setIsDialogOpen(false);
+          setEditingSlot(null);
         }}
-        onSuccess={refreshTimeSlots}
+        onSuccess={refresh}
         editingSlot={editingSlot}
       />
     </div>
-  )
+  );
 }

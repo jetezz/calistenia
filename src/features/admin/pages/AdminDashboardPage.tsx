@@ -40,7 +40,7 @@ export function AdminDashboardPage() {
       return b.booking_date === today && b.status === "confirmed";
     }).length,
     pendingPaymentRequests: pendingPaymentRequests.length,
-    totalUsers: profiles.filter((p) => p.role === "client").length,
+    totalUsers: profiles.filter((p) => p.role === "user").length,
     activeTimeSlots: activeTimeSlots.length,
   };
 

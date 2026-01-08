@@ -1,113 +1,109 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useProfile } from '@/hooks'
-import { useToast } from '@/hooks'
-
-
-
+import { useState, useMemo, useCallback } from "react";
+import { useAdminData, useToast } from "@/hooks";
+import { profileService } from "@/services/profileService";
 
 export function useAdminUsers() {
   const {
     profiles: allProfiles,
-    loading: isLoading,
-    error,
-    fetchProfiles,
-    updateCredits,
-    updatePaymentStatus,
-    createUser: createUserProfile,
-    deleteUser: deleteUserProfile,
-  } = useProfile()
-  
-  const [searchQuery, setSearchQuery] = useState('')
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all')
-  const { success, error: showError } = useToast()
+    isDashboardLoading: isLoading,
+    refresh,
+  } = useAdminData();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
+  const { success, error: showError } = useToast();
 
   const users = useMemo(() => {
-    return allProfiles.filter(profile => profile.role === 'user')
-  }, [allProfiles])
+    return allProfiles.filter((profile) => profile.role === "user");
+  }, [allProfiles]);
 
   const filteredUsers = useMemo(() => {
-    return users.filter(user => {
-      const matchesSearch = searchQuery === '' || 
+    return users.filter((user) => {
+      const matchesSearch =
+        searchQuery === "" ||
         user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
-      
-      const matchesPaymentStatus = paymentStatusFilter === 'all' || 
-        user.payment_status === paymentStatusFilter
-      
-      return matchesSearch && matchesPaymentStatus
-    })
-  }, [users, searchQuery, paymentStatusFilter])
+        user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      await fetchProfiles()
-    } catch (error) {
-      console.error('Error fetching users:', error)
-      showError('Error al cargar los usuarios')
-    }
-  }, [fetchProfiles, showError])
+      const matchesPaymentStatus =
+        paymentStatusFilter === "all" ||
+        user.payment_status === paymentStatusFilter;
 
-  const updateUserCredits = useCallback(async (userId: string, credits: number) => {
-    try {
-      await updateCredits(userId, credits)
-      success(`Créditos actualizados a ${credits}`)
-    } catch (error) {
-      console.error('Error updating user credits:', error)
-      showError('Error al actualizar los créditos')
-      throw error
-    }
-  }, [updateCredits, success, showError])
+      return matchesSearch && matchesPaymentStatus;
+    });
+  }, [users, searchQuery, paymentStatusFilter]);
 
-  const updateUserPaymentStatus = useCallback(async (userId: string, paymentStatus: string) => {
-    try {
-      await updatePaymentStatus(userId, paymentStatus)
-      success('Estado de pago actualizado')
-    } catch (error) {
-      console.error('Error updating payment status:', error)
-      showError('Error al actualizar el estado de pago')
-      throw error
-    }
-  }, [updatePaymentStatus, success, showError])
+  const updateUserCredits = useCallback(
+    async (userId: string, credits: number) => {
+      try {
+        await profileService.updateCredits(userId, credits);
+        success(`Créditos actualizados a ${credits}`);
+        await refresh();
+      } catch (error) {
+        console.error("Error updating user credits:", error);
+        showError("Error al actualizar los créditos");
+        throw error;
+      }
+    },
+    [success, showError, refresh]
+  );
 
-  const createUser = useCallback(async (email: string, password: string, fullName: string) => {
-    try {
-      await createUserProfile(email, password, fullName)
-      success('Usuario creado correctamente')
-    } catch (error) {
-      console.error('Error creating user:', error)
-      showError('Error al crear el usuario')
-      throw error
-    }
-  }, [createUserProfile, success, showError])
+  const updateUserPaymentStatus = useCallback(
+    async (userId: string, paymentStatus: string) => {
+      try {
+        await profileService.updatePaymentStatus(userId, paymentStatus);
+        success("Estado de pago actualizado");
+        await refresh();
+      } catch (error) {
+        console.error("Error updating payment status:", error);
+        showError("Error al actualizar el estado de pago");
+        throw error;
+      }
+    },
+    [success, showError, refresh]
+  );
 
-  const deleteUser = useCallback(async (userId: string) => {
-    try {
-      await deleteUserProfile(userId)
-      success('Usuario eliminado correctamente')
-    } catch (error) {
-      console.error('Error deleting user:', error)
-      showError('Error al eliminar el usuario')
-      throw error
-    }
-  }, [deleteUserProfile, success, showError])
+  const createUser = useCallback(
+    async (email: string, password: string, fullName: string) => {
+      try {
+        await profileService.createUser(email, password, fullName);
+        success("Usuario creado correctamente");
+        await refresh();
+      } catch (error) {
+        console.error("Error creating user:", error);
+        showError("Error al crear el usuario");
+        throw error;
+      }
+    },
+    [success, showError, refresh]
+  );
 
-  useEffect(() => {
-    fetchProfiles()
-  }, [])
+  const deleteUser = useCallback(
+    async (userId: string) => {
+      try {
+        await profileService.deleteUser(userId);
+        success("Usuario eliminado correctamente");
+        await refresh();
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        showError("Error al eliminar el usuario");
+        throw error;
+      }
+    },
+    [success, showError, refresh]
+  );
 
   return {
     users: filteredUsers,
     allUsers: users,
     isLoading,
-    error,
     searchQuery,
     setSearchQuery,
     paymentStatusFilter,
     setPaymentStatusFilter,
-    refreshUsers: fetchUsers,
+    refreshUsers: refresh,
     updateUserCredits,
     updateUserPaymentStatus,
     createUser,
     deleteUser,
-  }
+  };
 }
