@@ -1,4 +1,4 @@
-import { CreditCard, Send, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { CreditCard, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -263,8 +263,8 @@ export function RequestCreditsPage() {
                             }`} />
                             <div className="flex-1">
                               <div className="font-medium">{method.name}</div>
-                              {method.description && (
-                                <div className="text-sm text-muted-foreground">{method.description}</div>
+                              {method.instructions && (
+                                <div className="text-sm text-muted-foreground">{method.instructions}</div>
                               )}
                             </div>
                             {isSelected && (

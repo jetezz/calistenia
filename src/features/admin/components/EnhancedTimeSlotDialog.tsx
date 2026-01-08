@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Calendar, Clock, Users } from 'lucide-react'
+import { Calendar, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,7 +36,7 @@ const DAYS_OF_WEEK = [
 
 export function EnhancedTimeSlotDialog({ isOpen, onClose, onSuccess, editingSlot }: TimeSlotDialogProps) {
   const { user } = useAuth()
-  const { createTimeSlot, updateTimeSlotData, isLoading } = useTimeSlot()
+  const { createTimeSlot, updateTimeSlot: updateTimeSlotData, loading: isLoading } = useTimeSlot()
   
   const [scheduleType, setScheduleType] = useState<'recurring' | 'specific_date'>(
     editingSlot?.slot_type === 'specific_date' ? 'specific_date' : 'recurring'

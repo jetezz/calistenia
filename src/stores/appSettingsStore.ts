@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { appSettingsService, type CancellationPolicy, type AppSetting } from '@/services/appSettingsService'
+import { appSettingsService, type CancellationPolicy } from '@/services/appSettingsService'
 
 interface AppSettingsState {
   settings: Record<string, any>

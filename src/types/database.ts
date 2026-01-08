@@ -355,6 +355,14 @@ export type Database = {
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { user_id: string }; Returns: boolean }
+      admin_create_user: {
+        Args: { p_email: string; p_password: string; p_full_name: string }
+        Returns: string
+      }
+      admin_delete_user: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
