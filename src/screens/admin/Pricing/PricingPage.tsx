@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoadingState } from "@/components/common";
-import { PricingPackageDialog } from "@/features/admin/components/PricingPackageDialog";
+// TODO: Re-implement PricingPackageDialog component
+import { PricingPackageDialog } from "@/components/admin";
 import { toast } from "sonner";
 import { useAdminPricingLogic } from "@/hooks/admin/Pricing/useAdminPricingLogic";
 import type { Database } from "@/types/database";

@@ -157,6 +157,23 @@ const getByDateRange = async (startDate: string, endDate: string) => {
   return data as unknown as BookingWithRelations[];
 };
 
+const getBookingsByDate = async (date: string) => {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(
+      `
+      *,
+      time_slot:time_slots!bookings_time_slot_id_fkey(*),
+      user:profiles!bookings_user_id_fkey(id, full_name, email)
+    `
+    )
+    .eq("booking_date", date)
+    .eq("status", "confirmed");
+
+  if (error) throw error;
+  return data as unknown as BookingWithRelations[];
+};
+
 const checkBookingConflict = async (
   userId: string,
   timeSlotId: string,
@@ -184,6 +201,7 @@ export const bookingService: CrudService<
   getByUserId: typeof getByUserId;
   getUpcomingByUserId: typeof getUpcomingByUserId;
   getByDateRange: typeof getByDateRange;
+  getBookingsByDate: typeof getBookingsByDate;
   checkBookingConflict: typeof checkBookingConflict;
 } = {
   getAll,
@@ -194,5 +212,6 @@ export const bookingService: CrudService<
   getByUserId,
   getUpcomingByUserId,
   getByDateRange,
+  getBookingsByDate,
   checkBookingConflict,
 };

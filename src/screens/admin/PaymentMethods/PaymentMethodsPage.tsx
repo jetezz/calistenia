@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoadingState } from "@/components/common";
-import { PaymentMethodDialog } from "@/features/admin/components/PaymentMethodDialog";
+// TODO: Re-implement PaymentMethodDialog component
+import { PaymentMethodDialog } from "@/components/admin";
 import { toast } from "sonner";
 import { useAdminPaymentMethodsLogic } from "@/hooks/admin/PaymentMethods/useAdminPaymentMethodsLogic";
 import { getPaymentTypeLabel } from "@/lib/payment-utils";

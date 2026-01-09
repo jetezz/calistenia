@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { useAuth, useProfile } from "@/features/auth";
-import { NotificationBell } from "@/features/admin/components";
+import { NotificationBell } from "@/components/admin";
 import { useNotifications } from "@/hooks";
 import { useBookingStore } from "@/stores/bookingStore";
 import { Button } from "@/components/ui/button";

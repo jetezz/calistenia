@@ -20,8 +20,8 @@ import { bookingService } from "@/services/bookingService";
 import {
   EnhancedTimeSlotDialog,
   AddUserToSlotDialog,
-} from "@/features/admin/components"; // Adapting imports
-import { AvailabilityCalendar } from "@/features/admin/components/AvailabilityCalendar"; // Adapting imports
+  AvailabilityCalendar,
+} from "@/components/admin";
 import type { Database } from "@/types/database";
 
 type TimeSlot = Database["public"]["Tables"]["time_slots"]["Row"];
@@ -372,6 +372,18 @@ export function SlotsPage() {
 
           <TabsContent value="calendar" className="space-y-4">
             <AvailabilityCalendar onDateClick={handleCalendarDateClick} />
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Calendar className="size-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">
+                  Calendario temporalmente deshabilitado
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Use las pestañas "Semanales" o "Específicos" para gestionar
+                  horarios
+                </p>
+              </CardContent>
+            </Card>
 
             {selectedDateSlots && (
               <Card>

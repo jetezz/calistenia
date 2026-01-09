@@ -34,14 +34,15 @@ export const usePaymentMethodStore = create<PaymentMethodStore>(
       activeMethods: [],
 
       fetchActive: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          const activeMethods = await paymentMethodService.getActive();
-          set({ activeMethods, isLoading: false });
-        } catch (e) {
-          const error = e instanceof Error ? e : new Error(String(e));
-          set({ error: error.message, isLoading: false });
+        // Cache check
+        if (get().isInitialized) {
+          set({ activeMethods: get().items.filter((m) => m.is_active) });
+          return;
         }
+
+        // Consolidate to fetchAll which is deduped
+        await get().fetchAll();
+        set({ activeMethods: get().items.filter((m) => m.is_active) });
       },
 
       toggleActive: async (id, isActive) => {

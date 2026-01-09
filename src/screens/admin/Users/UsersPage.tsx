@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { PageLoadingState } from "@/components/common";
 import { useAdminUsersLogic } from "@/hooks/admin/Users/useAdminUsersLogic";
-import { CreateUserDialog } from "@/features/admin/components/CreateUserDialog"; // This might need moving to screens/admin/Users/components later
+import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 
 export function UsersPage() {
   const {

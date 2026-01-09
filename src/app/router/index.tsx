@@ -12,12 +12,10 @@ import { SlotsPage } from "@/screens/admin/Slots/SlotsPage";
 import { PricingPage } from "@/screens/admin/Pricing/PricingPage";
 import { PaymentMethodsPage } from "@/screens/admin/PaymentMethods/PaymentMethodsPage";
 import { SettingsPage } from "@/screens/admin/Settings/SettingsPage";
-import {
-  BookingPage,
-  MyBookingsPage,
-  RequestCreditsPage,
-  PaymentInfoPage,
-} from "@/features/client";
+import { BookingPage } from "@/screens/client/Booking/BookingPage";
+import { MyBookingsPage } from "@/screens/client/MyBookings/MyBookingsPage";
+import { PaymentInfoPage } from "@/screens/client/PaymentInfo/PaymentInfoPage";
+import { RequestCreditsPage } from "@/screens/client/RequestCredits/RequestCreditsPage";
 
 export const router = createBrowserRouter([
   {

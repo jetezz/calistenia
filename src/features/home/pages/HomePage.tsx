@@ -1,67 +1,90 @@
-import { Link, Navigate } from 'react-router-dom'
-import { CalendarDays, CreditCard, Info, Clock, AlertCircle, Calendar, RefreshCw, ChevronDown } from 'lucide-react'
-import { useProfile } from '@/features/auth'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { PageLoadingState } from '@/components/common'
-import { useClientDashboard } from '@/features/client/hooks'
-import { useState } from 'react'
+import { Link, Navigate } from "react-router-dom";
+import {
+  CalendarDays,
+  CreditCard,
+  Info,
+  Clock,
+  AlertCircle,
+  Calendar,
+  RefreshCw,
+  ChevronDown,
+} from "lucide-react";
+import { useProfile } from "@/features/auth";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageLoadingState } from "@/components/common";
+import { useHomeLogic } from "@/hooks/client/Home/useHomeLogic";
+import { useState } from "react";
 
 export function HomePage() {
-  const { profile, isAdmin, isLoading } = useProfile()
-  const { upcomingBookings, recentPaymentRequests, allPaymentRequests, isLoading: dashboardLoading, refreshDashboard } = useClientDashboard()
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [showAllRequests, setShowAllRequests] = useState(false)
+  const { profile, isAdmin, isLoading: authLoading } = useProfile();
+  const {
+    upcomingBookings,
+    recentPaymentRequests,
+    allPaymentRequests,
+    isLoading: dashboardLoading,
+    refreshDashboard,
+  } = useHomeLogic();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showAllRequests, setShowAllRequests] = useState(false);
 
-  if (isAdmin && !isLoading) {
-    return <Navigate to="/admin" replace />
+  if (isAdmin && !authLoading) {
+    return <Navigate to="/admin" replace />;
   }
 
   const getPaymentStatusBadge = () => {
     switch (profile?.payment_status) {
-      case 'paid':
-        return <Badge className="bg-green-500 text-white">Al día</Badge>
-      case 'pending':
-        return <Badge className="bg-yellow-500 text-white">Pendiente de pago</Badge>
-      case 'unpaid':
-        return <Badge variant="destructive">No pagado</Badge>
+      case "paid":
+        return <Badge className="bg-green-500 text-white">Al día</Badge>;
+      case "pending":
+        return (
+          <Badge className="bg-yellow-500 text-white">Pendiente de pago</Badge>
+        );
+      case "unpaid":
+        return <Badge variant="destructive">No pagado</Badge>;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   const formatTime = (time: string) => {
-    return new Date(`1970-01-01T${time}`).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    })
-  }
+    return new Date(`1970-01-01T${time}`).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
 
-  if (isLoading || dashboardLoading) {
-    return <PageLoadingState message="Cargando tu perfil..." />
+  if (authLoading || dashboardLoading) {
+    return <PageLoadingState message="Cargando tu perfil..." />;
   }
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await refreshDashboard()
-    setIsRefreshing(false)
-  }
+    setIsRefreshing(true);
+    await refreshDashboard();
+    setIsRefreshing(false);
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">
-          ¡Hola, {profile?.full_name?.split(' ')[0] || 'deportista'}!
+          ¡Hola, {profile?.full_name?.split(" ")[0] || "deportista"}!
         </h1>
         <p className="text-muted-foreground">Bienvenido a Calistenia Emérita</p>
       </div>
@@ -76,16 +99,21 @@ export function HomePage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-5xl font-bold text-primary">{profile?.credits ?? 0}</span>
+            <span className="text-5xl font-bold text-primary">
+              {profile?.credits ?? 0}
+            </span>
             <span className="text-muted-foreground">clases disponibles</span>
           </div>
-          
+
           {profile?.credits === 0 && (
             <div className="flex items-center gap-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
               <AlertCircle className="size-5 text-orange-600" />
               <p className="text-sm">
-                No tienes créditos disponibles. 
-                <Link to="/request-credits" className="ml-1 text-primary hover:underline font-medium">
+                No tienes créditos disponibles.
+                <Link
+                  to="/request-credits"
+                  className="ml-1 text-primary hover:underline font-medium"
+                >
                   Recarga aquí
                 </Link>
               </p>
@@ -102,14 +130,12 @@ export function HomePage() {
               <Calendar className="size-5" />
               Próximas Clases
             </CardTitle>
-            <CardDescription>
-              Tus reservas confirmadas
-            </CardDescription>
+            <CardDescription>Tus reservas confirmadas</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {upcomingBookings.map((booking) => (
-                <div 
+                <div
                   key={booking.id}
                   className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
                 >
@@ -122,20 +148,19 @@ export function HomePage() {
                         {formatDate(booking.booking_date)}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {formatTime(booking.time_slot.start_time)} - {formatTime(booking.time_slot.end_time)}
+                        {booking.time_slot &&
+                          `${formatTime(
+                            booking.time_slot.start_time
+                          )} - ${formatTime(booking.time_slot.end_time)}`}
                       </div>
                     </div>
                   </div>
-                  <Badge className="bg-green-500 text-white">
-                    Confirmada
-                  </Badge>
+                  <Badge className="bg-green-500 text-white">Confirmada</Badge>
                 </div>
               ))}
               {upcomingBookings.length >= 3 && (
                 <Button asChild variant="ghost" size="sm" className="w-full">
-                  <Link to="/my-bookings">
-                    Ver todas las reservas
-                  </Link>
+                  <Link to="/my-bookings">Ver todas las reservas</Link>
                 </Button>
               )}
             </div>
@@ -159,14 +184,22 @@ export function HomePage() {
                 disabled={isRefreshing}
                 className="h-8 w-8"
               >
-                <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`size-4 ${isRefreshing ? "animate-spin" : ""}`}
+                />
               </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {(showAllRequests ? allPaymentRequests : recentPaymentRequests).map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-3 rounded-lg border">
+              {(showAllRequests
+                ? allPaymentRequests
+                : recentPaymentRequests
+              ).map((request) => (
+                <div
+                  key={request.id}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
                   <div>
                     <div className="font-medium">
                       Solicitud de {request.credits_requested} créditos
@@ -176,14 +209,27 @@ export function HomePage() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <Badge 
-                      variant={request.status === 'approved' ? 'default' : 
-                              request.status === 'pending' ? 'secondary' : 'destructive'}
-                      className={request.status === 'approved' ? 'bg-green-500 text-white' :
-                                request.status === 'pending' ? 'bg-yellow-500 text-white' : ''}
+                    <Badge
+                      variant={
+                        request.status === "approved"
+                          ? "default"
+                          : request.status === "pending"
+                          ? "secondary"
+                          : "destructive"
+                      }
+                      className={
+                        request.status === "approved"
+                          ? "bg-green-500 text-white"
+                          : request.status === "pending"
+                          ? "bg-yellow-500 text-white"
+                          : ""
+                      }
                     >
-                      {request.status === 'approved' ? 'Aprobada' :
-                       request.status === 'pending' ? 'Pendiente' : 'Rechazada'}
+                      {request.status === "approved"
+                        ? "Aprobada"
+                        : request.status === "pending"
+                        ? "Pendiente"
+                        : "Rechazada"}
                     </Badge>
                     {request.admin_notes && (
                       <p className="text-xs text-muted-foreground italic">
@@ -194,9 +240,9 @@ export function HomePage() {
                 </div>
               ))}
               {!showAllRequests && allPaymentRequests.length > 3 && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="w-full"
                   onClick={() => setShowAllRequests(true)}
                 >
@@ -205,9 +251,9 @@ export function HomePage() {
                 </Button>
               )}
               {showAllRequests && allPaymentRequests.length > 3 && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="w-full"
                   onClick={() => setShowAllRequests(false)}
                 >
@@ -252,5 +298,5 @@ export function HomePage() {
         </Button>
       </div>
     </div>
-  )
+  );
 }

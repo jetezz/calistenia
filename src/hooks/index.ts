@@ -4,7 +4,5 @@ export { useTimeSlot } from "./useTimeSlot";
 export { usePaymentRequest } from "./usePaymentRequest";
 export { useSupabaseConnection } from "./useSupabaseConnection";
 export { useToast } from "./useToast";
-export { usePricingPackage } from "./usePricingPackage";
-export { usePaymentMethod } from "./usePaymentMethod";
 export { useNotifications } from "./useNotifications";
 export { useAppSettings } from "./useAppSettings";
