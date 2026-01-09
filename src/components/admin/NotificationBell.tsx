@@ -25,7 +25,7 @@ export function NotificationBell({
     >
       <Bell className="size-5" />
       {newBookingsCount > 0 && (
-        <Badge className="absolute -top-1 -right-1 px-1.5 min-w-[1.25rem] h-5 flex items-center justify-center bg-red-500 text-white border-2 border-background">
+        <Badge className="absolute -top-1 -right-1 px-1.5 min-w-5 h-5 flex items-center justify-center bg-red-500 text-white border-2 border-background">
           {newBookingsCount}
         </Badge>
       )}
