@@ -269,41 +269,34 @@ src/
 
 ## 7. Limpieza Pendiente y Deuda Técnica (Análisis Post-Refactor)
 
-A pesar de que el refactor principal está completo, el análisis del codebase revela archivos residuales y código duplicado que debe ser eliminado para completar la transición.
-
 ### 🗑️ Archivos "Basura" (Pendientes de Eliminación)
 
-Estos archivos son **Legacy Adapters** o restos de la arquitectura anterior que ya no deberían ser necesarios si se completa la migración de sus últimos consumidores.
+✅ **LIMPIEZA REALIZADA**
 
-1.  **Hooks Legacy (Eliminar tras verificar consumer)**:
+1.  **Hooks Legacy (Eliminados)**:
 
-    - `src/hooks/useBooking.ts` (Reemplazado por `BookingStore` y `useBookingLogic`)
-    - `src/hooks/useProfile.ts` (Reemplazado por `ProfileStore` y `useDashboardLogic`. _Nota: NO confundir con el hook de `features/auth`_)
-    - `src/hooks/useTimeSlot.ts` (Reemplazado por `TimeSlotStore`)
-    - `src/hooks/usePaymentRequest.ts` (Reemplazado por `PaymentRequestStore`)
-    - `src/hooks/useAppSettings.ts` (Reemplazado por `AppSettingsStore`)
+    - `src/hooks/useBooking.ts` 🗑️
+    - `src/hooks/useProfile.ts` 🗑️
+    - `src/hooks/useTimeSlot.ts` 🗑️
+    - `src/hooks/usePaymentRequest.ts` 🗑️
+    - `src/hooks/useAppSettings.ts` 🗑️
 
-    > **Acción Requerida**: Actualizar `src/components/layout/Header.tsx` y otros componentes sueltos para que importen directamente de los Stores o Hooks de Auth, y luego eliminar estos archivos y sus exports en `src/hooks/index.ts`.
-
-2.  **Directorios Features Obsoletos**:
-    - `src/features/demo/` (Código de demostración no utilizado)
-    - `src/features/errors/` (Si no se usa centralizadamente, mover a `components/common` o eliminar)
-    - `src/features/home/` (Debe ser migrado a `src/screens/client/Home` para cumplir con la arquitectura consistente)
+2.  **Directorios Features Obsoletos (Eliminados)**:
+    - `src/features/demo/` 🗑️
+    - `src/features/home/` 🗑️ -> Migrado a `src/screens/client/Home`
 
 ### ♻️ Código Duplicado y Mejoras
 
+✅ **REFACTOR REALIZADO**
+
 1.  **Utilidades de Fecha**:
-
-    - Se detectó lógica de formateo de fechas duplicada en `BookingPage.tsx`, `MyBookingsPage.tsx` y `HomePage.tsx`.
-    - **Solución**: Crear `src/lib/dateUtils.ts` y centralizar funciones como `formatDateToLocalString` y `formatTime`.
-
-2.  **Hooks de Lógica "Home"**:
-    - `useHomeLogic.ts` importa `useProfile` de `features/auth` solo para obtener el ID. Podría optimizarse.
+    - Creado `src/lib/dateUtils.ts`
+    - Refactorizadas las vistas de cliente (`BookingPage`, `MyBookingsPage`, `HomePage`) para usar estas utilidades.
 
 ### 📝 Plan de Acción para Limpieza Final
 
-- [ ] Migrar `src/features/home` -> `src/screens/client/Home`
-- [ ] Refactorizar `Header.tsx` para eliminar dependencias de `src/hooks/useProfile.ts` (si las tiene)
-- [ ] Crear `src/lib/dateUtils.ts` y refactorizar vistas de cliente
-- [ ] Eliminar carpeta `src/features/demo`
-- [ ] Eliminar hooks legacy en `src/hooks/` y limpiar `src/hooks/index.ts`
+- [x] Migrar `src/features/home` -> `src/screens/client/Home`
+- [x] Refactorizar `Header.tsx` (verificado que usa hooks correctos)
+- [x] Crear `src/lib/dateUtils.ts` y refactorizar vistas de cliente
+- [x] Eliminar carpeta `src/features/demo`
+- [x] Eliminar hooks legacy en `src/hooks/` y limpiar `src/hooks/index.ts`

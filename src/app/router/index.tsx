@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { RootLayout } from "@/components/layout/RootLayout";
-import { HomePage } from "@/features/home/pages/HomePage";
+import { HomePage } from "@/screens/client/Home/HomePage";
 import { NotFoundPage } from "@/features/errors/pages/NotFoundPage";
 import { LoginPage } from "@/features/auth";
 import { DashboardPage } from "@/screens/admin/Dashboard/DashboardPage";

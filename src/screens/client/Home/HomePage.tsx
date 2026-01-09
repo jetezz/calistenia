@@ -9,6 +9,7 @@ import {
   RefreshCw,
   ChevronDown,
 } from "lucide-react";
+import { formatDate, formatTime } from "@/lib/dateUtils";
 import { useProfile } from "@/features/auth";
 import {
   Card,
@@ -52,22 +53,6 @@ export function HomePage() {
       default:
         return null;
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const formatTime = (time: string) => {
-    return new Date(`1970-01-01T${time}`).toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
   };
 
   if (authLoading || dashboardLoading) {

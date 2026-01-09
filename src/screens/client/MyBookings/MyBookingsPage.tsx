@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   AlertCircle,
 } from "lucide-react";
+import { formatDateLong, formatTime } from "@/lib/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,23 +26,6 @@ export function MyBookingsPage() {
     refresh,
     getCancellationPolicy,
   } = useMyBookingsLogic(user?.id);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (time: string) => {
-    return new Date(`1970-01-01T${time}`).toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -125,7 +109,7 @@ export function MyBookingsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm leading-tight">
-                        {formatDate(booking.booking_date)}
+                        {formatDateLong(booking.booking_date)}
                       </h3>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                         <Clock className="size-3" />
@@ -135,7 +119,7 @@ export function MyBookingsPage() {
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        Reservada el {formatDate(booking.created_at)}
+                        Reservada el {formatDateLong(booking.created_at)}
                       </div>
                     </div>
                     <div className="flex-shrink-0">
@@ -210,7 +194,7 @@ export function MyBookingsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm leading-tight">
-                        {formatDate(booking.booking_date)}
+                        {formatDateLong(booking.booking_date)}
                       </h3>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                         <Clock className="size-3" />
@@ -220,7 +204,7 @@ export function MyBookingsPage() {
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        Reservada el {formatDate(booking.created_at)}
+                        Reservada el {formatDateLong(booking.created_at)}
                       </div>
                     </div>
                     <div className="flex-shrink-0">

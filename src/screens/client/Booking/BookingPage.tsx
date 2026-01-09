@@ -7,6 +7,7 @@ import {
   ChevronRight,
   CalendarDays,
 } from "lucide-react";
+import { formatDateToLocalString, formatTime } from "@/lib/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +16,6 @@ import { useBookingLogic } from "@/hooks/client/Booking/useBookingLogic";
 import { useAuth } from "@/features/auth";
 
 const DAYS_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-
-const formatDateToLocalString = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
 
 const getWeekDates = (startDate: Date) => {
   const dates = [];
@@ -58,14 +52,6 @@ export function BookingPage() {
   const formatDate = useCallback((date: Date) => {
     return formatDateToLocalString(date);
   }, []);
-
-  const formatTime = (time: string) => {
-    return new Date(`1970-01-01T${time}`).toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
 
   const weekDates = useMemo(() => getWeekDates(viewWeek), [viewWeek]);
 
