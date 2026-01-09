@@ -22,6 +22,7 @@ export function AdminPaymentRequestsPage() {
   const { success, error: showError } = useToast();
   const { profile: adminProfile } = useProfile();
   const {
+    profiles,
     pendingPaymentRequests,
     allPaymentRequests,
     isDashboardLoading: isLoading,
@@ -31,10 +32,29 @@ export function AdminPaymentRequestsPage() {
     usePaymentRequestStore();
 
   // Combine pending and all payment requests
-  const typedRequests =
-    allPaymentRequests.length > 0
-      ? (allPaymentRequests as PaymentRequestWithUser[])
-      : (pendingPaymentRequests as PaymentRequestWithUser[]);
+  // Combine pending and all payment requests
+  const requests =
+    allPaymentRequests.length > 0 ? allPaymentRequests : pendingPaymentRequests;
+
+  const typedRequests: PaymentRequestWithUser[] = requests.map((req) => {
+    // If user data is already present (e.g. from a different API version), use it
+    const reqWithUser = req as unknown as PaymentRequestWithUser;
+    if (reqWithUser.user) {
+      return reqWithUser;
+    }
+
+    // Otherwise find user in loaded profiles
+    const userProfile = profiles.find((p) => p.id === req.user_id);
+
+    return {
+      ...req,
+      user: {
+        id: req.user_id,
+        full_name: userProfile?.full_name ?? "Usuario desconocido",
+        email: userProfile?.email ?? "Sin email",
+      },
+    };
+  });
 
   const handleProcessRequest = async (
     request: PaymentRequestWithUser,
