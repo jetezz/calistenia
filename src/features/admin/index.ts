@@ -1,10 +1,2 @@
-export { AdminDashboardPage } from './pages/AdminDashboardPage'
-export { AdminSlotsPage } from './pages/AdminSlotsPage'
-export { EnhancedAdminSlotsPage } from './pages/EnhancedAdminSlotsPage'
-export { AdminUsersPage } from './pages/AdminUsersPage'
-export { AdminUserDetailPage } from './pages/AdminUserDetailPage'
-export { AdminBookingsPage } from './pages/AdminBookingsPage'
-export { AdminPaymentRequestsPage } from './pages/AdminPaymentRequestsPage'
-export { AdminPricingPage } from './pages/AdminPricingPage'
-export { AdminPaymentMethodsPage } from './pages/AdminPaymentMethodsPage'
-export { AdminSettingsPage } from './pages/AdminSettingsPage'
+// Exported pages have been migrated to src/screens/admin/
+// This file is kept to avoid import errors if any legacy import remains, but should be empty.

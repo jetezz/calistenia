@@ -6,4 +6,3 @@ export { usePricingPackageStore } from "./pricingPackageStore";
 export { usePaymentMethodStore } from "./paymentMethodStore";
 export { useNotificationStore } from "./notificationStore";
 export { useAppSettingsStore } from "./appSettingsStore";
-export { useAdminDataStore } from "./adminDataStore";

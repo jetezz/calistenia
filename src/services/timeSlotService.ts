@@ -1,176 +1,184 @@
-import { supabase } from '@/lib/supabase'
-import type { Database } from '@/types/database'
+import { supabase } from "@/lib/supabase";
+import type { Database } from "@/types/database";
+import type { CrudService } from "@/stores/BaseStore";
 
+type TimeSlot = Database["public"]["Tables"]["time_slots"]["Row"];
+type TimeSlotInsert = Database["public"]["Tables"]["time_slots"]["Insert"];
+type TimeSlotUpdate = Database["public"]["Tables"]["time_slots"]["Update"];
 
-type TimeSlotInsert = Database['public']['Tables']['time_slots']['Insert']
-type TimeSlotUpdate = Database['public']['Tables']['time_slots']['Update']
+const getAll = async (): Promise<TimeSlot[]> => {
+  const { data, error } = await supabase
+    .from("time_slots")
+    .select("*")
+    .order("slot_type", { ascending: true })
+    .order("day_of_week", { ascending: true })
+    .order("specific_date", { ascending: true })
+    .order("start_time", { ascending: true });
 
-export const timeSlotService = {
-  async getAll() {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .select('*')
-      .order('slot_type', { ascending: true })
-      .order('day_of_week', { ascending: true })
-      .order('specific_date', { ascending: true })
-      .order('start_time', { ascending: true })
-    
-    if (error) throw error
-    return data
-  },
+  if (error) throw error;
+  return data ?? [];
+};
 
-  async getActive() {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .select('*')
-      .eq('is_active', true)
-      .order('slot_type', { ascending: true })
-      .order('day_of_week', { ascending: true })
-      .order('specific_date', { ascending: true })
-      .order('start_time', { ascending: true })
-    
-    if (error) throw error
-    return data
-  },
+const getById = async (id: string): Promise<TimeSlot> => {
+  const { data, error } = await supabase
+    .from("time_slots")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-  async getRecurringSlots() {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .select('*')
-      .eq('slot_type', 'recurring')
-      .eq('is_active', true)
-      .order('day_of_week', { ascending: true })
-      .order('start_time', { ascending: true })
-    
-    if (error) throw error
-    return data
-  },
+  if (error) throw error;
+  return data;
+};
 
-  async getSpecificDateSlots(fromDate?: string, toDate?: string) {
-    let query = supabase
-      .from('time_slots')
-      .select('*')
-      .eq('slot_type', 'specific_date')
-      .eq('is_active', true)
-    
-    if (fromDate) {
-      query = query.gte('specific_date', fromDate)
-    }
-    
-    if (toDate) {
-      query = query.lte('specific_date', toDate)
-    }
-    
-    const { data, error } = await query
-      .order('specific_date', { ascending: true })
-      .order('start_time', { ascending: true })
-    
-    if (error) throw error
-    return data
-  },
+const create = async (timeSlot: TimeSlotInsert): Promise<TimeSlot> => {
+  const { data, error } = await supabase
+    .from("time_slots")
+    .insert(timeSlot)
+    .select()
+    .single();
 
-  async getAvailableDatesInRange(fromDate: string, toDate: string) {
-    // Get recurring slots that would be available in the date range
-    const { data: recurringSlots, error: recurringError } = await supabase
-      .from('time_slots')
-      .select('*')
-      .eq('slot_type', 'recurring')
-      .eq('is_active', true)
-    
-    if (recurringError) throw recurringError
+  if (error) throw error;
+  return data;
+};
 
-    // Get specific date slots in the range
-    const { data: specificSlots, error: specificError } = await supabase
-      .from('time_slots')
-      .select('*')
-      .eq('slot_type', 'specific_date')
-      .eq('is_active', true)
-      .gte('specific_date', fromDate)
-      .lte('specific_date', toDate)
-    
-    if (specificError) throw specificError
+const update = async (
+  id: string,
+  updates: TimeSlotUpdate
+): Promise<TimeSlot> => {
+  const { data, error } = await supabase
+    .from("time_slots")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
 
-    return { recurringSlots, specificSlots }
-  },
+  if (error) throw error;
+  return data;
+};
 
-  async getById(id: string) {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .select('*')
-      .eq('id', id)
-      .single()
-    
-    if (error) throw error
-    return data
-  },
+const _delete = async (id: string): Promise<void> => {
+  const { error } = await supabase.from("time_slots").delete().eq("id", id);
 
-  async getByDayOfWeek(dayOfWeek: number) {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .select('*')
-      .eq('day_of_week', dayOfWeek)
-      .eq('is_active', true)
-      .order('start_time', { ascending: true })
-    
-    if (error) throw error
-    return data
-  },
+  if (error) throw error;
+};
 
-  async getAvailableSpots(slotId: string, targetDate: string) {
-    const { data, error } = await supabase
-      .rpc('get_available_spots', {
-        slot_id: slotId,
-        target_date: targetDate
-      })
-    
-    if (error) throw error
-    return data as number
-  },
+// Métodos específicos
+const getActive = async () => {
+  const { data, error } = await supabase
+    .from("time_slots")
+    .select("*")
+    .eq("is_active", true)
+    .order("slot_type", { ascending: true })
+    .order("day_of_week", { ascending: true })
+    .order("specific_date", { ascending: true })
+    .order("start_time", { ascending: true });
 
-  async create(timeSlot: TimeSlotInsert) {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .insert(timeSlot)
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data
-  },
+  if (error) throw error;
+  return data ?? [];
+};
 
-  async update(id: string, updates: TimeSlotUpdate) {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data
-  },
+const getRecurringSlots = async () => {
+  const { data, error } = await supabase
+    .from("time_slots")
+    .select("*")
+    .eq("slot_type", "recurring")
+    .eq("is_active", true)
+    .order("day_of_week", { ascending: true })
+    .order("start_time", { ascending: true });
 
-  async toggleActive(id: string, isActive: boolean) {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .update({ is_active: isActive })
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data
-  },
+  if (error) throw error;
+  return data ?? [];
+};
 
-  async delete(id: string) {
-    const { data, error } = await supabase
-      .from('time_slots')
-      .delete()
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data
+const getSpecificDateSlots = async (fromDate?: string, toDate?: string) => {
+  let query = supabase
+    .from("time_slots")
+    .select("*")
+    .eq("slot_type", "specific_date")
+    .eq("is_active", true);
+
+  if (fromDate) {
+    query = query.gte("specific_date", fromDate);
   }
-}
+
+  if (toDate) {
+    query = query.lte("specific_date", toDate);
+  }
+
+  const { data, error } = await query
+    .order("specific_date", { ascending: true })
+    .order("start_time", { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+};
+
+const getAvailableSpots = async (slotId: string, targetDate: string) => {
+  const { data, error } = await supabase.rpc("get_available_spots", {
+    slot_id: slotId,
+    target_date: targetDate,
+  });
+
+  if (error) throw error;
+  return data as number;
+};
+
+const toggleActive = async (id: string, isActive: boolean) => {
+  const { data, error } = await supabase
+    .from("time_slots")
+    .update({ is_active: isActive })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+const getByDayOfWeek = async (dayOfWeek: number) => {
+  const { data, error } = await supabase
+    .from("time_slots")
+    .select("*")
+    .eq("day_of_week", dayOfWeek)
+    .eq("is_active", true)
+    .order("start_time", { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+};
+
+const getAvailableDatesInRange = async (fromDate: string, toDate: string) => {
+  const [recurringSlots, specificSlots] = await Promise.all([
+    getRecurringSlots(),
+    getSpecificDateSlots(fromDate, toDate),
+  ]);
+  return { recurringSlots, specificSlots };
+};
+
+export const timeSlotService: CrudService<
+  TimeSlot,
+  TimeSlotInsert,
+  TimeSlotUpdate
+> & {
+  getById: typeof getById;
+  getActive: typeof getActive;
+  getRecurringSlots: typeof getRecurringSlots;
+  getSpecificDateSlots: typeof getSpecificDateSlots;
+  getAvailableSpots: typeof getAvailableSpots;
+  toggleActive: typeof toggleActive;
+  getByDayOfWeek: typeof getByDayOfWeek;
+  getAvailableDatesInRange: typeof getAvailableDatesInRange;
+} = {
+  getAll,
+  create,
+  update,
+  delete: _delete,
+  getById,
+  getActive,
+  getRecurringSlots,
+  getSpecificDateSlots,
+  getAvailableSpots,
+  toggleActive,
+  getByDayOfWeek,
+  getAvailableDatesInRange,
+};

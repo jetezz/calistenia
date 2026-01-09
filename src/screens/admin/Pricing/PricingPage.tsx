@@ -4,21 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoadingState } from "@/components/common";
-import { useAdminData } from "@/hooks";
-import { usePricingPackageStore } from "@/stores";
-import { PricingPackageDialog } from "../components/PricingPackageDialog";
+import { PricingPackageDialog } from "@/features/admin/components/PricingPackageDialog";
 import { toast } from "sonner";
+import { useAdminPricingLogic } from "@/hooks/admin/Pricing/useAdminPricingLogic";
 import type { Database } from "@/types/database";
 
 type PricingPackage = Database["public"]["Tables"]["pricing_packages"]["Row"];
 
-export function AdminPricingPage() {
-  const {
-    pricingPackages: packages,
-    isSecondaryLoading: isLoading,
-    refresh,
-  } = useAdminData();
-  const { deletePackage, toggleActive } = usePricingPackageStore();
+export function PricingPage() {
+  const { packages, isLoading, refresh, deletePackage, toggleActive } =
+    useAdminPricingLogic();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<PricingPackage | null>(
     null
@@ -44,7 +40,6 @@ export function AdminPricingPage() {
     try {
       await deletePackage(id);
       toast.success("Paquete eliminado correctamente");
-      await refresh();
     } catch (error) {
       console.error("Error deleting package:", error);
       toast.error("Error al eliminar el paquete");
@@ -57,7 +52,6 @@ export function AdminPricingPage() {
       toast.success(
         `Paquete ${!currentStatus ? "activado" : "desactivado"} correctamente`
       );
-      await refresh();
     } catch (error) {
       console.error("Error toggling package status:", error);
       toast.error("Error al cambiar el estado del paquete");

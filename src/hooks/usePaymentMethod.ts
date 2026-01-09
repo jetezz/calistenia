@@ -9,38 +9,36 @@ type PaymentMethodUpdate =
 
 export function usePaymentMethod(loadAll = false) {
   const {
-    methods,
+    items: methods,
+    activeMethods,
     isLoading,
     error,
-    initialized,
-    fetchMethods,
-    fetchActiveMethods,
-    createMethod,
-    updateMethod,
-    deleteMethod,
+    fetchAll,
+    fetchActive,
+    create,
+    update,
+    delete: deleteItem,
     toggleActive,
   } = usePaymentMethodStore();
 
   useEffect(() => {
-    if (!initialized && !isLoading) {
-      if (loadAll) {
-        fetchMethods();
-      } else {
-        fetchActiveMethods();
-      }
+    if (loadAll) {
+      fetchAll();
+    } else {
+      fetchActive();
     }
-  }, [initialized, isLoading, loadAll, fetchMethods, fetchActiveMethods]);
+  }, [loadAll, fetchAll, fetchActive]);
 
   const handleCreate = async (paymentMethod: PaymentMethodInsert) => {
-    return createMethod(paymentMethod);
+    return create(paymentMethod);
   };
 
   const handleUpdate = async (id: string, updates: PaymentMethodUpdate) => {
-    return updateMethod(id, updates);
+    return update(id, updates);
   };
 
   const handleDelete = async (id: string) => {
-    return deleteMethod(id);
+    return deleteItem(id);
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
@@ -48,15 +46,15 @@ export function usePaymentMethod(loadAll = false) {
   };
 
   const refreshMethods = () => {
-    return fetchMethods();
+    return fetchAll();
   };
 
   const refreshActiveMethods = () => {
-    return fetchActiveMethods();
+    return fetchActive();
   };
 
   return {
-    methods,
+    methods: loadAll ? methods : activeMethods,
     isLoading,
     error,
     createMethod: handleCreate,

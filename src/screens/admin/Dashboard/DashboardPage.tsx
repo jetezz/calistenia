@@ -19,44 +19,21 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAdminData } from "@/hooks";
-import { useNotifications } from "@/hooks";
 import { PageLoadingState } from "@/components/common";
+import { useDashboardLogic } from "@/hooks/admin/Dashboard/useDashboardLogic";
 
-export function AdminDashboardPage() {
-  const {
-    profiles,
-    bookings,
-    pendingPaymentRequests,
-    activeTimeSlots,
-    isDashboardLoading,
-    refresh,
-  } = useAdminData();
+export function DashboardPage() {
+  const { stats, newBookingsCount, isLoading, refresh, markAsSeen } =
+    useDashboardLogic();
 
-  // Calculate stats from the data
-  const stats = {
-    todayBookings: bookings.filter((b) => {
-      const today = new Date().toISOString().split("T")[0];
-      return b.booking_date === today && b.status === "confirmed";
-    }).length,
-    pendingPaymentRequests: pendingPaymentRequests.length,
-    totalUsers: profiles.filter((p) => p.role === "user").length,
-    activeTimeSlots: activeTimeSlots.length,
-  };
-
-  const { newBookingsCount, markAsSeen } = useNotifications(
-    true,
-    stats.todayBookings
-  );
-
-  if (isDashboardLoading) {
+  if (isLoading) {
     return <PageLoadingState message="Cargando panel de administración..." />;
   }
 
   const statsCards = [
     {
       title: "Clases de Hoy",
-      value: stats.todayBookings,
+      value: stats.todayBookingsCount,
       description: "Reservas confirmadas",
       icon: Calendar,
       color: "text-blue-600",
@@ -65,7 +42,7 @@ export function AdminDashboardPage() {
     },
     {
       title: "Solicitudes Pendientes",
-      value: stats.pendingPaymentRequests,
+      value: stats.pendingPaymentRequestsCount,
       description: "Recargas por aprobar",
       icon: AlertCircle,
       color: "text-orange-600",
@@ -74,7 +51,7 @@ export function AdminDashboardPage() {
     },
     {
       title: "Usuarios Totales",
-      value: stats.totalUsers,
+      value: stats.totalUsersCount,
       description: "Clientes registrados",
       icon: Users,
       color: "text-green-600",
@@ -83,7 +60,7 @@ export function AdminDashboardPage() {
     },
     {
       title: "Horarios Activos",
-      value: stats.activeTimeSlots,
+      value: stats.activeTimeSlotsCount,
       description: "Franjas disponibles",
       icon: Clock,
       color: "text-purple-600",
@@ -148,7 +125,7 @@ export function AdminDashboardPage() {
           </Button>
         </div>
         <p className="text-sm text-muted-foreground">
-          Gestiona tu centro de calistenia desde aquí
+          Gestiona tu centro de calistenia desde aquí (Nueva Arquitectura)
         </p>
       </div>
 
@@ -248,7 +225,7 @@ export function AdminDashboardPage() {
               </Link>
             )}
 
-            {stats.pendingPaymentRequests > 0 && (
+            {stats.pendingPaymentRequestsCount > 0 && (
               <Link
                 to="/admin/payment-requests"
                 className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors cursor-pointer"
@@ -256,7 +233,7 @@ export function AdminDashboardPage() {
                 <CreditCard className="size-5 text-orange-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">
-                    {stats.pendingPaymentRequests} solicitudes de pago
+                    {stats.pendingPaymentRequestsCount} solicitudes de pago
                     pendientes
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -264,12 +241,12 @@ export function AdminDashboardPage() {
                   </p>
                 </div>
                 <Badge variant="secondary">
-                  {stats.pendingPaymentRequests}
+                  {stats.pendingPaymentRequestsCount}
                 </Badge>
               </Link>
             )}
 
-            {newBookingsCount === 0 && stats.todayBookings === 0 && (
+            {newBookingsCount === 0 && stats.todayBookingsCount === 0 && (
               <Link
                 to="/admin/bookings"
                 className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"
@@ -286,7 +263,7 @@ export function AdminDashboardPage() {
               </Link>
             )}
 
-            {stats.activeTimeSlots === 0 && (
+            {stats.activeTimeSlotsCount === 0 && (
               <Link
                 to="/admin/slots"
                 className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
@@ -301,9 +278,9 @@ export function AdminDashboardPage() {
               </Link>
             )}
 
-            {stats.pendingPaymentRequests === 0 &&
-              stats.todayBookings > 0 &&
-              stats.activeTimeSlots > 0 && (
+            {stats.pendingPaymentRequestsCount === 0 &&
+              stats.todayBookingsCount > 0 &&
+              stats.activeTimeSlotsCount > 0 && (
                 <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
                   <TrendingUp className="size-5 text-green-600" />
                   <div>

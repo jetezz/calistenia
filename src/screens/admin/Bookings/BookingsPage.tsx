@@ -3,65 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageLoadingState } from "@/components/common";
-import { useAdminData, useToast } from "@/hooks";
-import { useBookingStore } from "@/stores";
+import { useAdminBookingsLogic } from "@/hooks/admin/Bookings/useAdminBookingsLogic";
 
-type BookingWithTimeSlotAndUser = {
-  id: string;
-  user_id: string;
-  time_slot_id: string;
-  booking_date: string;
-  status: string;
-  created_at: string;
-  user: { id: string; full_name: string | null; email: string };
-  time_slot: {
-    id: string;
-    day_of_week: number;
-    start_time: string;
-    end_time: string;
-    capacity: number;
-    created_at: string;
-    updated_at: string;
-  };
-};
+export function BookingsPage() {
+  const { bookings, isLoading, handleUpdateStatus, refresh } =
+    useAdminBookingsLogic();
 
-export function AdminBookingsPage() {
-  const { success, error: showError } = useToast();
-  const { bookings, isDashboardLoading: isLoading, refresh } = useAdminData();
-  const { updateBooking: updateStatus } = useBookingStore();
-
-  // Cast to include user relations since service returns joined data
-  const typedBookings = bookings as unknown as BookingWithTimeSlotAndUser[];
-
-  const updateBookingStatus = async (bookingId: string, status: string) => {
-    try {
-      await updateStatus(bookingId, { status });
-      if (status === "cancelled") {
-        success("Reserva cancelada. Crédito devuelto al usuario");
-      } else {
-        success(`Reserva actualizada a ${status}`);
-      }
-      // Refresh admin data after update
-      await refresh();
-    } catch (error) {
-      console.error("Error updating booking status:", error);
-      showError("Error al actualizar la reserva");
-    }
-  };
-
-  const getBookingStatusBadge = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return <Badge className="bg-blue-500 text-white">Confirmada</Badge>;
-      case "cancelled":
-        return <Badge variant="destructive">Cancelada</Badge>;
-      case "completed":
-        return <Badge className="bg-green-500 text-white">Completada</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
+  // Helper local para renderizado
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-ES", {
       weekday: "short",
@@ -79,9 +27,20 @@ export function AdminBookingsPage() {
     });
   };
 
-  const DAYS_OF_WEEK = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+  const getBookingStatusBadge = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return <Badge className="bg-blue-500 text-white">Confirmada</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Cancelada</Badge>;
+      case "completed":
+        return <Badge className="bg-green-500 text-white">Completada</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
 
-  // Convert database day_of_week (0=Sunday) to display index (0=Monday)
+  const DAYS_OF_WEEK = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
   const convertDayOfWeekToDisplayIndex = (dbDayOfWeek: number) => {
     return dbDayOfWeek === 0 ? 6 : dbDayOfWeek - 1;
   };
@@ -105,7 +64,7 @@ export function AdminBookingsPage() {
             </p>
           </div>
 
-          {typedBookings.length === 0 ? (
+          {!bookings || bookings.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <Calendar className="size-12 mx-auto text-muted-foreground mb-4" />
@@ -123,12 +82,12 @@ export function AdminBookingsPage() {
                 <Calendar className="size-4 text-muted-foreground" />
                 <h2 className="font-semibold text-base">Todas las Reservas</h2>
                 <Badge variant="outline" className="text-xs">
-                  {typedBookings.length}
+                  {bookings.length}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                {typedBookings.map((booking) => (
+                {bookings.map((booking) => (
                   <div
                     key={booking.id}
                     className="p-3 rounded-lg border bg-card"
@@ -139,13 +98,13 @@ export function AdminBookingsPage() {
                           <div className="flex items-center gap-1.5 mb-1">
                             <User className="size-3 text-muted-foreground shrink-0" />
                             <span className="font-semibold text-sm truncate">
-                              {booking.user.full_name || "Sin nombre"}
+                              {booking.user?.full_name || "Sin nombre"}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Mail className="size-3 shrink-0" />
                             <span className="truncate">
-                              {booking.user.email}
+                              {booking.user?.email}
                             </span>
                           </div>
                         </div>
@@ -159,13 +118,12 @@ export function AdminBookingsPage() {
                             {formatDate(booking.booking_date)}
                           </div>
                           <div className="text-muted-foreground text-[10px]">
-                            {
+                            {booking.time_slot &&
                               DAYS_OF_WEEK[
                                 convertDayOfWeekToDisplayIndex(
                                   booking.time_slot.day_of_week
                                 )
-                              ]
-                            }
+                              ]}
                           </div>
                         </div>
                         <div className="space-y-1">
@@ -173,8 +131,13 @@ export function AdminBookingsPage() {
                           <div className="flex items-center gap-1 font-medium">
                             <Clock className="size-3" />
                             <span>
-                              {formatTime(booking.time_slot.start_time)} -{" "}
-                              {formatTime(booking.time_slot.end_time)}
+                              {booking.time_slot
+                                ? `${formatTime(
+                                    booking.time_slot.start_time
+                                  )} - ${formatTime(
+                                    booking.time_slot.end_time
+                                  )}`
+                                : "Horario eliminado"}
                             </span>
                           </div>
                         </div>
@@ -187,7 +150,7 @@ export function AdminBookingsPage() {
                               size="sm"
                               variant="outline"
                               onClick={() =>
-                                updateBookingStatus(booking.id, "completed")
+                                handleUpdateStatus(booking.id, "completed")
                               }
                               className="flex-1 h-8 text-xs"
                             >
@@ -197,7 +160,7 @@ export function AdminBookingsPage() {
                               size="sm"
                               variant="destructive"
                               onClick={() =>
-                                updateBookingStatus(booking.id, "cancelled")
+                                handleUpdateStatus(booking.id, "cancelled")
                               }
                               className="flex-1 h-8 text-xs"
                             >
@@ -210,7 +173,7 @@ export function AdminBookingsPage() {
                             size="sm"
                             variant="outline"
                             onClick={() =>
-                              updateBookingStatus(booking.id, "confirmed")
+                              handleUpdateStatus(booking.id, "confirmed")
                             }
                             className="w-full h-8 text-xs"
                           >

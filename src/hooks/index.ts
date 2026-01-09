@@ -8,4 +8,3 @@ export { usePricingPackage } from "./usePricingPackage";
 export { usePaymentMethod } from "./usePaymentMethod";
 export { useNotifications } from "./useNotifications";
 export { useAppSettings } from "./useAppSettings";
-export { useAdminData } from "./useAdminData";

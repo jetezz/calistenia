@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { useAuth, useProfile } from "@/features/auth";
 import { NotificationBell } from "@/features/admin/components";
-import { useAdminData, useNotifications } from "@/hooks";
+import { useNotifications } from "@/hooks";
+import { useBookingStore } from "@/stores/bookingStore";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +14,21 @@ export function Header() {
   const { signOut } = useAuth();
   const { profile, isAdmin } = useProfile();
   const navigate = useNavigate();
-  const { bookings } = useAdminData();
+
+  const { items: bookings, fetchAll } = useBookingStore();
+
+  // Fetch bookings if admin to show notifications
+  useEffect(() => {
+    if (isAdmin) {
+      fetchAll();
+    }
+  }, [isAdmin, fetchAll]);
+
   const today = new Date().toISOString().split("T")[0];
   const todayBookingsCount = bookings.filter(
     (b) => b.booking_date === today && b.status === "confirmed"
   ).length;
+
   const { markAsSeen } = useNotifications(isAdmin, todayBookingsCount);
 
   const handleSignOut = async () => {

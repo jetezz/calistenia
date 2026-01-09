@@ -1,101 +1,90 @@
-import { create } from 'zustand'
-import type { Database } from '@/types/database'
+import { create } from "zustand";
+import { createBaseStore, type BaseStoreState } from "./BaseStore";
+import { timeSlotService } from "@/services/timeSlotService";
+import type { Database } from "@/types/database";
 
-type TimeSlot = Database['public']['Tables']['time_slots']['Row']
+type TimeSlot = Database["public"]["Tables"]["time_slots"]["Row"];
+type TimeSlotInsert = Database["public"]["Tables"]["time_slots"]["Insert"];
+type TimeSlotUpdate = Database["public"]["Tables"]["time_slots"]["Update"];
 
-interface TimeSlotStore {
-  timeSlots: TimeSlot[]
-  activeTimeSlots: TimeSlot[]
-  currentTimeSlot: TimeSlot | null
-  availabilityCache: Record<string, number>
-  loading: boolean
-  error: string | null
-
-  setTimeSlots: (timeSlots: TimeSlot[]) => void
-  setActiveTimeSlots: (timeSlots: TimeSlot[]) => void
-  setCurrentTimeSlot: (timeSlot: TimeSlot | null) => void
-  addTimeSlot: (timeSlot: TimeSlot) => void
-  updateTimeSlot: (id: string, updates: Partial<TimeSlot>) => void
-  removeTimeSlot: (id: string) => void
-  setAvailability: (slotId: string, date: string, spots: number) => void
-  getAvailability: (slotId: string, date: string) => number | undefined
-  setLoading: (loading: boolean) => void
-  setError: (error: string | null) => void
-  reset: () => void
+interface TimeSlotStore
+  extends BaseStoreState<TimeSlot, TimeSlotInsert, TimeSlotUpdate> {
+  activeSlots: TimeSlot[];
+  availabilityCache: Record<string, number>;
+  fetchActive: () => Promise<void>;
+  toggleActive: (id: string, isActive: boolean) => Promise<void>;
+  setActiveSlots: (slots: TimeSlot[]) => void;
+  addItem: (slot: TimeSlot) => void;
+  updateItem: (id: string, slot: TimeSlot) => void;
+  removeItem: (id: string) => void;
+  setAvailability: (slotId: string, date: string, spots: number) => void;
+  getAvailability: (slotId: string, date: string) => number | undefined;
 }
 
-const initialState = {
-  timeSlots: [],
-  activeTimeSlots: [],
-  currentTimeSlot: null,
-  availabilityCache: {},
-  loading: false,
-  error: null,
-}
+export const useTimeSlotStore = create<TimeSlotStore>((set, get, store) => {
+  const baseStore = createBaseStore<TimeSlot, TimeSlotInsert, TimeSlotUpdate>(
+    timeSlotService
+  )(set, get, store);
 
-export const useTimeSlotStore = create<TimeSlotStore>((set, get) => ({
-  ...initialState,
+  return {
+    ...baseStore,
+    activeSlots: [],
+    availabilityCache: {},
 
-  setTimeSlots: (timeSlots) => set({ timeSlots }),
-  
-  setActiveTimeSlots: (activeTimeSlots) => set({ activeTimeSlots }),
-  
-  setCurrentTimeSlot: (currentTimeSlot) => set({ currentTimeSlot }),
-  
-  addTimeSlot: (timeSlot) => set((state) => ({
-    timeSlots: [...state.timeSlots, timeSlot].sort((a, b) => {
-      if (a.day_of_week !== b.day_of_week) {
-        return a.day_of_week - b.day_of_week
+    fetchActive: async () => {
+      // Si ya tenemos todos los items cargados, filtramos localmente
+      if (get().isInitialized) {
+        set({ activeSlots: get().items.filter((i) => i.is_active) });
+        return;
       }
-      return a.start_time.localeCompare(b.start_time)
-    }),
-    activeTimeSlots: timeSlot.is_active 
-      ? [...state.activeTimeSlots, timeSlot].sort((a, b) => {
-          if (a.day_of_week !== b.day_of_week) {
-            return a.day_of_week - b.day_of_week
-          }
-          return a.start_time.localeCompare(b.start_time)
-        })
-      : state.activeTimeSlots
-  })),
-  
-  updateTimeSlot: (id, updates) => set((state) => {
-    const updatedTimeSlots = state.timeSlots.map((timeSlot) =>
-      timeSlot.id === id ? { ...timeSlot, ...updates } : timeSlot
-    )
-    
-    const updatedActiveTimeSlots = updatedTimeSlots.filter(slot => slot.is_active)
-    
-    return {
-      timeSlots: updatedTimeSlots,
-      activeTimeSlots: updatedActiveTimeSlots,
-      currentTimeSlot: state.currentTimeSlot?.id === id
-        ? { ...state.currentTimeSlot, ...updates }
-        : state.currentTimeSlot
-    }
-  }),
-  
-  removeTimeSlot: (id) => set((state) => ({
-    timeSlots: state.timeSlots.filter((timeSlot) => timeSlot.id !== id),
-    activeTimeSlots: state.activeTimeSlots.filter((timeSlot) => timeSlot.id !== id),
-    currentTimeSlot: state.currentTimeSlot?.id === id ? null : state.currentTimeSlot
-  })),
-  
-  setAvailability: (slotId, date, spots) => set((state) => ({
-    availabilityCache: {
-      ...state.availabilityCache,
-      [`${slotId}-${date}`]: spots
-    }
-  })),
-  
-  getAvailability: (slotId, date) => {
-    const state = get()
-    return state.availabilityCache[`${slotId}-${date}`]
-  },
-  
-  setLoading: (loading) => set({ loading }),
-  
-  setError: (error) => set({ error }),
-  
-  reset: () => set(initialState),
-}))
+
+      // Consolidar en fetchAll para evitar duplicados
+      await get().fetchAll();
+      set({ activeSlots: get().items.filter((i) => i.is_active) });
+    },
+
+    toggleActive: async (id, isActive) => {
+      // Optimistic update
+      set((state) => ({
+        items: state.items.map((i) =>
+          i.id === id ? { ...i, is_active: isActive } : i
+        ),
+        activeSlots: isActive
+          ? [...state.activeSlots, state.items.find((i) => i.id === id)!]
+          : state.activeSlots.filter((i) => i.id !== id),
+      }));
+
+      try {
+        await timeSlotService.toggleActive(id, isActive);
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message });
+      }
+    },
+
+    setAvailability: (slotId, date, spots) => {
+      set((state) => ({
+        availabilityCache: {
+          ...state.availabilityCache,
+          [`${slotId}-${date}`]: spots,
+        },
+      }));
+    },
+
+    getAvailability: (slotId, date) => {
+      return get().availabilityCache[`${slotId}-${date}`];
+    },
+
+    setActiveSlots: (activeSlots) => set({ activeSlots }),
+
+    addItem: (slot) => set((state) => ({ items: [slot, ...state.items] })),
+
+    updateItem: (id, slot) =>
+      set((state) => ({
+        items: state.items.map((i) => (i.id === id ? slot : i)),
+      })),
+
+    removeItem: (id) =>
+      set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+  };
+});

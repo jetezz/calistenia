@@ -15,11 +15,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageLoadingState } from "@/components/common";
-import { useAdminData } from "@/hooks";
-import { timeSlotService } from "@/services/timeSlotService";
-import { EnhancedTimeSlotDialog, AddUserToSlotDialog } from "../components";
-import { AvailabilityCalendar } from "../components/AvailabilityCalendar";
-import { bookingService } from "@/services";
+import { useAdminSlotsLogic } from "@/hooks/admin/Slots/useAdminSlotsLogic";
+import { bookingService } from "@/services/bookingService";
+import {
+  EnhancedTimeSlotDialog,
+  AddUserToSlotDialog,
+} from "@/features/admin/components"; // Adapting imports
+import { AvailabilityCalendar } from "@/features/admin/components/AvailabilityCalendar"; // Adapting imports
 import type { Database } from "@/types/database";
 
 type TimeSlot = Database["public"]["Tables"]["time_slots"]["Row"];
@@ -39,12 +41,14 @@ const DAYS_OF_WEEK = [
   "Domingo",
 ];
 
-export function EnhancedAdminSlotsPage() {
+export function SlotsPage() {
   const {
-    allTimeSlots: timeSlots,
-    isSecondaryLoading: isLoading,
+    slots: timeSlots,
+    isLoading,
     refresh,
-  } = useAdminData();
+    deleteSlot,
+    toggleActive,
+  } = useAdminSlotsLogic();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null);
@@ -78,15 +82,13 @@ export function EnhancedAdminSlotsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("¿Estás seguro de que quieres eliminar este horario?")) {
-      await timeSlotService.delete(id);
-      await refresh();
+    if (window.confirm("¿Estás seguro de que quieres eliminar este horario?")) {
+      await deleteSlot(id);
     }
   };
 
   const handleToggleStatus = async (slot: TimeSlot) => {
-    await timeSlotService.toggleActive(slot.id, !slot.is_active);
-    await refresh();
+    await toggleActive(slot.id, !slot.is_active);
   };
 
   const handleCalendarDateClick = (date: string, slots: TimeSlot[]) => {
@@ -99,17 +101,22 @@ export function EnhancedAdminSlotsPage() {
 
     try {
       const allBookingsForDate = await bookingService.getBookingsByDate(date);
+      // Casting because getBookingsByDate returns BookingWithRelations which is compatible enough for this usage
+      // or we just trust the specific logic here.
+      // ideally we should move this to logic layer too if it becomes complex.
 
       for (const slot of slots) {
-        const matchingBookings = allBookingsForDate.filter((booking) => {
-          const bookingSlot = booking.time_slot;
-          if (!bookingSlot) return false;
+        const matchingBookings = (allBookingsForDate as any[]).filter(
+          (booking) => {
+            const bookingSlot = booking.time_slot;
+            if (!bookingSlot) return false;
 
-          return (
-            bookingSlot.start_time === slot.start_time &&
-            bookingSlot.end_time === slot.end_time
-          );
-        });
+            return (
+              bookingSlot.start_time === slot.start_time &&
+              bookingSlot.end_time === slot.end_time
+            );
+          }
+        );
 
         bookingsMap[slot.id] = matchingBookings;
       }
@@ -127,7 +134,7 @@ export function EnhancedAdminSlotsPage() {
     if (selectedDateSlots) {
       loadBookingsForSlots(selectedDateSlots.slots, selectedDateSlots.date);
     }
-  }, [timeSlots, selectedDateSlots]);
+  }, [timeSlots, selectedDateSlots]); // Refresh bookings if slots change or selection changes
 
   // Convert database day_of_week (0=Sunday) to display index (0=Monday)
   const convertDayOfWeekToDisplayIndex = (dbDayOfWeek: number) => {

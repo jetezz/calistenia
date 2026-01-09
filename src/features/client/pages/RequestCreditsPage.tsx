@@ -1,109 +1,126 @@
-import { CreditCard, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useAuth } from '@/features/auth'
-import { usePaymentRequest, usePricingPackage, usePaymentMethod } from '@/hooks'
-import { toast } from 'sonner'
-import { PageLoadingState } from '@/components/common'
-import { getPaymentMethodIcon } from '@/features/admin/pages/AdminPaymentMethodsPage'
-import type { Database } from '@/types/database'
+import {
+  CreditCard,
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+} from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/features/auth";
+import {
+  usePaymentRequest,
+  usePricingPackage,
+  usePaymentMethod,
+} from "@/hooks";
+import { toast } from "sonner";
+import { PageLoadingState } from "@/components/common";
+import { getPaymentMethodIcon } from "@/lib/payment-utils";
+import type { Database } from "@/types/database";
 
-type PaymentMethod = Database['public']['Tables']['payment_methods']['Row']
+type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
 export function RequestCreditsPage() {
-  const { user } = useAuth()
-  const { packages, isLoading: isLoadingPackages } = usePricingPackage()
-  const { methods, isLoading: isLoadingMethods } = usePaymentMethod()
-  const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { user } = useAuth();
+  const { packages, isLoading: isLoadingPackages } = usePricingPackage();
+  const { methods, isLoading: isLoadingMethods } = usePaymentMethod();
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    credits: '',
-    paymentMethod: '',
-    notes: ''
-  })
-  
-  const { createPaymentRequest } = usePaymentRequest()
+    credits: "",
+    paymentMethod: "",
+    notes: "",
+  });
 
-  const selectedPackage = packages.find(pkg => pkg.credits.toString() === formData.credits)
-  const selectedMethod = methods.find(m => m.id === formData.paymentMethod)
+  const { createPaymentRequest } = usePaymentRequest();
+
+  const selectedPackage = packages.find(
+    (pkg) => pkg.credits.toString() === formData.credits
+  );
+  const selectedMethod = methods.find((m) => m.id === formData.paymentMethod);
 
   const handleStep1Submit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!formData.credits) {
-      toast.error('Por favor selecciona un paquete de clases')
-      return
+      toast.error("Por favor selecciona un paquete de clases");
+      return;
     }
 
-    setStep(2)
-  }
+    setStep(2);
+  };
 
   const handleStep2Submit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!formData.paymentMethod) {
-      toast.error('Por favor selecciona un método de pago')
-      return
+      toast.error("Por favor selecciona un método de pago");
+      return;
     }
 
-    setStep(3)
-  }
+    setStep(3);
+  };
 
   const handleFinalSubmit = async () => {
     if (!user) {
-      toast.error('Error de autenticación')
-      return
+      toast.error("Error de autenticación");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       await createPaymentRequest({
         user_id: user.id,
         credits_requested: parseInt(formData.credits),
         payment_method_id: formData.paymentMethod,
-        admin_notes: formData.notes || undefined
-      })
+        admin_notes: formData.notes || undefined,
+      });
 
-      toast.success('Solicitud de créditos enviada correctamente')
-      
+      toast.success("Solicitud de créditos enviada correctamente");
+
       setFormData({
-        credits: '',
-        paymentMethod: '',
-        notes: ''
-      })
-      
-      window.location.href = '/'
+        credits: "",
+        paymentMethod: "",
+        notes: "",
+      });
+
+      window.location.href = "/";
     } catch (error) {
-      console.error('Error submitting credit request:', error)
-      toast.error('Error al enviar la solicitud. Inténtalo de nuevo.')
+      console.error("Error submitting credit request:", error);
+      toast.error("Error al enviar la solicitud. Inténtalo de nuevo.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const renderPaymentDetails = (method: PaymentMethod) => {
-    const details = []
-    
+    const details = [];
+
     if (method.contact_phone) {
-      details.push({ label: 'Teléfono', value: method.contact_phone })
+      details.push({ label: "Teléfono", value: method.contact_phone });
     }
     if (method.contact_email) {
-      details.push({ label: 'Email', value: method.contact_email })
+      details.push({ label: "Email", value: method.contact_email });
     }
     if (method.bank_account) {
-      details.push({ label: 'Cuenta bancaria', value: method.bank_account })
+      details.push({ label: "Cuenta bancaria", value: method.bank_account });
     }
-    
-    return details
-  }
+
+    return details;
+  };
 
   if (isLoadingPackages || isLoadingMethods) {
-    return <PageLoadingState message="Cargando información..." />
+    return <PageLoadingState message="Cargando información..." />;
   }
 
   if (packages.length === 0) {
@@ -112,14 +129,16 @@ export function RequestCreditsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <AlertCircle className="size-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay paquetes disponibles</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              No hay paquetes disponibles
+            </h3>
             <p className="text-muted-foreground">
               Por favor, contacta con el administrador
             </p>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -128,9 +147,9 @@ export function RequestCreditsPage() {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Solicitar Créditos</h1>
           <p className="text-muted-foreground">
-            {step === 1 && 'Selecciona el paquete de clases que necesitas'}
-            {step === 2 && 'Realiza el pago y selecciona el método utilizado'}
-            {step === 3 && 'Confirma tu solicitud'}
+            {step === 1 && "Selecciona el paquete de clases que necesitas"}
+            {step === 2 && "Realiza el pago y selecciona el método utilizado"}
+            {step === 3 && "Confirma tu solicitud"}
           </p>
         </div>
 
@@ -148,7 +167,9 @@ export function RequestCreditsPage() {
                   <Label htmlFor="credits">Selecciona un paquete</Label>
                   <Select
                     value={formData.credits}
-                    onValueChange={(value) => setFormData({ ...formData, credits: value })}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, credits: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Elige el número de clases" />
@@ -158,10 +179,14 @@ export function RequestCreditsPage() {
                         <SelectItem key={pkg.id} value={pkg.credits.toString()}>
                           <div className="flex justify-between items-center w-full">
                             <span>
-                              {pkg.package_name && <strong>{pkg.package_name} - </strong>}
+                              {pkg.package_name && (
+                                <strong>{pkg.package_name} - </strong>
+                              )}
                               {pkg.name}
                             </span>
-                            <span className="font-medium text-green-600 ml-4">{pkg.price}€</span>
+                            <span className="font-medium text-green-600 ml-4">
+                              {pkg.price}€
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
@@ -169,7 +194,10 @@ export function RequestCreditsPage() {
                   </Select>
                   {selectedPackage && (
                     <p className="text-sm text-muted-foreground">
-                      Precio: <span className="font-medium text-green-600">{selectedPackage.price}€</span>
+                      Precio:{" "}
+                      <span className="font-medium text-green-600">
+                        {selectedPackage.price}€
+                      </span>
                     </p>
                   )}
                 </div>
@@ -180,14 +208,16 @@ export function RequestCreditsPage() {
                     id="notes"
                     placeholder="Añade cualquier comentario o solicitud especial..."
                     value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, notes: e.target.value })
+                    }
                     className="min-h-[100px]"
                   />
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
+                <Button
+                  type="submit"
+                  className="w-full"
                   disabled={!formData.credits}
                 >
                   <ArrowRight className="size-4 mr-2" />
@@ -210,7 +240,9 @@ export function RequestCreditsPage() {
                     {selectedPackage.price}€
                   </div>
                   <div className="text-blue-700">
-                    {selectedPackage.package_name && <strong>{selectedPackage.package_name} - </strong>}
+                    {selectedPackage.package_name && (
+                      <strong>{selectedPackage.package_name} - </strong>
+                    )}
                     {selectedPackage.name}
                   </div>
                 </div>
@@ -221,14 +253,21 @@ export function RequestCreditsPage() {
                       Datos para realizar el pago:
                     </h3>
                     {renderPaymentDetails(selectedMethod).map((detail, idx) => (
-                      <div key={idx} className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">{detail.label}:</span>
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center"
+                      >
+                        <span className="text-sm text-muted-foreground">
+                          {detail.label}:
+                        </span>
                         <span className="font-medium">{detail.value}</span>
                       </div>
                     ))}
                     {selectedMethod.instructions && (
                       <div className="pt-2 border-t">
-                        <p className="text-sm text-muted-foreground">{selectedMethod.instructions}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedMethod.instructions}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -244,27 +283,38 @@ export function RequestCreditsPage() {
                 <form onSubmit={handleStep2Submit} className="space-y-4">
                   <div className="space-y-3">
                     {methods.map((method) => {
-                      const Icon = getPaymentMethodIcon(method.type)
-                      const isSelected = formData.paymentMethod === method.id
+                      const Icon = getPaymentMethodIcon(method.type);
+                      const isSelected = formData.paymentMethod === method.id;
                       return (
                         <button
                           key={method.id}
                           type="button"
-                          onClick={() => setFormData({ ...formData, paymentMethod: method.id })}
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              paymentMethod: method.id,
+                            })
+                          }
                           className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                            isSelected 
-                              ? 'border-primary bg-primary/5' 
-                              : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                            isSelected
+                              ? "border-primary bg-primary/5"
+                              : "border-gray-200 bg-gray-50 hover:border-gray-300"
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <Icon className={`size-6 ${
-                              isSelected ? 'text-primary' : 'text-muted-foreground'
-                            }`} />
+                            <Icon
+                              className={`size-6 ${
+                                isSelected
+                                  ? "text-primary"
+                                  : "text-muted-foreground"
+                              }`}
+                            />
                             <div className="flex-1">
                               <div className="font-medium">{method.name}</div>
                               {method.instructions && (
-                                <div className="text-sm text-muted-foreground">{method.instructions}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {method.instructions}
+                                </div>
                               )}
                             </div>
                             {isSelected && (
@@ -272,13 +322,13 @@ export function RequestCreditsPage() {
                             )}
                           </div>
                         </button>
-                      )
+                      );
                     })}
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
+                  <Button
+                    type="submit"
+                    className="w-full"
                     disabled={!formData.paymentMethod}
                   >
                     <CheckCircle2 className="size-4 mr-2" />
@@ -306,7 +356,9 @@ export function RequestCreditsPage() {
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="mt-1">•</span>
-                  <span>Recibirás información de pago una vez aprobada la solicitud</span>
+                  <span>
+                    Recibirás información de pago una vez aprobada la solicitud
+                  </span>
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="mt-1">•</span>
@@ -314,22 +366,24 @@ export function RequestCreditsPage() {
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="mt-1">•</span>
-                  <span>Puedes ver el estado de tu solicitud en la página principal</span>
+                  <span>
+                    Puedes ver el estado de tu solicitud en la página principal
+                  </span>
                 </p>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleFinalSubmit}
                 className="w-full"
                 disabled={isSubmitting}
               >
                 <CheckCircle2 className="size-4 mr-2" />
-                {isSubmitting ? 'Enviando solicitud...' : 'Aceptar'}
+                {isSubmitting ? "Enviando solicitud..." : "Aceptar"}
               </Button>
             </CardContent>
           </Card>
         )}
       </div>
     </div>
-  )
+  );
 }

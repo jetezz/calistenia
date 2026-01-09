@@ -1,33 +1,31 @@
-import { createBrowserRouter } from 'react-router-dom'
-import { RootLayout } from '@/components/layout/RootLayout'
-import { HomePage } from '@/features/home/pages/HomePage'
-import { NotFoundPage } from '@/features/errors/pages/NotFoundPage'
-import { LoginPage } from '@/features/auth'
-import {
-  AdminDashboardPage,
-  EnhancedAdminSlotsPage,
-  AdminUsersPage,
-  AdminUserDetailPage,
-  AdminBookingsPage,
-  AdminPaymentRequestsPage,
-  AdminPricingPage,
-  AdminPaymentMethodsPage,
-  AdminSettingsPage
-} from '@/features/admin'
+import { createBrowserRouter } from "react-router-dom";
+import { RootLayout } from "@/components/layout/RootLayout";
+import { HomePage } from "@/features/home/pages/HomePage";
+import { NotFoundPage } from "@/features/errors/pages/NotFoundPage";
+import { LoginPage } from "@/features/auth";
+import { DashboardPage } from "@/screens/admin/Dashboard/DashboardPage";
+import { BookingsPage } from "@/screens/admin/Bookings/BookingsPage";
+import { PaymentRequestsPage } from "@/screens/admin/PaymentRequests/PaymentRequestsPage";
+import { UsersPage } from "@/screens/admin/Users/UsersPage";
+import { UserDetailPage } from "@/screens/admin/Users/UserDetailPage";
+import { SlotsPage } from "@/screens/admin/Slots/SlotsPage";
+import { PricingPage } from "@/screens/admin/Pricing/PricingPage";
+import { PaymentMethodsPage } from "@/screens/admin/PaymentMethods/PaymentMethodsPage";
+import { SettingsPage } from "@/screens/admin/Settings/SettingsPage";
 import {
   BookingPage,
   MyBookingsPage,
   RequestCreditsPage,
-  PaymentInfoPage
-} from '@/features/client'
+  PaymentInfoPage,
+} from "@/features/client";
 
 export const router = createBrowserRouter([
   {
-    path: '/login',
+    path: "/login",
     element: <LoginPage />,
   },
   {
-    path: '/',
+    path: "/",
     element: <RootLayout />,
     children: [
       {
@@ -35,61 +33,61 @@ export const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: 'book',
+        path: "book",
         element: <BookingPage />,
       },
       {
-        path: 'my-bookings',
+        path: "my-bookings",
         element: <MyBookingsPage />,
       },
       {
-        path: 'request-credits',
+        path: "request-credits",
         element: <RequestCreditsPage />,
       },
       {
-        path: 'payment-info',
+        path: "payment-info",
         element: <PaymentInfoPage />,
       },
       {
-        path: 'admin',
-        element: <AdminDashboardPage />,
+        path: "admin",
+        element: <DashboardPage />,
       },
       {
-        path: 'admin/slots',
-        element: <EnhancedAdminSlotsPage />,
+        path: "admin/slots",
+        element: <SlotsPage />,
       },
       {
-        path: 'admin/users',
-        element: <AdminUsersPage />,
+        path: "admin/users",
+        element: <UsersPage />,
       },
       {
-        path: 'admin/users/:userId',
-        element: <AdminUserDetailPage />,
+        path: "admin/users/:userId",
+        element: <UserDetailPage />,
       },
       {
-        path: 'admin/bookings',
-        element: <AdminBookingsPage />,
+        path: "admin/bookings",
+        element: <BookingsPage />,
       },
       {
-        path: 'admin/payment-requests',
-        element: <AdminPaymentRequestsPage />,
+        path: "admin/payment-requests",
+        element: <PaymentRequestsPage />,
       },
       {
-        path: 'admin/pricing',
-        element: <AdminPricingPage />,
+        path: "admin/pricing",
+        element: <PricingPage />,
       },
       {
-        path: 'admin/payment-methods',
-        element: <AdminPaymentMethodsPage />,
+        path: "admin/payment-methods",
+        element: <PaymentMethodsPage />,
       },
       {
-        path: 'admin/settings',
-        element: <AdminSettingsPage />,
+        path: "admin/settings",
+        element: <SettingsPage />,
       },
       {
-        path: '*',
+        path: "*",
         element: <NotFoundPage />,
       },
     ],
   },
-])
+]);

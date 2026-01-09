@@ -1,28 +1,38 @@
-import { useEffect } from 'react'
-import { useAppSettingsStore } from '@/stores/appSettingsStore'
-import type { CancellationPolicy } from '@/services/appSettingsService'
+import { useEffect, useCallback } from "react";
+import { useAppSettingsStore } from "@/stores/appSettingsStore";
+
+interface CancellationPolicy {
+  unit: "hours" | "days";
+  value: number;
+}
 
 export function useAppSettings() {
   const {
-    settings,
-    cancellationPolicy,
-    loading,
+    items: settings,
+    isLoading: loading,
     error,
-    fetchSettings,
-    fetchCancellationPolicy,
-    updateCancellationPolicy,
-    getCancellationPolicy
-  } = useAppSettingsStore()
+    fetchAll: fetchSettings,
+    getSettingValue,
+    updateSettingValue,
+  } = useAppSettingsStore();
 
   useEffect(() => {
-    if (!cancellationPolicy) {
-      fetchCancellationPolicy()
-    }
-  }, [cancellationPolicy, fetchCancellationPolicy])
+    fetchSettings();
+  }, [fetchSettings]);
 
-  const updatePolicy = async (policy: CancellationPolicy, userId: string) => {
-    await updateCancellationPolicy(policy, userId)
-  }
+  const getCancellationPolicy = useCallback((): CancellationPolicy | null => {
+    return getSettingValue<CancellationPolicy | null>(
+      "cancellation_policy",
+      null
+    );
+  }, [getSettingValue]);
+
+  const updateCancellationPolicy = async (
+    policy: CancellationPolicy,
+    userId: string
+  ) => {
+    await updateSettingValue("cancellation_policy", policy, userId);
+  };
 
   return {
     settings,
@@ -30,8 +40,7 @@ export function useAppSettings() {
     loading,
     error,
     fetchSettings,
-    fetchCancellationPolicy,
-    updateCancellationPolicy: updatePolicy,
-    getCancellationPolicy
-  }
+    updateCancellationPolicy,
+    getCancellationPolicy,
+  };
 }

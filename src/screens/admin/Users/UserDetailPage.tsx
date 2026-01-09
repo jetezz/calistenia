@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   ArrowLeft,
   User,
@@ -23,42 +23,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageLoadingState } from "@/components/common";
-import { useAdminData, useToast } from "@/hooks";
-import { profileService } from "@/services/profileService";
+import { useToast } from "@/hooks";
+import { useAdminUserDetailLogic } from "@/hooks/admin/Users/useAdminUserDetailLogic";
 
-export function AdminUserDetailPage() {
-  const { userId } = useParams<{ userId: string }>();
+export function UserDetailPage() {
+  const { user, userBookings, isLoading, updateCredits, updatePaymentStatus } =
+    useAdminUserDetailLogic();
+
   const [creditsInput, setCreditsInput] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const { success, error: showError } = useToast();
 
-  const {
-    profiles,
-    bookings,
-    isDashboardLoading: isLoading,
-    refresh,
-  } = useAdminData();
+  useEffect(() => {
+    if (user) {
+      setCreditsInput(user.credits.toString());
+    }
+  }, [user]);
 
-  // Find user and their bookings from centralized data
-  const user = useMemo(
-    () => profiles.find((p) => p.id === userId),
-    [profiles, userId]
-  );
-
-  const userBookings = useMemo(
-    () => bookings.filter((b) => b.user_id === userId).slice(0, 10),
-    [bookings, userId]
-  );
-
-  const updateUserCredits = async (newCredits: number) => {
-    if (!userId) return;
-
+  const handleUpdateCredits = async (newCredits: number) => {
+    if (!user) return;
     try {
       setIsUpdating(true);
-      await profileService.updateCredits(userId, newCredits);
+      await updateCredits(user.id, newCredits);
       setCreditsInput(newCredits.toString());
       success(`Créditos actualizados a ${newCredits}`);
-      await refresh();
     } catch (error) {
       console.error("Error updating credits:", error);
       showError("Error al actualizar los créditos");
@@ -67,13 +55,11 @@ export function AdminUserDetailPage() {
     }
   };
 
-  const updatePaymentStatus = async (status: string) => {
-    if (!userId) return;
-
+  const handleUpdatePaymentStatus = async (status: string) => {
+    if (!user) return;
     try {
-      await profileService.updatePaymentStatus(userId, status);
+      await updatePaymentStatus(user.id, status);
       success("Estado de pago actualizado");
-      await refresh();
     } catch (error) {
       console.error("Error updating payment status:", error);
       showError("Error al actualizar el estado de pago");
@@ -84,8 +70,26 @@ export function AdminUserDetailPage() {
     e.preventDefault();
     const newCredits = parseInt(creditsInput);
     if (!isNaN(newCredits) && newCredits >= 0) {
-      updateUserCredits(newCredits);
+      handleUpdateCredits(newCredits);
     }
+  };
+
+  // Helper local para renderizado
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatTime = (time: string) => {
+    return new Date(`1970-01-01T${time}`).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
   const getInitials = (name: string | null) => {
@@ -123,29 +127,6 @@ export function AdminUserDetailPage() {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatTime = (time: string) => {
-    return new Date(`1970-01-01T${time}`).toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
-
-  useEffect(() => {
-    if (user) {
-      setCreditsInput(user.credits.toString());
-    }
-  }, [user]);
 
   if (isLoading) {
     return <PageLoadingState message="Cargando datos del usuario..." />;
@@ -265,7 +246,9 @@ export function AdminUserDetailPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => updateUserCredits(Math.max(0, user.credits - 1))}
+                onClick={() =>
+                  handleUpdateCredits(Math.max(0, user.credits - 1))
+                }
                 disabled={user.credits === 0 || isUpdating}
               >
                 <Minus className="size-4 mr-1" />
@@ -274,7 +257,7 @@ export function AdminUserDetailPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => updateUserCredits(user.credits + 1)}
+                onClick={() => handleUpdateCredits(user.credits + 1)}
                 disabled={isUpdating}
               >
                 <Plus className="size-4 mr-1" />
@@ -283,7 +266,7 @@ export function AdminUserDetailPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => updateUserCredits(user.credits + 10)}
+                onClick={() => handleUpdateCredits(user.credits + 10)}
                 disabled={isUpdating}
               >
                 <Plus className="size-4 mr-1" />
@@ -297,7 +280,7 @@ export function AdminUserDetailPage() {
                 {getPaymentStatusBadge(user.payment_status)}
                 <Select
                   value={user.payment_status}
-                  onValueChange={updatePaymentStatus}
+                  onValueChange={handleUpdatePaymentStatus}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -332,7 +315,7 @@ export function AdminUserDetailPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {userBookings.map((booking) => (
+              {userBookings.slice(0, 10).map((booking) => (
                 <div
                   key={booking.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg"
@@ -342,8 +325,11 @@ export function AdminUserDetailPage() {
                       {formatDate(booking.booking_date)}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {formatTime(booking.time_slot.start_time)} -{" "}
-                      {formatTime(booking.time_slot.end_time)}
+                      {booking.time_slot
+                        ? `${formatTime(
+                            booking.time_slot.start_time
+                          )} - ${formatTime(booking.time_slot.end_time)}`
+                        : "Horario eliminado"}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-2 sm:mt-0">

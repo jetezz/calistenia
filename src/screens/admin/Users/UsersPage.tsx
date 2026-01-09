@@ -1,100 +1,129 @@
-import { useState } from 'react'
-import { Search, Users, Plus, Minus, UserCheck, UserPlus, Trash } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { PageLoadingState } from '@/components/common'
-import { useAdminUsers } from '../hooks'
-import { CreateUserDialog } from '../components/CreateUserDialog'
+import { useState } from "react";
+import {
+  Search,
+  Users,
+  Plus,
+  Minus,
+  UserCheck,
+  UserPlus,
+  Trash,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PageLoadingState } from "@/components/common";
+import { useAdminUsersLogic } from "@/hooks/admin/Users/useAdminUsersLogic";
+import { CreateUserDialog } from "@/features/admin/components/CreateUserDialog"; // This might need moving to screens/admin/Users/components later
 
-export function AdminUsersPage() {
+export function UsersPage() {
   const {
-    users,
-    allUsers,
+    users: allUsers,
     isLoading,
-    searchQuery,
-    setSearchQuery,
-    paymentStatusFilter,
-    setPaymentStatusFilter,
-    updateUserCredits,
-    updateUserPaymentStatus,
     createUser,
-    deleteUser
-  } = useAdminUsers()
+    deleteUser,
+    updateCredits,
+    updatePaymentStatus,
+  } = useAdminUsersLogic();
 
-  const [updatingCredits, setUpdatingCredits] = useState<Record<string, boolean>>({})
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+  const [updatingCredits, setUpdatingCredits] = useState<
+    Record<string, boolean>
+  >({});
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  // Filtering logic moved from hook to UI/Logic adaptation
+  const filteredUsers = allUsers.filter((user) => {
+    const matchesSearch =
+      (user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+        false) ||
+      (user.email.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+
+    if (paymentStatusFilter === "all") return matchesSearch;
+    return matchesSearch && user.payment_status === paymentStatusFilter;
+  });
+
+  // Handlers
+  const handleCreateUser = async (
+    email: string,
+    password: string,
+    fullName: string
+  ) => {
+    await createUser(email, password, fullName);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      await deleteUser(userToDelete.id);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
+
+  const handleCreditsChange = async (userId: string, change: number) => {
+    const user = allUsers.find((u) => u.id === userId);
+    if (!user) return;
+    const newCredits = Math.max(0, user.credits + change);
+
+    try {
+      setUpdatingCredits((prev) => ({ ...prev, [userId]: true }));
+      await updateCredits(userId, newCredits);
+    } catch (error) {
+      console.error("Error updating credits:", error);
+    } finally {
+      setUpdatingCredits((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
 
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
-      case 'paid':
-        return <Badge className="bg-green-500 text-white">Al día</Badge>
-      case 'pending':
-        return <Badge className="bg-yellow-500 text-white">Pendiente</Badge>
-      case 'unpaid':
-        return <Badge variant="destructive">No pagado</Badge>
+      case "paid":
+        return <Badge className="bg-green-500 text-white">Al día</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-500 text-white">Pendiente</Badge>;
+      case "unpaid":
+        return <Badge variant="destructive">No pagado</Badge>;
       default:
-        return <Badge variant="secondary">Sin definir</Badge>
+        return <Badge variant="secondary">Sin definir</Badge>;
     }
-  }
+  };
 
   const getInitials = (name: string | null) => {
-    if (!name) return 'U'
+    if (!name) return "U";
     return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
       .toUpperCase()
-      .slice(0, 2)
-  }
-
-  const handleCreditsChange = async (userId: string, change: number) => {
-    const user = users.find(u => u.id === userId)
-    if (!user) return
-
-    const newCredits = Math.max(0, user.credits + change)
-    
-    try {
-      setUpdatingCredits(prev => ({ ...prev, [userId]: true }))
-      await updateUserCredits(userId, newCredits)
-    } catch (error) {
-      console.error('Error updating credits:', error)
-    } finally {
-      setUpdatingCredits(prev => ({ ...prev, [userId]: false }))
-    }
-  }
-
-  const handlePaymentStatusChange = async (userId: string, status: string) => {
-    try {
-      await updateUserPaymentStatus(userId, status)
-    } catch (error) {
-      console.error('Error updating payment status:', error)
-    }
-  }
-
-  const handleCreateUser = async (email: string, password: string, fullName: string) => {
-    await createUser(email, password, fullName)
-  }
-
-  const handleDeleteUser = async () => {
-    if (!userToDelete) return
-    
-    try {
-      await deleteUser(userToDelete.id)
-      setUserToDelete(null)
-    } catch (error) {
-      console.error('Error deleting user:', error)
-    }
-  }
+      .slice(0, 2);
+  };
 
   if (isLoading) {
-    return <PageLoadingState message="Cargando usuarios..." />
+    return <PageLoadingState message="Cargando usuarios..." />;
   }
 
   return (
@@ -123,7 +152,7 @@ export function AdminUsersPage() {
               className="pl-10 h-11"
             />
           </div>
-          
+
           <Select
             value={paymentStatusFilter}
             onValueChange={setPaymentStatusFilter}
@@ -144,25 +173,31 @@ export function AdminUsersPage() {
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span>Total: {allUsers.length}</span>
           <span>•</span>
-          <span>Mostrando: {users.length}</span>
+          <span>Mostrando: {filteredUsers.length}</span>
         </div>
       </div>
 
-      {users.length === 0 && searchQuery === '' && paymentStatusFilter === 'all' ? (
+      {allUsers.length === 0 &&
+      searchQuery === "" &&
+      paymentStatusFilter === "all" ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Users className="size-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No hay usuarios registrados</h3>
+            <h3 className="text-lg font-medium mb-2">
+              No hay usuarios registrados
+            </h3>
             <p className="text-sm text-muted-foreground">
               Los nuevos usuarios aparecerán aquí cuando se registren
             </p>
           </CardContent>
         </Card>
-      ) : users.length === 0 ? (
+      ) : filteredUsers.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Search className="size-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No se encontraron usuarios</h3>
+            <h3 className="text-lg font-medium mb-2">
+              No se encontraron usuarios
+            </h3>
             <p className="text-sm text-muted-foreground">
               Intenta ajustar los filtros de búsqueda
             </p>
@@ -170,7 +205,7 @@ export function AdminUsersPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {users.map((user) => (
+          {filteredUsers.map((user) => (
             <Card key={user.id} className="overflow-hidden">
               <CardContent className="p-4">
                 <div className="space-y-4">
@@ -180,10 +215,10 @@ export function AdminUsersPage() {
                         {getInitials(user.full_name)}
                       </AvatarFallback>
                     </Avatar>
-                    
+
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-base leading-tight mb-1">
-                        {user.full_name || 'Sin nombre'}
+                        {user.full_name || "Sin nombre"}
                       </h3>
                       <p className="text-sm text-muted-foreground truncate">
                         {user.email}
@@ -193,8 +228,12 @@ export function AdminUsersPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col items-center justify-center bg-muted/50 rounded-lg p-3">
-                      <div className="text-2xl font-bold leading-none mb-1">{user.credits}</div>
-                      <div className="text-xs text-muted-foreground">créditos</div>
+                      <div className="text-2xl font-bold leading-none mb-1">
+                        {user.credits}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        créditos
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-center gap-2">
@@ -203,7 +242,9 @@ export function AdminUsersPage() {
                         variant="outline"
                         className="h-12 w-12"
                         onClick={() => handleCreditsChange(user.id, -1)}
-                        disabled={user.credits === 0 || updatingCredits[user.id]}
+                        disabled={
+                          user.credits === 0 || updatingCredits[user.id]
+                        }
                       >
                         <Minus className="size-5" />
                       </Button>
@@ -221,12 +262,16 @@ export function AdminUsersPage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Estado de pago</span>
+                      <span className="text-sm text-muted-foreground">
+                        Estado de pago
+                      </span>
                       {getPaymentStatusBadge(user.payment_status)}
                     </div>
                     <Select
                       value={user.payment_status}
-                      onValueChange={(value) => handlePaymentStatusChange(user.id, value)}
+                      onValueChange={(value) =>
+                        updatePaymentStatus(user.id, value)
+                      }
                     >
                       <SelectTrigger className="h-11">
                         <SelectValue />
@@ -244,7 +289,12 @@ export function AdminUsersPage() {
                     <Button
                       variant="outline"
                       className="w-full h-11"
-                      onClick={() => setUserToDelete({ id: user.id, name: user.full_name || user.email })}
+                      onClick={() =>
+                        setUserToDelete({
+                          id: user.id,
+                          name: user.full_name || user.email,
+                        })
+                      }
                     >
                       <Trash className="size-4 mr-2" />
                       Eliminar
@@ -275,8 +325,8 @@ export function AdminUsersPage() {
             <DialogTitle>¿Eliminar usuario?</DialogTitle>
             <DialogDescription>
               Estás a punto de eliminar a <strong>{userToDelete?.name}</strong>.
-              Esta acción no se puede deshacer y eliminará todos los datos asociados
-              (reservas, solicitudes de pago, etc.).
+              Esta acción no se puede deshacer y eliminará todos los datos
+              asociados (reservas, solicitudes de pago, etc.).
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -290,5 +340,5 @@ export function AdminUsersPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

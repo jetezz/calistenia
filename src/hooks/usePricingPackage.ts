@@ -9,38 +9,36 @@ type PricingPackageUpdate =
 
 export function usePricingPackage(loadAll = false) {
   const {
-    packages,
+    items: packages,
+    activePackages,
     isLoading,
     error,
-    initialized,
-    fetchPackages,
-    fetchActivePackages,
-    createPackage,
-    updatePackage,
-    deletePackage,
+    fetchAll,
+    fetchActive,
+    create,
+    update,
+    delete: deleteItem,
     toggleActive,
   } = usePricingPackageStore();
 
   useEffect(() => {
-    if (!initialized && !isLoading) {
-      if (loadAll) {
-        fetchPackages();
-      } else {
-        fetchActivePackages();
-      }
+    if (loadAll) {
+      fetchAll();
+    } else {
+      fetchActive();
     }
-  }, [initialized, isLoading, loadAll, fetchPackages, fetchActivePackages]);
+  }, [loadAll, fetchAll, fetchActive]);
 
   const handleCreate = async (pricingPackage: PricingPackageInsert) => {
-    return createPackage(pricingPackage);
+    return create(pricingPackage);
   };
 
   const handleUpdate = async (id: string, updates: PricingPackageUpdate) => {
-    return updatePackage(id, updates);
+    return update(id, updates);
   };
 
   const handleDelete = async (id: string) => {
-    return deletePackage(id);
+    return deleteItem(id);
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
@@ -48,15 +46,18 @@ export function usePricingPackage(loadAll = false) {
   };
 
   const refreshPackages = () => {
-    return fetchPackages();
+    return fetchAll(true);
   };
 
   const refreshActivePackages = () => {
-    return fetchActivePackages();
+    // BaseStore fetchActive doesn't take force yet, but we optimized it to check cache.
+    // If we want to refresh, we should clear cache or allow force.
+    // For now, let's just make fetchAll force reload which populates active too if initialized.
+    return fetchAll(true);
   };
 
   return {
-    packages,
+    packages: loadAll ? packages : activePackages,
     isLoading,
     error,
     createPackage: handleCreate,

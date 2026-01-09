@@ -1,59 +1,92 @@
-import { create } from 'zustand'
-import type { Database } from '@/types/database'
+import { create } from "zustand";
+import { createBaseStore, type BaseStoreState } from "./BaseStore";
+import { profileService } from "@/services/profileService";
+import type { Database } from "@/types/database";
 
-type Profile = Database['public']['Tables']['profiles']['Row']
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
-interface ProfileStore {
-  profiles: Profile[]
-  currentProfile: Profile | null
-  loading: boolean
-  error: string | null
-
-  setProfiles: (profiles: Profile[]) => void
-  setCurrentProfile: (profile: Profile | null) => void
-  addProfile: (profile: Profile) => void
-  updateProfile: (id: string, updates: Partial<Profile>) => void
-  removeProfile: (id: string) => void
-  setLoading: (loading: boolean) => void
-  setError: (error: string | null) => void
-  reset: () => void
+interface ProfileStore
+  extends BaseStoreState<Profile, ProfileInsert, ProfileUpdate> {
+  // Métodos extra específicos de usuarios
+  updateCredits: (id: string, credits: number) => Promise<void>;
+  updatePaymentStatus: (id: string, status: string) => Promise<void>;
+  createUser: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
 }
 
-const initialState = {
-  profiles: [],
-  currentProfile: null,
-  loading: false,
-  error: null,
-}
+export const useProfileStore = create<ProfileStore>((set, get, store) => {
+  const baseStore = createBaseStore<Profile, ProfileInsert, ProfileUpdate>(
+    profileService
+  )(set, get, store);
 
-export const useProfileStore = create<ProfileStore>((set) => ({
-  ...initialState,
+  return {
+    ...baseStore,
 
-  setProfiles: (profiles) => set({ profiles }),
-  
-  setCurrentProfile: (currentProfile) => set({ currentProfile }),
-  
-  addProfile: (profile) => set((state) => ({
-    profiles: [profile, ...state.profiles]
-  })),
-  
-  updateProfile: (id, updates) => set((state) => ({
-    profiles: state.profiles.map((profile) =>
-      profile.id === id ? { ...profile, ...updates } : profile
-    ),
-    currentProfile: state.currentProfile?.id === id
-      ? { ...state.currentProfile, ...updates }
-      : state.currentProfile
-  })),
-  
-  removeProfile: (id) => set((state) => ({
-    profiles: state.profiles.filter((profile) => profile.id !== id),
-    currentProfile: state.currentProfile?.id === id ? null : state.currentProfile
-  })),
-  
-  setLoading: (loading) => set({ loading }),
-  
-  setError: (error) => set({ error }),
-  
-  reset: () => set(initialState),
-}))
+    updateCredits: async (id: string, credits: number) => {
+      // Optimistic Update
+      set((state) => ({
+        items: state.items.map((p) => (p.id === id ? { ...p, credits } : p)),
+      }));
+
+      try {
+        await profileService.updateCredits(id, credits);
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message });
+      }
+    },
+
+    updatePaymentStatus: async (id: string, status: string) => {
+      set((state) => ({
+        items: state.items.map((p) =>
+          p.id === id ? { ...p, payment_status: status } : p
+        ),
+      }));
+
+      try {
+        await profileService.updatePaymentStatus(id, status);
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message });
+      }
+    },
+
+    createUser: async (email, password, fullName) => {
+      set({ isLoading: true, error: null });
+      try {
+        await profileService.createUser(email, password, fullName);
+        // After creating, we might want to refresh the list?
+        // BaseStore fetchAll?
+        const items = await profileService.getAll();
+        set({ items, isLoading: false });
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message, isLoading: false });
+      }
+    },
+
+    deleteUser: async (userId) => {
+      // Optimistic delete
+      set((state) => ({
+        items: state.items.filter((p) => p.id !== userId),
+      }));
+
+      try {
+        await profileService.deleteUser(userId);
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message });
+        // Should revert here implicitly by fetching again or rolling back state?
+        // Since we don't have easy rollback without snapshots, we might just re-fetch
+        const items = await profileService.getAll();
+        set({ items });
+      }
+    },
+  };
+});

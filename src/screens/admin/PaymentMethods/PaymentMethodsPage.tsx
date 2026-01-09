@@ -13,28 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoadingState } from "@/components/common";
-import { useAdminData } from "@/hooks";
-import { usePaymentMethodStore } from "@/stores";
-import { PaymentMethodDialog } from "../components/PaymentMethodDialog";
+import { PaymentMethodDialog } from "@/features/admin/components/PaymentMethodDialog";
 import { toast } from "sonner";
+import { useAdminPaymentMethodsLogic } from "@/hooks/admin/PaymentMethods/useAdminPaymentMethodsLogic";
+import { getPaymentTypeLabel } from "@/lib/payment-utils";
 import type { Database } from "@/types/database";
 
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
-
-export const getPaymentMethodIcon = (type: string) => {
-  switch (type) {
-    case "bizum":
-      return Phone;
-    case "paypal":
-      return Mail;
-    case "bank_transfer":
-      return Landmark;
-    case "cash":
-      return Wallet;
-    default:
-      return Wallet;
-  }
-};
 
 const getPaymentIcon = (type: string) => {
   switch (type) {
@@ -51,24 +36,10 @@ const getPaymentIcon = (type: string) => {
   }
 };
 
-const getPaymentTypeLabel = (type: string) => {
-  const labels: Record<string, string> = {
-    bizum: "Bizum",
-    paypal: "PayPal",
-    bank_transfer: "Transferencia",
-    cash: "Efectivo",
-    other: "Otro",
-  };
-  return labels[type] || type;
-};
+export function PaymentMethodsPage() {
+  const { methods, isLoading, refresh, deleteMethod, toggleActive } =
+    useAdminPaymentMethodsLogic();
 
-export function AdminPaymentMethodsPage() {
-  const {
-    paymentMethods: methods,
-    isSecondaryLoading: isLoading,
-    refresh,
-  } = useAdminData();
-  const { deleteMethod, toggleActive } = usePaymentMethodStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(
     null
@@ -94,7 +65,6 @@ export function AdminPaymentMethodsPage() {
     try {
       await deleteMethod(id);
       toast.success("Método de pago eliminado correctamente");
-      await refresh();
     } catch (error) {
       console.error("Error deleting payment method:", error);
       toast.error("Error al eliminar el método de pago");
@@ -105,7 +75,6 @@ export function AdminPaymentMethodsPage() {
     try {
       await toggleActive(id, !currentStatus);
       toast.success(currentStatus ? "Método desactivado" : "Método activado");
-      await refresh();
     } catch (error) {
       console.error("Error toggling method status:", error);
       toast.error("Error al cambiar el estado del método");

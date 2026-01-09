@@ -1,208 +1,150 @@
-import { useCallback } from 'react'
-import { useTimeSlotStore } from '@/stores'
-import { timeSlotService } from '@/services'
-import type { Database } from '@/types/database'
+import { useCallback } from "react";
+import { useTimeSlotStore } from "@/stores";
+import { timeSlotService } from "@/services/timeSlotService";
+import type { Database } from "@/types/database";
 
-
-type TimeSlotInsert = Database['public']['Tables']['time_slots']['Insert']
-type TimeSlotUpdate = Database['public']['Tables']['time_slots']['Update']
+type TimeSlotInsert = Database["public"]["Tables"]["time_slots"]["Insert"];
+type TimeSlotUpdate = Database["public"]["Tables"]["time_slots"]["Update"];
 
 export const useTimeSlot = () => {
-  const {
-    timeSlots,
-    activeTimeSlots,
-    currentTimeSlot,
-    availabilityCache,
-    loading,
-    error,
-    setTimeSlots,
-    setActiveTimeSlots,
-    setCurrentTimeSlot,
-    addTimeSlot,
-    updateTimeSlot,
-    removeTimeSlot,
-    setAvailability,
-    getAvailability,
-    setLoading,
-    setError,
-  } = useTimeSlotStore()
+  const store = useTimeSlotStore();
 
-  const fetchTimeSlots = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await timeSlotService.getAll()
-      setTimeSlots(data)
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch time slots')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const fetchTimeSlots = useCallback(
+    async (force = false) => {
+      await store.fetchAll(force);
+    },
+    [store]
+  );
 
   const fetchActiveTimeSlots = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await timeSlotService.getActive()
-      setActiveTimeSlots(data)
-      return data
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch active time slots')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    await store.fetchActive();
+    return store.activeSlots;
+  }, [store]);
 
   const fetchRecurringSlots = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await timeSlotService.getRecurringSlots()
-      return data
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch recurring slots')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    await store.fetchAll();
+    return store.items.filter(
+      (i) => i.slot_type === "recurring" && i.is_active
+    );
+  }, [store]);
 
-  const fetchSpecificDateSlots = useCallback(async (fromDate?: string, toDate?: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await timeSlotService.getSpecificDateSlots(fromDate, toDate)
-      return data
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch specific date slots')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const fetchSpecificDateSlots = useCallback(
+    async (fromDate?: string, toDate?: string) => {
+      await store.fetchAll();
+      let slots = store.items.filter(
+        (i) => i.slot_type === "specific_date" && i.is_active
+      );
+      if (fromDate) {
+        slots = slots.filter(
+          (i) => i.specific_date && i.specific_date >= fromDate
+        );
+      }
+      if (toDate) {
+        slots = slots.filter(
+          (i) => i.specific_date && i.specific_date <= toDate
+        );
+      }
+      return slots.sort((a, b) => {
+        // Basic sort by date then time
+        if (a.specific_date !== b.specific_date)
+          return (a.specific_date || "").localeCompare(b.specific_date || "");
+        return a.start_time.localeCompare(b.start_time);
+      });
+    },
+    [store]
+  );
 
-  const getAvailableDatesInRange = useCallback(async (fromDate: string, toDate: string) => {
-    try {
-      const data = await timeSlotService.getAvailableDatesInRange(fromDate, toDate)
-      return data
-    } catch (error) {
-      throw error
-    }
-  }, [])
+  const getAvailableDatesInRange = useCallback(
+    async (fromDate: string, toDate: string) => {
+      await store.fetchAll();
 
-  const fetchTimeSlotById = useCallback(async (id: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await timeSlotService.getById(id)
-      setCurrentTimeSlot(data)
-      return data
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch time slot')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+      const recurringSlots = store.items
+        .filter((i) => i.slot_type === "recurring" && i.is_active)
+        .sort((a, b) => {
+          if (a.day_of_week !== b.day_of_week)
+            return a.day_of_week - b.day_of_week;
+          return a.start_time.localeCompare(b.start_time);
+        });
+
+      const specificSlots = store.items
+        .filter(
+          (i) =>
+            i.slot_type === "specific_date" &&
+            i.is_active &&
+            i.specific_date &&
+            i.specific_date >= fromDate &&
+            i.specific_date <= toDate
+        )
+        .sort((a, b) => {
+          if (a.specific_date !== b.specific_date)
+            return (a.specific_date || "").localeCompare(b.specific_date || "");
+          return a.start_time.localeCompare(b.start_time);
+        });
+
+      return { recurringSlots, specificSlots };
+    },
+    [store]
+  );
+
+  const fetchTimeSlotById = useCallback(
+    async (id: string) => {
+      // Adapter style: try to find in items first
+      let slot = store.items.find((i) => i.id === id);
+      if (!slot) {
+        slot = await timeSlotService.getById(id);
+      }
+      store.select(id);
+      return slot;
+    },
+    [store]
+  );
 
   const fetchTimeSlotsByDay = useCallback(async (dayOfWeek: number) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await timeSlotService.getByDayOfWeek(dayOfWeek)
-      return data
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch time slots by day')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    return await timeSlotService.getByDayOfWeek(dayOfWeek);
+  }, []);
 
-  const fetchAvailableSpots = useCallback(async (slotId: string, targetDate: string) => {
-    const cached = getAvailability(slotId, targetDate)
-    if (cached !== undefined) {
-      return cached
-    }
+  const fetchAvailableSpots = useCallback(
+    async (slotId: string, targetDate: string) => {
+      return await timeSlotService.getAvailableSpots(slotId, targetDate);
+    },
+    []
+  );
 
-    try {
-      const spots = await timeSlotService.getAvailableSpots(slotId, targetDate)
-      setAvailability(slotId, targetDate, spots)
-      return spots
-    } catch (error) {
-      throw error
-    }
-  }, [getAvailability, setAvailability])
+  const createTimeSlot = useCallback(
+    async (timeSlotData: TimeSlotInsert) => {
+      return await store.create(timeSlotData);
+    },
+    [store]
+  );
 
-  const createTimeSlot = useCallback(async (timeSlotData: TimeSlotInsert) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const newTimeSlot = await timeSlotService.create(timeSlotData)
-      addTimeSlot(newTimeSlot)
-      return newTimeSlot
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to create time slot')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [addTimeSlot])
+  const updateTimeSlotData = useCallback(
+    async (id: string, updates: TimeSlotUpdate) => {
+      return await store.update(id, updates);
+    },
+    [store]
+  );
 
-  const updateTimeSlotData = useCallback(async (id: string, updates: TimeSlotUpdate) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const updatedTimeSlot = await timeSlotService.update(id, updates)
-      updateTimeSlot(id, updatedTimeSlot)
-      return updatedTimeSlot
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to update time slot')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [updateTimeSlot])
+  const toggleTimeSlotActive = useCallback(
+    async (id: string, isActive: boolean) => {
+      return await store.toggleActive(id, isActive);
+    },
+    [store]
+  );
 
-  const toggleTimeSlotActive = useCallback(async (id: string, isActive: boolean) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const updatedTimeSlot = await timeSlotService.toggleActive(id, isActive)
-      updateTimeSlot(id, updatedTimeSlot)
-      return updatedTimeSlot
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to toggle time slot status')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [updateTimeSlot])
-
-  const deleteTimeSlot = useCallback(async (id: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      await timeSlotService.delete(id)
-      removeTimeSlot(id)
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete time slot')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [removeTimeSlot])
+  const deleteTimeSlot = useCallback(
+    async (id: string) => {
+      return await store.delete(id);
+    },
+    [store]
+  );
 
   return {
     // State
-    timeSlots,
-    activeTimeSlots,
-    currentTimeSlot,
-    availabilityCache,
-    loading,
-    error,
+    timeSlots: store.items,
+    activeTimeSlots: store.activeSlots,
+    currentTimeSlot: store.currentItem,
+    loading: store.isLoading,
+    error: store.error,
 
     // Actions
     fetchTimeSlots,
@@ -217,6 +159,6 @@ export const useTimeSlot = () => {
     updateTimeSlot: updateTimeSlotData,
     toggleTimeSlotActive,
     deleteTimeSlot,
-    setCurrentTimeSlot,
-  }
-}
+    setCurrentTimeSlot: store.select,
+  };
+};

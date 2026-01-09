@@ -5,90 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageLoadingState } from "@/components/common";
-import { useAdminData, useToast } from "@/hooks";
-import { useProfile } from "@/features/auth";
-import { usePaymentRequestStore } from "@/stores";
-import { profileService } from "@/services/profileService";
-import type { Database } from "@/types/database";
+import { useAdminPaymentRequestsLogic } from "@/hooks/admin/PaymentRequests/useAdminPaymentRequestsLogic";
 
-type PaymentRequestWithUser =
-  Database["public"]["Tables"]["payment_requests"]["Row"] & {
-    user: { id: string; full_name: string | null; email: string };
-  };
-
-export function AdminPaymentRequestsPage() {
+export function PaymentRequestsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const { success, error: showError } = useToast();
-  const { profile: adminProfile } = useProfile();
-  const {
-    profiles,
-    pendingPaymentRequests,
-    allPaymentRequests,
-    isDashboardLoading: isLoading,
-    refresh,
-  } = useAdminData();
-  const { updatePaymentRequest: updatePaymentRequestStatus } =
-    usePaymentRequestStore();
+  const { requests, isLoading, handleApprove, handleReject, refresh } =
+    useAdminPaymentRequestsLogic();
 
-  // Combine pending and all payment requests
-  // Combine pending and all payment requests
-  const requests =
-    allPaymentRequests.length > 0 ? allPaymentRequests : pendingPaymentRequests;
+  // Helper local para renderizado
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-  const typedRequests: PaymentRequestWithUser[] = requests.map((req) => {
-    // If user data is already present (e.g. from a different API version), use it
-    const reqWithUser = req as unknown as PaymentRequestWithUser;
-    if (reqWithUser.user) {
-      return reqWithUser;
-    }
-
-    // Otherwise find user in loaded profiles
-    const userProfile = profiles.find((p) => p.id === req.user_id);
-
-    return {
-      ...req,
-      user: {
-        id: req.user_id,
-        full_name: userProfile?.full_name ?? "Usuario desconocido",
-        email: userProfile?.email ?? "Sin email",
-      },
-    };
-  });
-
-  const handleProcessRequest = async (
-    request: PaymentRequestWithUser,
-    status: "approved" | "rejected"
-  ) => {
-    if (!adminProfile || processingId) return;
-
-    try {
-      setProcessingId(request.id);
-
-      await updatePaymentRequestStatus(request.id, {
-        status,
-        admin_notes: null,
-        processed_by: adminProfile.id,
-        processed_at: new Date().toISOString(),
-      });
-
-      if (status === "approved") {
-        await profileService.updateCredits(
-          request.user_id,
-          request.credits_requested
-        );
-      }
-
-      success(`Solicitud ${status === "approved" ? "aprobada" : "rechazada"}`);
-
-      // Refresh admin data after processing
-      await refresh();
-    } catch (error) {
-      console.error("Error processing payment request:", error);
-      showError("Error al procesar la solicitud");
-    } finally {
-      setProcessingId(null);
-    }
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const getRequestStatusBadge = (status: string) => {
@@ -104,32 +47,23 @@ export function AdminPaymentRequestsPage() {
     }
   };
 
-  const getInitials = (name: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const processRequest = async (id: string, action: "approve" | "reject") => {
+    setProcessingId(id);
+    try {
+      if (action === "approve") {
+        await handleApprove(id);
+      } else {
+        await handleReject(id);
+      }
+    } catch (error) {
+      console.error("Error processing", error);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const pendingRequests = typedRequests.filter(
-    (req) => req.status === "pending"
-  );
-  const processedRequests = typedRequests.filter(
-    (req) => req.status !== "pending"
-  );
+  const pendingRequests = requests.filter((r) => r.status === "pending");
+  const processedRequests = requests.filter((r) => r.status !== "pending");
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
@@ -175,24 +109,24 @@ export function AdminPaymentRequestsPage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <Avatar className="size-10 flex-shrink-0">
+                          <Avatar className="size-10 shrink-0">
                             <AvatarFallback className="text-xs">
-                              {getInitials(request.user.full_name)}
+                              {getInitials(request.user?.full_name || "U")}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium truncate">
-                              {request.user.full_name || "Sin nombre"}
+                              {request.user?.full_name || "Sin nombre"}
                             </div>
                             <div className="text-sm text-muted-foreground truncate">
-                              {request.user.email}
+                              {request.user?.email || "Sin email"}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
                               Solicitado: {formatDate(request.created_at)}
                             </div>
                           </div>
                         </div>
-                        <div className="text-center flex-shrink-0 bg-white rounded-lg px-3 py-2 border">
+                        <div className="text-center shrink-0 bg-white rounded-lg px-3 py-2 border">
                           <div className="text-2xl font-bold text-primary leading-none">
                             {request.credits_requested}
                           </div>
@@ -206,9 +140,7 @@ export function AdminPaymentRequestsPage() {
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 flex-1"
-                          onClick={() =>
-                            handleProcessRequest(request, "approved")
-                          }
+                          onClick={() => processRequest(request.id, "approve")}
                           disabled={processingId === request.id}
                         >
                           <Check className="size-4 sm:mr-1" />
@@ -227,9 +159,7 @@ export function AdminPaymentRequestsPage() {
                           size="sm"
                           variant="destructive"
                           className="flex-1"
-                          onClick={() =>
-                            handleProcessRequest(request, "rejected")
-                          }
+                          onClick={() => processRequest(request.id, "reject")}
                           disabled={processingId === request.id}
                         >
                           <X className="size-4 sm:mr-1" />
@@ -271,12 +201,12 @@ export function AdminPaymentRequestsPage() {
                       <div className="flex items-center gap-4">
                         <Avatar className="size-10">
                           <AvatarFallback className="text-xs">
-                            {getInitials(request.user.full_name)}
+                            {getInitials(request.user?.full_name || "U")}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <div className="font-medium">
-                            {request.user.full_name || "Sin nombre"}
+                            {request.user?.full_name || "Sin nombre"}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {request.credits_requested} créditos •{" "}

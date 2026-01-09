@@ -5,34 +5,36 @@ import { useProfileStore } from "@/stores/profileStore";
 
 export function useProfile() {
   const { user } = useAuth();
-  const {
-    currentProfile: profile,
-    setCurrentProfile,
-    loading: isLoading,
-    setLoading: setIsLoading,
-  } = useProfileStore();
+
+  // Mapeamos a la nueva estructura del store
+  // currentProfile -> currentItem
+  // setCurrentProfile -> setCurrentItem
+  // loading -> isLoading (el store tiene isLoading)
+  // setLoading -> setLoading (ahora existe en BaseStore)
+  const store = useProfileStore();
+
+  const profile = store.currentItem;
+  const isLoading = store.isLoading;
+  const setCurrentProfile = store.setCurrentItem;
+  const setIsLoading = store.setLoading;
 
   useEffect(() => {
     if (!user) {
-      // If there's a profile in the store but no user, clear it
-      if (useProfileStore.getState().currentProfile) {
+      if (useProfileStore.getState().currentItem) {
         setCurrentProfile(null);
       }
       return;
     }
 
     const checkAndFetchProfile = async () => {
-      // Access the most current state directly from the store to avoid race conditions
-      // where multiple components might call this effect simultaneously with stale closure values
       const state = useProfileStore.getState();
 
-      // If we already have the correct profile loaded, don't fetch
-      if (state.currentProfile?.id === user.id) {
+      // Check currentItem instead of currentProfile
+      if (state.currentItem?.id === user.id) {
         return;
       }
 
-      // If a fetch is already in progress, don't start another one
-      if (state.loading) {
+      if (state.isLoading) {
         return;
       }
 
@@ -89,7 +91,7 @@ export function useProfile() {
   };
 
   return {
-    profile,
+    profile, // Devolvemos 'profile' para mantener contrato con componentes consumidores
     isLoading,
     isAdmin: profile?.role === "admin",
     refreshProfile,

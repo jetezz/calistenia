@@ -1,83 +1,85 @@
-import { create } from 'zustand'
-import { appSettingsService, type CancellationPolicy } from '@/services/appSettingsService'
+import { create } from "zustand";
+import { createBaseStore, type BaseStoreState } from "./BaseStore";
+import { appSettingsService } from "@/services/appSettingsService";
+import type { Database } from "@/types/database";
 
-interface AppSettingsState {
-  settings: Record<string, any>
-  cancellationPolicy: CancellationPolicy | null
-  loading: boolean
-  error: string | null
-  
-  fetchSettings: () => Promise<void>
-  fetchCancellationPolicy: () => Promise<void>
-  updateCancellationPolicy: (policy: CancellationPolicy, userId: string) => Promise<void>
-  getCancellationPolicy: () => CancellationPolicy
+type AppSetting = Database["public"]["Tables"]["app_settings"]["Row"];
+type AppSettingInsert = Database["public"]["Tables"]["app_settings"]["Insert"];
+type AppSettingUpdate = Database["public"]["Tables"]["app_settings"]["Update"];
+
+interface AppSettingsStore
+  extends BaseStoreState<AppSetting, AppSettingInsert, AppSettingUpdate> {
+  getSettingValue: <T>(key: string, defaultValue: T) => T;
+  updateSettingValue: (
+    key: string,
+    value: any,
+    userId: string
+  ) => Promise<void>;
 }
 
-export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
-  settings: {},
-  cancellationPolicy: null,
-  loading: false,
-  error: null,
+export const useAppSettingsStore = create<AppSettingsStore>(
+  (set, get, store) => {
+    const baseStore = createBaseStore<
+      AppSetting,
+      AppSettingInsert,
+      AppSettingUpdate
+    >(appSettingsService)(set, get, store);
 
-  fetchSettings: async () => {
-    set({ loading: true, error: null })
-    try {
-      const settings = await appSettingsService.getAllSettings()
-      const settingsMap = settings.reduce((acc, setting) => {
-        acc[setting.key] = setting.value
-        return acc
-      }, {} as Record<string, any>)
-      
-      set({ 
-        settings: settingsMap,
-        cancellationPolicy: settingsMap.cancellation_policy || { unit: 'hours', value: 2 },
-        loading: false 
-      })
-    } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to fetch settings',
-        loading: false 
-      })
-    }
-  },
+    return {
+      ...baseStore,
 
-  fetchCancellationPolicy: async () => {
-    set({ loading: true, error: null })
-    try {
-      const policy = await appSettingsService.getCancellationPolicy()
-      set({ 
-        cancellationPolicy: policy,
-        loading: false 
-      })
-    } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to fetch cancellation policy',
-        cancellationPolicy: { unit: 'hours', value: 2 },
-        loading: false 
-      })
-    }
-  },
+      getSettingValue: (key, defaultValue) => {
+        const item = get().items.find((i) => i.key === key);
+        return item ? (item.value as any) : defaultValue;
+      },
 
-  updateCancellationPolicy: async (policy: CancellationPolicy, userId: string) => {
-    set({ loading: true, error: null })
-    try {
-      await appSettingsService.updateCancellationPolicy(policy, userId)
-      set({ 
-        cancellationPolicy: policy,
-        settings: { ...get().settings, cancellation_policy: policy },
-        loading: false 
-      })
-    } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to update cancellation policy',
-        loading: false 
-      })
-      throw error
-    }
-  },
+      updateSettingValue: async (key, value, userId) => {
+        // Optimistic
+        const currentItems = get().items;
+        const existingIndex = currentItems.findIndex((i) => i.key === key);
 
-  getCancellationPolicy: () => {
-    const state = get()
-    return state.cancellationPolicy || { unit: 'hours', value: 2 }
+        let newItems;
+        if (existingIndex >= 0) {
+          newItems = [...currentItems];
+          newItems[existingIndex] = {
+            ...newItems[existingIndex],
+            value,
+            updated_at: new Date().toISOString(),
+          };
+        } else {
+          // Fake ID for generic optimistic creation not fully supported without ID logic,
+          // but here we just need it in the list
+          newItems = [
+            ...currentItems,
+            {
+              key,
+              value,
+              id: "temp-" + key,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              updated_by: userId,
+              description: null,
+            },
+          ];
+        }
+
+        set({ items: newItems });
+
+        try {
+          const updated = await appSettingsService.upsertByKey(
+            key,
+            value,
+            userId
+          );
+          set((state) => ({
+            items: state.items.map((i) => (i.key === key ? updated : i)),
+          }));
+          // If it was a new item with temp ID, the map above needs to handle key matching which it does.
+        } catch (e) {
+          const error = e instanceof Error ? e : new Error(String(e));
+          set({ items: currentItems, error: error.message });
+        }
+      },
+    };
   }
-}))
+);
