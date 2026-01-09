@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Edit2,
@@ -91,23 +91,20 @@ export function SlotsPage() {
     await toggleActive(slot.id, !slot.is_active);
   };
 
-  const handleCalendarDateClick = (date: string, slots: TimeSlot[]) => {
-    setSelectedDateSlots({ date, slots });
-    loadBookingsForSlots(slots, date);
-  };
+  const loadBookingsForSlots = useCallback(
+    async (slots: TimeSlot[], date: string) => {
+      const bookingsMap: Record<string, BookingWithUser[]> = {};
 
-  const loadBookingsForSlots = async (slots: TimeSlot[], date: string) => {
-    const bookingsMap: Record<string, BookingWithUser[]> = {};
+      try {
+        const allBookingsForDate = await bookingService.getBookingsByDate(date);
+        // Casting because getBookingsByDate returns BookingWithRelations which is compatible enough for this usage
+        // or we just trust the specific logic here.
+        // ideally we should move this to logic layer too if it becomes complex.
 
-    try {
-      const allBookingsForDate = await bookingService.getBookingsByDate(date);
-      // Casting because getBookingsByDate returns BookingWithRelations which is compatible enough for this usage
-      // or we just trust the specific logic here.
-      // ideally we should move this to logic layer too if it becomes complex.
-
-      for (const slot of slots) {
-        const matchingBookings = (allBookingsForDate as any[]).filter(
-          (booking) => {
+        for (const slot of slots) {
+          const matchingBookings = (
+            allBookingsForDate as (Booking & { time_slot: TimeSlot | null })[]
+          ).filter((booking) => {
             const bookingSlot = booking.time_slot;
             if (!bookingSlot) return false;
 
@@ -115,26 +112,36 @@ export function SlotsPage() {
               bookingSlot.start_time === slot.start_time &&
               bookingSlot.end_time === slot.end_time
             );
-          }
-        );
+          }) as unknown as BookingWithUser[];
 
-        bookingsMap[slot.id] = matchingBookings;
+          bookingsMap[slot.id] = matchingBookings;
+        }
+      } catch (error) {
+        console.error("Error loading bookings:", error);
+        slots.forEach((slot) => {
+          bookingsMap[slot.id] = [];
+        });
       }
-    } catch (error) {
-      console.error("Error loading bookings:", error);
-      slots.forEach((slot) => {
-        bookingsMap[slot.id] = [];
-      });
-    }
 
-    setSlotBookings(bookingsMap);
-  };
+      setSlotBookings(bookingsMap);
+    },
+    []
+  );
+
+  const handleCalendarDateClick = useCallback(
+    (date: string, slots: TimeSlot[]) => {
+      setSelectedDateSlots({ date, slots });
+      // La carga se realiza automáticamente por el useEffect cuando cambia selectedDateSlots
+    },
+    []
+  );
 
   useEffect(() => {
     if (selectedDateSlots) {
       loadBookingsForSlots(selectedDateSlots.slots, selectedDateSlots.date);
     }
-  }, [timeSlots, selectedDateSlots]); // Refresh bookings if slots change or selection changes
+    // Eliminamos timeSlots de las dependencias para evitar recargas innecesarias si los slots globales cambian pero no la selección
+  }, [selectedDateSlots, loadBookingsForSlots]);
 
   // Convert database day_of_week (0=Sunday) to display index (0=Monday)
   const convertDayOfWeekToDisplayIndex = (dbDayOfWeek: number) => {
@@ -371,19 +378,10 @@ export function SlotsPage() {
           </TabsList>
 
           <TabsContent value="calendar" className="space-y-4">
-            <AvailabilityCalendar onDateClick={handleCalendarDateClick} />
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Calendar className="size-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">
-                  Calendario temporalmente deshabilitado
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Use las pestañas "Semanales" o "Específicos" para gestionar
-                  horarios
-                </p>
-              </CardContent>
-            </Card>
+            <AvailabilityCalendar
+              slots={timeSlots}
+              onDateClick={handleCalendarDateClick}
+            />
 
             {selectedDateSlots && (
               <Card>
