@@ -12,7 +12,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { PaymentMethodDialog } from "@/components/admin";
 import { toast } from "sonner";
 import { useAdminPaymentMethodsLogic } from "@/hooks/admin/PaymentMethods/useAdminPaymentMethodsLogic";
@@ -89,20 +89,14 @@ export function PaymentMethodsPage() {
     }
   };
 
-  if (isLoading && methods.length === 0) {
-    return <PageLoadingState message="Cargando métodos de pago..." />;
-  }
-
-  if (isLoading && methods.length === 0) {
-    return <PageLoadingState message="Cargando métodos de pago..." />;
-  }
-
   return (
     <StandardPage
       icon={Wallet}
       title="Métodos de Pago"
       description="Configura los métodos de pago disponibles para los clientes"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando métodos de pago..."
       actionButton={
         <Button onClick={handleCreate} size="sm">
           <Plus className="size-4 mr-2" />

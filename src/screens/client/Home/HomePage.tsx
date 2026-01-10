@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { useHomeLogic } from "@/hooks/client/Home/useHomeLogic";
 import { useState } from "react";
 
@@ -56,10 +56,6 @@ export function HomePage() {
     }
   };
 
-  if (authLoading || dashboardLoading) {
-    return <PageLoadingState message="Cargando tu perfil..." />;
-  }
-
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await refreshDashboard();
@@ -72,6 +68,8 @@ export function HomePage() {
       title={`¡Hola, ${profile?.full_name?.split(" ")[0] || "deportista"}!`}
       description="Bienvenido a Calistenia Emérita"
       onRefresh={handleRefresh}
+      isLoading={authLoading || dashboardLoading}
+      loadingMessage="Cargando tu perfil..."
       maxWidth="max-w-4xl"
     >
       {/* 1. Credits and Payment Status */}

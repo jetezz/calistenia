@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { useAdminUsersLogic } from "@/hooks/admin/Users/useAdminUsersLogic";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import { UsersFilters } from "@/components/admin/UsersFilters";
@@ -95,16 +95,14 @@ export function UsersPage() {
     }
   };
 
-  if (isLoading) {
-    return <PageLoadingState message="Cargando usuarios..." />;
-  }
-
   return (
     <StandardPage
       icon={Users}
       title="Usuarios"
       description="Administra los clientes y sus créditos"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando usuarios..."
       actionButton={
         <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
           <UserPlus className="size-4 mr-2" />

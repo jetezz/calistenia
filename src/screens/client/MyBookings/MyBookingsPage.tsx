@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { useMyBookingsLogic } from "@/hooks/client/MyBookings/useMyBookingsLogic";
 import { useAuth } from "@/features/auth";
 
@@ -39,16 +39,14 @@ export function MyBookingsPage() {
     }
   };
 
-  if (isLoading) {
-    return <PageLoadingState message="Cargando tus reservas..." />;
-  }
-
   return (
     <StandardPage
       icon={CalendarCheck}
       title="Mis Reservas"
       description="Gestiona tus clases"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando tus reservas..."
       maxWidth="max-w-4xl"
     >
       <Tabs defaultValue="upcoming" className="space-y-4">

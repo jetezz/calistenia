@@ -2,7 +2,7 @@ import { Calendar, Clock, User, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { useAdminBookingsLogic } from "@/hooks/admin/Bookings/useAdminBookingsLogic";
 
 export function BookingsPage() {
@@ -45,16 +45,14 @@ export function BookingsPage() {
     return dbDayOfWeek === 0 ? 6 : dbDayOfWeek - 1;
   };
 
-  if (isLoading) {
-    return <PageLoadingState message="Cargando reservas..." />;
-  }
-
   return (
     <StandardPage
       icon={Calendar}
       title="Reservas"
       description="Administra todas las reservas del sistema"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando reservas..."
       maxWidth="max-w-4xl"
     >
       {!bookings || bookings.length === 0 ? (

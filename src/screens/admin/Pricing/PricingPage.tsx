@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { PricingPackageDialog } from "@/components/admin";
 import { toast } from "sonner";
 import { useAdminPricingLogic } from "@/hooks/admin/Pricing/useAdminPricingLogic";
@@ -66,20 +66,14 @@ export function PricingPage() {
     }
   };
 
-  if (isLoading && packages.length === 0) {
-    return <PageLoadingState message="Cargando paquetes de precios..." />;
-  }
-
-  if (isLoading && packages.length === 0) {
-    return <PageLoadingState message="Cargando paquetes de precios..." />;
-  }
-
   return (
     <StandardPage
       icon={DollarSign}
       title="Precios"
       description="Configura los paquetes de clases disponibles para los clientes"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando paquetes de precios..."
       actionButton={
         <Button onClick={handleCreate} size="sm">
           <Plus className="size-4 mr-2" />

@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { useAdminSlotsLogic } from "@/hooks/admin/Slots/useAdminSlotsLogic";
 import { bookingService } from "@/services/bookingService";
 import {
@@ -206,10 +206,6 @@ export function SlotsPage() {
     return acc;
   }, {} as Record<string, TimeSlot[]>);
 
-  if (isLoading) {
-    return <PageLoadingState message="Cargando horarios..." />;
-  }
-
   const TimeSlotCard = ({
     slot,
     showBookings = false,
@@ -341,16 +337,14 @@ export function SlotsPage() {
     );
   };
 
-  if (isLoading) {
-    return <PageLoadingState message="Cargando horarios..." />;
-  }
-
   return (
     <StandardPage
       icon={Clock}
       title="Horarios"
       description="Administra horarios semanales y días específicos"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando horarios..."
       actionButton={
         <Button onClick={handleCreate} size="sm">
           <Plus className="size-4 mr-2" />

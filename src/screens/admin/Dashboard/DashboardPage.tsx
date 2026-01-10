@@ -21,16 +21,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { StandardPage, PageLoadingState } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { useDashboardLogic } from "@/hooks/admin/Dashboard/useDashboardLogic";
 
 export function DashboardPage() {
   const { stats, newBookingsCount, isLoading, refresh, markAsSeen } =
     useDashboardLogic();
-
-  if (isLoading) {
-    return <PageLoadingState message="Cargando panel de administración..." />;
-  }
 
   const statsCards = [
     {
@@ -181,6 +177,8 @@ export function DashboardPage() {
       icon={Sparkles}
       title="Panel Admin"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando panel de administración..."
       maxWidth="max-w-4xl"
     >
       {/* Compact Stats Grid */}

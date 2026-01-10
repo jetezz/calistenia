@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { useAdminPaymentRequestsLogic } from "@/hooks/admin/PaymentRequests/useAdminPaymentRequestsLogic";
 
 export function PaymentRequestsPage() {
@@ -65,16 +65,14 @@ export function PaymentRequestsPage() {
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const processedRequests = requests.filter((r) => r.status !== "pending");
 
-  if (isLoading) {
-    return <PageLoadingState message="Cargando solicitudes de pago..." />;
-  }
-
   return (
     <StandardPage
       icon={CreditCard}
       title="Solicitudes de Pago"
       description="Gestiona las solicitudes de recarga de créditos"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando solicitudes de pago..."
       maxWidth="max-w-4xl"
     >
       {/* Pending Requests */}

@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import { usePaymentInfoLogic } from "@/hooks/client/PaymentInfo/usePaymentInfoLogic";
 import { toast } from "sonner";
 
@@ -60,16 +60,14 @@ export function PaymentInfoPage() {
       });
   };
 
-  if (isLoading) {
-    return <PageLoadingState message="Cargando información de pago..." />;
-  }
-
   return (
     <StandardPage
       icon={CreditCard}
       title="Información de Pago"
       description="Métodos de pago disponibles y datos de contacto"
       onRefresh={refresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando información de pago..."
       maxWidth="max-w-4xl"
     >
       {methods.length === 0 ? (

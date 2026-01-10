@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "./PageHeader";
+import { LoadingState } from "./LoadingStates";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,10 @@ interface StandardPageProps {
   onRefresh?: () => void;
   /** Botón de acción adicional en la cabecera */
   actionButton?: ReactNode;
+  /** Estado de carga */
+  isLoading?: boolean;
+  /** Mensaje de carga personalizado */
+  loadingMessage?: string;
   /** Ancho máximo del contenedor (default: max-w-4xl) */
   maxWidth?:
     | "max-w-xl"
@@ -42,6 +47,8 @@ export function StandardPage({
   description,
   onRefresh,
   actionButton,
+  isLoading,
+  loadingMessage,
   maxWidth = "max-w-4xl",
   className = "",
 }: StandardPageProps) {
@@ -62,7 +69,11 @@ export function StandardPage({
           actionButton={actionButton}
         />
       )}
-      {children}
+      {isLoading ? (
+        <LoadingState message={loadingMessage} className="min-h-[200px]" />
+      ) : (
+        children
+      )}
     </div>
   );
 }

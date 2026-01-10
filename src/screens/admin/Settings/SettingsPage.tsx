@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageLoadingState, StandardPage } from "@/components/common";
+import { StandardPage } from "@/components/common";
 import {
   ImageUpload,
   VisibilityToggle,
@@ -114,20 +114,14 @@ export function SettingsPage() {
     }
   };
 
-  if (isLoading && !settings) {
-    return <PageLoadingState message="Cargando configuración..." />;
-  }
-
-  if (isLoading && !settings) {
-    return <PageLoadingState message="Cargando configuración..." />;
-  }
-
   return (
     <StandardPage
       icon={Settings}
       title="Configuración"
       description="Personaliza la información que aparece en tu landing page y aplicación"
       onRefresh={handleRefresh}
+      isLoading={isLoading}
+      loadingMessage="Cargando configuración..."
       actionButton={
         <Button onClick={handleSave} disabled={isSaving || isLoading} size="sm">
           <Save className="size-4 mr-2" />
