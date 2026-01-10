@@ -1,16 +1,9 @@
 import { NavLink } from "react-router-dom";
-import {
-  Home,
-  CalendarDays,
-  CreditCard,
-  LayoutDashboard,
-  Users,
-  Clock,
-  Calendar,
-  DollarSign,
-} from "lucide-react";
+import { Home, CalendarDays, CreditCard, Calendar } from "lucide-react";
 import { useProfile } from "@/features/auth";
 import { cn } from "@/lib/utils";
+import { useAppSettingsStore } from "@/stores/appSettingsStore";
+import { ADMIN_AVAILABLE_ACTIONS, ICONS } from "@/types/navigation";
 
 interface NavItem {
   to: string;
@@ -40,33 +33,37 @@ export function MobileNav() {
     },
   ];
 
+  const { getQuickActions } = useAppSettingsStore();
+  const quickActionPaths = getQuickActions();
+
+  // Ensure panel is always first and not duplicated
+  const panelPath = "/app/admin";
+  const otherActions = quickActionPaths.filter((path) => path !== panelPath);
+
   const adminNavItems: NavItem[] = [
-    {
-      to: "/app/admin",
-      icon: <LayoutDashboard className="size-5" />,
-      label: "Panel",
-    },
-    {
-      to: "/app/admin/slots",
-      icon: <Clock className="size-5" />,
-      label: "Horarios",
-    },
-    {
-      to: "/app/admin/users",
-      icon: <Users className="size-5" />,
-      label: "Usuarios",
-    },
-    {
-      to: "/app/admin/pricing",
-      icon: <DollarSign className="size-5" />,
-      label: "Precios",
-    },
-    {
-      to: "/app/admin/bookings",
-      icon: <CalendarDays className="size-5" />,
-      label: "Reservas",
-    },
-  ];
+    // Always add Panel first
+    (() => {
+      const action = ADMIN_AVAILABLE_ACTIONS.find((a) => a.to === panelPath);
+      if (!action) return null; // Should not happen
+      const Icon = ICONS[action.icon];
+      return {
+        to: action.to,
+        icon: <Icon className="size-5" />,
+        label: action.label,
+      };
+    })(),
+    // Map other actions
+    ...otherActions.map((path) => {
+      const action = ADMIN_AVAILABLE_ACTIONS.find((a) => a.to === path);
+      if (!action) return null;
+      const Icon = ICONS[action.icon];
+      return {
+        to: action.to,
+        icon: <Icon className="size-5" />,
+        label: action.label,
+      };
+    }),
+  ].filter((item) => item !== null) as NavItem[];
 
   const navItems = isAdmin ? adminNavItems : clientNavItems;
 

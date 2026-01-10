@@ -20,11 +20,43 @@ import {
 } from "@/components/admin";
 import { useBrandingSettings } from "@/hooks/admin/Branding/useBrandingSettings";
 import { toast } from "sonner";
-import type { BrandingSettingsUpdate, ImageType } from "@/types/branding";
+import type {
+  BrandingSettingsUpdate,
+  ImageType,
+  Testimonial,
+} from "@/types/branding";
+import { useAdminSettingsLogic } from "@/hooks/admin/Settings/useAdminSettingsLogic";
+import { ADMIN_AVAILABLE_ACTIONS, ICONS } from "@/types/navigation";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 export function SettingsPage() {
   const { settings, isLoading, updateSettings, uploadImage, refresh } =
     useBrandingSettings();
+  const {
+    getQuickActions,
+    updateQuickActions,
+    refresh: refreshAppSettings,
+  } = useAdminSettingsLogic();
+
+  const quickActions = getQuickActions();
+
+  const handleToggleAction = async (path: string, checked: boolean) => {
+    if (path === "/app/admin") return; // Prevent toggling dashboard
+
+    let newActions = [...quickActions];
+    if (checked) {
+      if (newActions.length >= 4) {
+        toast.error("Solo puedes seleccionar hasta 4 acciones");
+        return;
+      }
+      newActions.push(path);
+    } else {
+      newActions = newActions.filter((a) => a !== path);
+    }
+    await updateQuickActions(newActions);
+    await refreshAppSettings();
+  };
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<BrandingSettingsUpdate>({});
 
@@ -37,7 +69,7 @@ export function SettingsPage() {
 
   const handleInputChange = (
     field: keyof BrandingSettingsUpdate,
-    value: string | boolean | number
+    value: string | boolean | number | Testimonial[]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -87,17 +119,18 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 pb-20 space-y-6 max-w-5xl">
+    <div className="container mx-auto px-4 py-6 pb-32 md:pb-20 space-y-6 max-w-5xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Configuración de Marca</h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             Personaliza la información que aparece en tu landing page y
             aplicación
           </p>
         </div>
-        <div className="flex gap-2">
+        {/* Desktop buttons - hidden on mobile */}
+        <div className="hidden md:flex gap-2">
           <Button
             variant="outline"
             onClick={handleRefresh}
@@ -115,7 +148,7 @@ export function SettingsPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="identity" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-7 w-full overflow-x-auto">
           <TabsTrigger value="identity">Identidad</TabsTrigger>
           <TabsTrigger value="images">Imágenes</TabsTrigger>
           <TabsTrigger value="contact">Contacto</TabsTrigger>
@@ -123,6 +156,7 @@ export function SettingsPage() {
           <TabsTrigger value="schedule">Horarios</TabsTrigger>
           <TabsTrigger value="texts">Textos</TabsTrigger>
           <TabsTrigger value="testimonials">Testimonios</TabsTrigger>
+          <TabsTrigger value="navigation">Navegación</TabsTrigger>
         </TabsList>
 
         {/* Tab: Identidad */}
@@ -562,25 +596,98 @@ export function SettingsPage() {
               <TestimonialEditor
                 testimonials={formData.testimonials || []}
                 onChange={(testimonials) =>
-                  handleInputChange("testimonials", testimonials as any)
+                  handleInputChange("testimonials", testimonials)
                 }
               />
             </CardContent>
           </Card>
         </TabsContent>
+        {/* Tab: Navegación */}
+        <TabsContent value="navigation" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Menú Inferior (App)</CardTitle>
+              <CardDescription>
+                Selecciona las 4 acciones rápidas que aparecerán en el menú
+                inferior de la app.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {ADMIN_AVAILABLE_ACTIONS.map((action) => {
+                  const Icon = ICONS[action.icon];
+                  const isDashboard = action.to === "/app/admin";
+                  const isSelected =
+                    isDashboard || quickActions.includes(action.to);
+
+                  // Dashboard always disabled (locked). Others disabled if limit reached and not selected
+                  const isDisabled =
+                    isDashboard || (!isSelected && quickActions.length >= 4);
+
+                  return (
+                    <div
+                      key={action.to}
+                      className={cn(
+                        "flex items-center space-x-3 rounded-lg border p-4 transition-colors",
+                        isDashboard && "bg-muted/50 border-primary/20"
+                      )}
+                    >
+                      <Checkbox
+                        id={`action-${action.to}`}
+                        checked={isSelected}
+                        disabled={isDisabled}
+                        onCheckedChange={(checked) =>
+                          // Dashboard change prevented in handler, but redundant safety here
+                          !isDashboard &&
+                          handleToggleAction(action.to, checked as boolean)
+                        }
+                      />
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <Label
+                          htmlFor={`action-${action.to}`}
+                          className="cursor-pointer font-medium"
+                        >
+                          {action.label} {isDashboard && "(Obligatorio)"}
+                        </Label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Seleccionados: {quickActions.length} / 4
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
-      {/* Sticky Save Button (Mobile) */}
-      <div className="fixed bottom-20 right-4 md:hidden">
-        <Button
-          size="lg"
-          onClick={handleSave}
-          disabled={isSaving || isLoading}
-          className="shadow-lg"
-        >
-          <Save className="size-4 mr-2" />
-          {isSaving ? "Guardando..." : "Guardar"}
-        </Button>
+      {/* Sticky Action Buttons (Mobile Only) */}
+      <div className="fixed bottom-16 left-0 right-0 md:hidden px-4 pb-4 bg-gradient-to-t from-background via-background to-transparent pt-6">
+        <div className="flex gap-2 max-w-5xl mx-auto">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="flex-1 shadow-lg"
+            size="lg"
+          >
+            <RefreshCw className="size-4 mr-2" />
+            Actualizar
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving || isLoading}
+            className="flex-1 shadow-lg"
+            size="lg"
+          >
+            <Save className="size-4 mr-2" />
+            {isSaving ? "Guardando..." : "Guardar"}
+          </Button>
+        </div>
       </div>
     </div>
   );

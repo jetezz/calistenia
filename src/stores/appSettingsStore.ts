@@ -15,6 +15,9 @@ interface AppSettingsStore
     value: any,
     userId: string
   ) => Promise<void>;
+  // Quick Actions specific
+  getQuickActions: () => string[];
+  updateQuickActions: (actions: string[], userId: string) => Promise<void>;
 }
 
 export const useAppSettingsStore = create<AppSettingsStore>(
@@ -79,6 +82,23 @@ export const useAppSettingsStore = create<AppSettingsStore>(
           const error = e instanceof Error ? e : new Error(String(e));
           set({ items: currentItems, error: error.message });
         }
+      },
+
+      getQuickActions: () => {
+        const defaultActions = [
+          "/app/admin",
+          "/app/admin/slots",
+          "/app/admin/users",
+          "/app/admin/bookings",
+        ];
+        return get().getSettingValue<string[]>(
+          "mobile_quick_actions",
+          defaultActions
+        );
+      },
+
+      updateQuickActions: async (actions: string[], userId: string) => {
+        await get().updateSettingValue("mobile_quick_actions", actions, userId);
       },
     };
   }

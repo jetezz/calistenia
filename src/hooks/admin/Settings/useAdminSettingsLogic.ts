@@ -9,6 +9,8 @@ export const useAdminSettingsLogic = () => {
     error,
     fetchAll,
     updateSettingValue,
+    getQuickActions,
+    updateQuickActions: storeUpdateQuickActions,
   } = useAppSettingsStore();
 
   const { user } = useAuth();
@@ -37,5 +39,10 @@ export const useAdminSettingsLogic = () => {
     refresh: fetchAll,
     updateSetting: handleUpdateSetting,
     updateCancellationPolicy: handleUpdateCancellationPolicy,
+    getQuickActions, // Reactive
+    updateQuickActions: async (actions: string[]) => {
+      if (!user) return;
+      await storeUpdateQuickActions(actions, user.id);
+    },
   };
 };
