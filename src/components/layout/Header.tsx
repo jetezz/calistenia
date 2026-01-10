@@ -5,6 +5,7 @@ import { useAuth, useProfile } from "@/features/auth";
 import { NotificationBell } from "@/components/admin";
 import { useNotifications } from "@/hooks";
 import { useBookingStore } from "@/stores/bookingStore";
+import { useBrandingSettings } from "@/hooks/admin/Branding/useBrandingSettings";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ export function Header() {
   const { signOut } = useAuth();
   const { profile, isAdmin } = useProfile();
   const navigate = useNavigate();
+  const { settings } = useBrandingSettings();
 
   const { items: bookings, fetchAll } = useBookingStore();
 
@@ -55,10 +57,24 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between min-h-[64px]">
         <Link
-          to={isAdmin ? "/admin" : "/"}
+          to={isAdmin ? "/app/admin" : "/app"}
           className="flex items-center gap-2 touch-none"
         >
-          <span className="text-lg font-bold">Calistenia Emérita</span>
+          {/* Logo */}
+          {settings?.show_logo && settings?.logo_url && (
+            <img
+              src={settings.logo_url}
+              alt={settings.business_name || "Logo"}
+              className="h-8 w-8 object-contain"
+            />
+          )}
+
+          {/* Business Name */}
+          <span className="text-lg font-bold">
+            {settings?.business_name || "Calistenia Emérita"}
+          </span>
+
+          {/* Admin Badge - Only visible to admins */}
           {isAdmin && (
             <Badge variant="secondary" className="text-xs">
               Admin

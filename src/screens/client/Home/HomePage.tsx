@@ -37,7 +37,7 @@ export function HomePage() {
   const [showAllRequests, setShowAllRequests] = useState(false);
 
   if (isAdmin && !authLoading) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/app/admin" replace />;
   }
 
   const getPaymentStatusBadge = () => {
@@ -96,7 +96,7 @@ export function HomePage() {
               <p className="text-sm">
                 No tienes créditos disponibles.
                 <Link
-                  to="/request-credits"
+                  to="/app/request-credits"
                   className="ml-1 text-primary hover:underline font-medium"
                 >
                   Recarga aquí
@@ -145,7 +145,7 @@ export function HomePage() {
               ))}
               {upcomingBookings.length >= 3 && (
                 <Button asChild variant="ghost" size="sm" className="w-full">
-                  <Link to="/my-bookings">Ver todas las reservas</Link>
+                  <Link to="/app/my-bookings">Ver todas las reservas</Link>
                 </Button>
               )}
             </div>
@@ -253,14 +253,14 @@ export function HomePage() {
       {/* Action Buttons */}
       <div className="grid gap-4">
         <Button asChild size="lg" className="h-14 text-lg">
-          <Link to="/book">
+          <Link to="/app/book">
             <CalendarDays className="mr-2 size-5" />
             Reservar clase
           </Link>
         </Button>
 
         <Button asChild variant="outline" size="lg" className="h-14 text-lg">
-          <Link to="/request-credits">
+          <Link to="/app/request-credits">
             <CreditCard className="mr-2 size-5" />
             Recargar bonos
           </Link>
@@ -268,7 +268,7 @@ export function HomePage() {
 
         {upcomingBookings.length > 0 && (
           <Button asChild variant="ghost" size="lg" className="h-14">
-            <Link to="/my-bookings">
+            <Link to="/app/my-bookings">
               <Calendar className="mr-2 size-5" />
               Mis reservas
             </Link>
@@ -276,7 +276,7 @@ export function HomePage() {
         )}
 
         <Button asChild variant="ghost" size="lg" className="h-14">
-          <Link to="/payment-info">
+          <Link to="/app/payment-info">
             <Info className="mr-2 size-5" />
             Información de pago
           </Link>

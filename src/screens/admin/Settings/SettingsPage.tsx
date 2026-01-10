@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { Settings, Save, Clock, Calendar } from "lucide-react";
+import { Save, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -7,199 +11,577 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageLoadingState } from "@/components/common";
-import { useAdminSettingsLogic } from "@/hooks/admin/Settings/useAdminSettingsLogic";
+import {
+  ImageUpload,
+  VisibilityToggle,
+  TestimonialEditor,
+} from "@/components/admin";
+import { useBrandingSettings } from "@/hooks/admin/Branding/useBrandingSettings";
+import { toast } from "sonner";
+import type { BrandingSettingsUpdate, ImageType } from "@/types/branding";
 
 export function SettingsPage() {
-  const { settings, isLoading, updateCancellationPolicy } =
-    useAdminSettingsLogic();
-
-  const { success, error: showError } = useToast();
-
-  const [unit, setUnit] = useState<"hours" | "days">("hours");
-  const [value, setValue] = useState<string>("2");
+  const { settings, isLoading, updateSettings, uploadImage, refresh } =
+    useBrandingSettings();
   const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<BrandingSettingsUpdate>({});
 
-  // Find cancellation policy in settings
-  const cancellationPolicy = settings.find(
-    (s) => s.key === "cancellation_policy"
-  )?.value;
-
+  // Update form data when settings load
   useEffect(() => {
-    if (cancellationPolicy && typeof cancellationPolicy === "object") {
-      // Assume structure { unit: 'hours' | 'days', value: number }
-      const policy = cancellationPolicy as {
-        unit: "hours" | "days";
-        value: number;
-      };
-      setUnit(policy.unit || "hours");
-      setValue(policy.value?.toString() || "0");
+    if (settings) {
+      setFormData(settings);
     }
-  }, [cancellationPolicy]);
+  }, [settings]);
+
+  const handleInputChange = (
+    field: keyof BrandingSettingsUpdate,
+    value: string | boolean | number
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = async (file: File, type: ImageType) => {
+    const result = await uploadImage(file, type);
+    if (result.success) {
+      toast.success("Imagen subida correctamente");
+      // Refresh settings to get the updated image URL
+      await refresh();
+    } else {
+      toast.error(result.error || "Error al subir la imagen");
+    }
+  };
 
   const handleSave = async () => {
-    const numValue = value === "" ? 0 : parseInt(value);
-
-    if (isNaN(numValue) || numValue < 0) {
-      showError("El valor debe ser 0 o mayor");
-      return;
-    }
-
     setIsSaving(true);
     try {
-      await updateCancellationPolicy({ unit, value: numValue });
-      success("Política de cancelación actualizada correctamente");
-    } catch (error) {
-      console.error("Error updating cancellation policy:", error);
-      showError("Error al actualizar la política de cancelación");
+      const result = await updateSettings(formData);
+      if (result.success) {
+        toast.success("Configuración guardada correctamente");
+        await refresh();
+      } else {
+        toast.error(result.error || "Error al guardar la configuración");
+      }
+    } catch {
+      toast.error("Error al guardar la configuración");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const getPreviewText = () => {
-    const numValue = value === "" ? 0 : parseInt(value);
-    if (isNaN(numValue) || numValue === 0) {
-      return "Los clientes podrán cancelar sus reservas en cualquier momento, incluso minutos antes de la clase";
-    }
-    if (unit === "hours") {
-      return `Los clientes podrán cancelar sus reservas con al menos ${numValue} ${
-        numValue === 1 ? "hora" : "horas"
-      } de antelación`;
+  const handleRefresh = async () => {
+    const result = await refresh();
+    if (result.success) {
+      toast.success("Configuración actualizada");
+      if (settings) {
+        setFormData(settings);
+      }
     } else {
-      return `Los clientes podrán cancelar sus reservas con al menos ${numValue} ${
-        numValue === 1 ? "día" : "días"
-      } de antelación`;
+      toast.error(result.error || "Error al actualizar");
     }
   };
 
-  if (isLoading && !cancellationPolicy) {
+  if (isLoading && !settings) {
     return <PageLoadingState message="Cargando configuración..." />;
   }
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-20 space-y-6 max-w-4xl">
-      <div className="flex items-center gap-3">
-        <Settings className="size-8" />
+    <div className="container mx-auto px-4 py-6 pb-20 space-y-6 max-w-5xl">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Configuración</h1>
-          <p className="text-sm text-muted-foreground">
-            Gestiona las políticas y configuraciones de la aplicación
+          <h1 className="text-2xl font-bold">Configuración de Marca</h1>
+          <p className="text-muted-foreground">
+            Personaliza la información que aparece en tu landing page y
+            aplicación
           </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            <RefreshCw className="size-4 mr-2" />
+            Actualizar
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving || isLoading}>
+            <Save className="size-4 mr-2" />
+            {isSaving ? "Guardando..." : "Guardar Cambios"}
+          </Button>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="size-5" />
-            Política de Cancelación
-          </CardTitle>
-          <CardDescription>
-            Configura el tiempo mínimo requerido antes de que un cliente pueda
-            cancelar una reserva
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="value">Tiempo mínimo</Label>
-              <Input
-                id="value"
-                type="number"
-                min="0"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="w-full"
+      {/* Tabs */}
+      <Tabs defaultValue="identity" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+          <TabsTrigger value="identity">Identidad</TabsTrigger>
+          <TabsTrigger value="images">Imágenes</TabsTrigger>
+          <TabsTrigger value="contact">Contacto</TabsTrigger>
+          <TabsTrigger value="location">Ubicación</TabsTrigger>
+          <TabsTrigger value="schedule">Horarios</TabsTrigger>
+          <TabsTrigger value="texts">Textos</TabsTrigger>
+          <TabsTrigger value="testimonials">Testimonios</TabsTrigger>
+        </TabsList>
+
+        {/* Tab: Identidad */}
+        <TabsContent value="identity" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Identidad de Marca</CardTitle>
+              <CardDescription>
+                Configura el nombre y logo de tu negocio
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="business_name">Nombre del Negocio</Label>
+                <Input
+                  id="business_name"
+                  value={formData.business_name || ""}
+                  onChange={(e) =>
+                    handleInputChange("business_name", e.target.value)
+                  }
+                  placeholder="Ej: Calistenia Emérita"
+                />
+              </div>
+
+              <ImageUpload
+                label="Logo"
+                currentImage={settings?.logo_url || formData.logo_url}
+                onUpload={(file) => handleImageUpload(file, "logo")}
+                aspectRatio="square"
               />
-              <p className="text-xs text-muted-foreground">
-                0 = Siempre se puede cancelar
-              </p>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unidad</Label>
-              <Select
-                value={unit}
-                onValueChange={(value) => setUnit(value as "hours" | "days")}
-              >
-                <SelectTrigger id="unit">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hours">
-                    <div className="flex items-center gap-2">
-                      <Clock className="size-4" />
-                      <span>Horas</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="days">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="size-4" />
-                      <span>Días</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+              <VisibilityToggle
+                label="Mostrar Logo"
+                checked={formData.show_logo ?? true}
+                onCheckedChange={(checked) =>
+                  handleInputChange("show_logo", checked)
+                }
+                description="Controla si el logo aparece en la aplicación"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
-            <h4 className="font-medium text-sm mb-2 text-blue-900">
-              Vista previa
-            </h4>
-            <p className="text-sm text-blue-800">{getPreviewText()}</p>
-          </div>
+        {/* Tab: Imágenes */}
+        <TabsContent value="images" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Imágenes de la Landing Page</CardTitle>
+              <CardDescription>
+                Sube y gestiona las imágenes principales de tu sitio
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="space-y-4">
+                <ImageUpload
+                  label="Imagen Principal (Hero)"
+                  currentImage={
+                    settings?.hero_image_url || formData.hero_image_url
+                  }
+                  onUpload={(file) => handleImageUpload(file, "hero")}
+                  aspectRatio="video"
+                />
+                <VisibilityToggle
+                  label="Mostrar Imagen Hero"
+                  checked={formData.show_hero_image ?? true}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("show_hero_image", checked)
+                  }
+                />
+              </div>
 
-          <div className="flex items-center gap-3 pt-2">
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex-1 sm:flex-none"
-            >
-              <Save className="size-4 mr-2" />
-              {isSaving ? "Guardando..." : "Guardar cambios"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="space-y-4">
+                <ImageUpload
+                  label="Foto del Entrenador"
+                  currentImage={
+                    settings?.trainer_image_url || formData.trainer_image_url
+                  }
+                  onUpload={(file) => handleImageUpload(file, "trainer")}
+                  aspectRatio="square"
+                />
+                <VisibilityToggle
+                  label="Mostrar Foto del Entrenador"
+                  checked={formData.show_trainer_image ?? true}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("show_trainer_image", checked)
+                  }
+                />
+              </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Información</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex gap-2">
-              <span className="font-medium min-w-[120px]">
-                Configuración actual:
-              </span>
-              <span>
-                {value} {unit === "hours" ? "horas" : "días"}
-              </span>
-            </div>
-            <div className="pt-3 border-t space-y-2">
-              <p>• Esta configuración afecta a todos los clientes</p>
-              <p>• Los cambios se aplican inmediatamente</p>
-              <p>
-                • Las reservas existentes no se verán afectadas retroactivamente
-              </p>
-              <p>• Los clientes verán el mensaje actualizado en su panel</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="space-y-4">
+                <ImageUpload
+                  label="Foto del Grupo"
+                  currentImage={
+                    settings?.group_image_url || formData.group_image_url
+                  }
+                  onUpload={(file) => handleImageUpload(file, "group")}
+                  aspectRatio="video"
+                />
+                <VisibilityToggle
+                  label="Mostrar Foto del Grupo"
+                  checked={formData.show_group_image ?? true}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("show_group_image", checked)
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab: Contacto */}
+        <TabsContent value="contact" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Información de Contacto</CardTitle>
+              <CardDescription>
+                Configura los datos de contacto que aparecerán en la landing
+                page
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email || ""}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="info@ejemplo.com"
+                  />
+                </div>
+                <VisibilityToggle
+                  label="Mostrar Email"
+                  checked={formData.show_email ?? true}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("show_email", checked)
+                  }
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Teléfono</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone || ""}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    placeholder="+34 XXX XXX XXX"
+                  />
+                </div>
+                <VisibilityToggle
+                  label="Mostrar Teléfono"
+                  checked={formData.show_phone ?? true}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("show_phone", checked)
+                  }
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input
+                    id="whatsapp"
+                    type="tel"
+                    value={formData.whatsapp || ""}
+                    onChange={(e) =>
+                      handleInputChange("whatsapp", e.target.value)
+                    }
+                    placeholder="34XXXXXXXXX"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Número sin espacios ni símbolos (ej: 34612345678)
+                  </p>
+                </div>
+                <VisibilityToggle
+                  label="Mostrar WhatsApp"
+                  checked={formData.show_whatsapp ?? true}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("show_whatsapp", checked)
+                  }
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="instagram">Instagram</Label>
+                  <Input
+                    id="instagram"
+                    value={formData.instagram || ""}
+                    onChange={(e) =>
+                      handleInputChange("instagram", e.target.value)
+                    }
+                    placeholder="@tuusuario"
+                  />
+                </div>
+                <VisibilityToggle
+                  label="Mostrar Instagram"
+                  checked={formData.show_instagram ?? true}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("show_instagram", checked)
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab: Ubicación */}
+        <TabsContent value="location" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Ubicación</CardTitle>
+              <CardDescription>
+                Información sobre la ubicación de tu negocio
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="address">Dirección</Label>
+                <Input
+                  id="address"
+                  value={formData.address || ""}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  placeholder="Calle Ejemplo, 123"
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="city">Ciudad</Label>
+                  <Input
+                    id="city"
+                    value={formData.city || ""}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    placeholder="Mérida"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="region">Región/Provincia</Label>
+                  <Input
+                    id="region"
+                    value={formData.region || ""}
+                    onChange={(e) =>
+                      handleInputChange("region", e.target.value)
+                    }
+                    placeholder="Extremadura"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">País</Label>
+                  <Input
+                    id="country"
+                    value={formData.country || ""}
+                    onChange={(e) =>
+                      handleInputChange("country", e.target.value)
+                    }
+                    placeholder="España"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="google_maps_url">URL de Google Maps</Label>
+                <Input
+                  id="google_maps_url"
+                  type="url"
+                  value={formData.google_maps_url || ""}
+                  onChange={(e) =>
+                    handleInputChange("google_maps_url", e.target.value)
+                  }
+                  placeholder="https://maps.google.com/..."
+                />
+                <p className="text-sm text-muted-foreground">
+                  Obtén el enlace desde Google Maps → Compartir → Copiar enlace
+                </p>
+              </div>
+
+              <VisibilityToggle
+                label="Mostrar Ubicación"
+                checked={formData.show_location ?? true}
+                onCheckedChange={(checked) =>
+                  handleInputChange("show_location", checked)
+                }
+                description="Controla si la ubicación aparece en la landing page"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab: Horarios */}
+        <TabsContent value="schedule" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Horarios de Atención</CardTitle>
+              <CardDescription>
+                Define los horarios de tu centro
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="schedule_weekdays">Lunes - Viernes</Label>
+                <Input
+                  id="schedule_weekdays"
+                  value={formData.schedule_weekdays || ""}
+                  onChange={(e) =>
+                    handleInputChange("schedule_weekdays", e.target.value)
+                  }
+                  placeholder="7:00 - 21:00"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="schedule_saturday">Sábados</Label>
+                <Input
+                  id="schedule_saturday"
+                  value={formData.schedule_saturday || ""}
+                  onChange={(e) =>
+                    handleInputChange("schedule_saturday", e.target.value)
+                  }
+                  placeholder="9:00 - 14:00"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="schedule_sunday">Domingos</Label>
+                <Input
+                  id="schedule_sunday"
+                  value={formData.schedule_sunday || ""}
+                  onChange={(e) =>
+                    handleInputChange("schedule_sunday", e.target.value)
+                  }
+                  placeholder="Cerrado"
+                />
+              </div>
+
+              <VisibilityToggle
+                label="Mostrar Horarios"
+                checked={formData.show_schedule ?? true}
+                onCheckedChange={(checked) =>
+                  handleInputChange("show_schedule", checked)
+                }
+                description="Controla si los horarios aparecen en la landing page"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab: Textos */}
+        <TabsContent value="texts" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Textos de la Landing Page</CardTitle>
+              <CardDescription>
+                Personaliza los mensajes principales de tu sitio
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="hero_title">Título Principal (Hero)</Label>
+                <Textarea
+                  id="hero_title"
+                  value={formData.hero_title || ""}
+                  onChange={(e) =>
+                    handleInputChange("hero_title", e.target.value)
+                  }
+                  rows={2}
+                  placeholder="Recupera tu agilidad y fuerza..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="hero_subtitle">Subtítulo (Hero)</Label>
+                <Textarea
+                  id="hero_subtitle"
+                  value={formData.hero_subtitle || ""}
+                  onChange={(e) =>
+                    handleInputChange("hero_subtitle", e.target.value)
+                  }
+                  rows={3}
+                  placeholder="Entrenamiento personal en grupos reducidos..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="hero_cta_text">Texto del Botón Principal</Label>
+                <Input
+                  id="hero_cta_text"
+                  value={formData.hero_cta_text || ""}
+                  onChange={(e) =>
+                    handleInputChange("hero_cta_text", e.target.value)
+                  }
+                  placeholder="Solicitar Entrevista Gratuita"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="about_trainer_text">Sobre el Entrenador</Label>
+                <Textarea
+                  id="about_trainer_text"
+                  value={formData.about_trainer_text || ""}
+                  onChange={(e) =>
+                    handleInputChange("about_trainer_text", e.target.value)
+                  }
+                  rows={4}
+                  placeholder="Con años de experiencia..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="about_trainer_quote">Cita del Entrenador</Label>
+                <Input
+                  id="about_trainer_quote"
+                  value={formData.about_trainer_quote || ""}
+                  onChange={(e) =>
+                    handleInputChange("about_trainer_quote", e.target.value)
+                  }
+                  placeholder="No eres un número, eres parte de la familia"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab: Testimonios */}
+        <TabsContent value="testimonials" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Testimonios de Clientes</CardTitle>
+              <CardDescription>
+                Gestiona los testimonios que aparecen en la landing page
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TestimonialEditor
+                testimonials={formData.testimonials || []}
+                onChange={(testimonials) =>
+                  handleInputChange("testimonials", testimonials as any)
+                }
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Sticky Save Button (Mobile) */}
+      <div className="fixed bottom-20 right-4 md:hidden">
+        <Button
+          size="lg"
+          onClick={handleSave}
+          disabled={isSaving || isLoading}
+          className="shadow-lg"
+        >
+          <Save className="size-4 mr-2" />
+          {isSaving ? "Guardando..." : "Guardar"}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -38,7 +38,7 @@ export function DashboardPage() {
       icon: Calendar,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      href: "/admin/bookings",
+      href: "/app/admin/bookings",
     },
     {
       title: "Solicitudes Pendientes",
@@ -47,7 +47,7 @@ export function DashboardPage() {
       icon: AlertCircle,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
-      href: "/admin/payment-requests",
+      href: "/app/admin/payment-requests",
     },
     {
       title: "Usuarios Totales",
@@ -56,7 +56,7 @@ export function DashboardPage() {
       icon: Users,
       color: "text-green-600",
       bgColor: "bg-green-50",
-      href: "/admin/users",
+      href: "/app/admin/users",
     },
     {
       title: "Horarios Activos",
@@ -65,7 +65,7 @@ export function DashboardPage() {
       icon: Clock,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
-      href: "/admin/slots",
+      href: "/app/admin/slots",
     },
   ];
 
@@ -73,43 +73,43 @@ export function DashboardPage() {
     {
       title: "Gestionar Horarios",
       description: "Crear y editar franjas horarias",
-      href: "/admin/slots",
+      href: "/app/admin/slots",
       icon: Clock,
     },
     {
       title: "Ver Usuarios",
       description: "Lista de todos los clientes",
-      href: "/admin/users",
+      href: "/app/admin/users",
       icon: Users,
     },
     {
       title: "Gestionar Precios",
       description: "Configurar paquetes de clases",
-      href: "/admin/pricing",
+      href: "/app/admin/pricing",
       icon: DollarSign,
     },
     {
       title: "Métodos de Pago",
       description: "Configurar formas de pago",
-      href: "/admin/payment-methods",
+      href: "/app/admin/payment-methods",
       icon: Wallet,
     },
     {
       title: "Configuración",
       description: "Políticas de cancelación",
-      href: "/admin/settings",
+      href: "/app/admin/settings",
       icon: Settings,
     },
     {
       title: "Solicitudes de Pago",
       description: "Aprobar recargas de bonos",
-      href: "/admin/payment-requests",
+      href: "/app/admin/payment-requests",
       icon: CreditCard,
     },
     {
       title: "Todas las Reservas",
       description: "Historial completo",
-      href: "/admin/bookings",
+      href: "/app/admin/bookings",
       icon: Calendar,
     },
   ];
@@ -207,7 +207,7 @@ export function DashboardPage() {
           <CardContent className="space-y-3">
             {newBookingsCount > 0 && (
               <Link
-                to="/admin/bookings"
+                to="/app/admin/bookings"
                 onClick={markAsSeen}
                 className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"
               >
@@ -227,7 +227,7 @@ export function DashboardPage() {
 
             {stats.pendingPaymentRequestsCount > 0 && (
               <Link
-                to="/admin/payment-requests"
+                to="/app/admin/payment-requests"
                 className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors cursor-pointer"
               >
                 <CreditCard className="size-5 text-orange-600" />
@@ -248,7 +248,7 @@ export function DashboardPage() {
 
             {newBookingsCount === 0 && stats.todayBookingsCount === 0 && (
               <Link
-                to="/admin/bookings"
+                to="/app/admin/bookings"
                 className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"
               >
                 <Calendar className="size-5 text-blue-600" />
@@ -265,7 +265,7 @@ export function DashboardPage() {
 
             {stats.activeTimeSlotsCount === 0 && (
               <Link
-                to="/admin/slots"
+                to="/app/admin/slots"
                 className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
               >
                 <Clock className="size-5 text-red-600" />

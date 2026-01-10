@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { RootLayout } from "@/components/layout/RootLayout";
 import { HomePage } from "@/screens/client/Home/HomePage";
+import { LandingPage } from "@/screens/LandingPage";
 import { NotFoundPage } from "@/features/errors/pages/NotFoundPage";
 import { LoginPage } from "@/features/auth";
 import { DashboardPage } from "@/screens/admin/Dashboard/DashboardPage";
@@ -21,6 +22,10 @@ import { RejectedPage } from "@/screens/client/Rejected/RejectedPage";
 
 export const router = createBrowserRouter([
   {
+    path: "/",
+    element: <LandingPage />,
+  },
+  {
     path: "/login",
     element: <LoginPage />,
   },
@@ -33,7 +38,7 @@ export const router = createBrowserRouter([
     element: <RejectedPage />,
   },
   {
-    path: "/",
+    path: "/app",
     element: <RootLayout />,
     children: [
       {

@@ -5,3 +5,6 @@ export * from "./EnhancedTimeSlotDialog";
 export * from "./AddUserToSlotDialog";
 export * from "./AvailabilityCalendar";
 export * from "./PricingPackageDialog";
+export * from "./ImageUpload";
+export * from "./VisibilityToggle";
+export * from "./TestimonialEditor";

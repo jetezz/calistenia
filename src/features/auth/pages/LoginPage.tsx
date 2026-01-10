@@ -1,10 +1,10 @@
-import { Navigate } from 'react-router-dom'
-import { LoginForm } from '../components/LoginForm'
-import { useAuth } from '../hooks/useAuth'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Navigate } from "react-router-dom";
+import { LoginForm } from "../components/LoginForm";
+import { useAuth } from "../hooks/useAuth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function LoginPage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -21,11 +21,11 @@ export function LoginPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (user) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/app" replace />;
   }
 
   return (
@@ -42,5 +42,5 @@ export function LoginPage() {
         <LoginForm />
       </div>
     </div>
-  )
+  );
 }

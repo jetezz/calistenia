@@ -107,6 +107,150 @@ export type Database = {
           },
         ]
       }
+      branding_settings: {
+        Row: {
+          about_trainer_quote: string | null
+          about_trainer_text: string | null
+          about_trainer_title: string | null
+          address: string | null
+          business_name: string
+          city: string
+          country: string
+          created_at: string
+          email: string | null
+          empathy_subtitle: string | null
+          empathy_title: string | null
+          final_cta_subtitle: string | null
+          final_cta_title: string | null
+          google_maps_url: string | null
+          group_image_url: string | null
+          hero_cta_text: string
+          hero_image_url: string | null
+          hero_subtitle: string
+          hero_title: string
+          id: string
+          instagram: string | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          phone: string | null
+          region: string
+          schedule_saturday: string | null
+          schedule_sunday: string | null
+          schedule_weekdays: string | null
+          show_email: boolean
+          show_group_image: boolean
+          show_hero_image: boolean
+          show_instagram: boolean
+          show_location: boolean
+          show_logo: boolean
+          show_phone: boolean
+          show_schedule: boolean
+          show_trainer_image: boolean
+          show_whatsapp: boolean
+          testimonials: Json | null
+          trainer_image_url: string | null
+          updated_at: string
+          value_prop_subtitle: string | null
+          value_prop_title: string
+          whatsapp: string | null
+        }
+        Insert: {
+          about_trainer_quote?: string | null
+          about_trainer_text?: string | null
+          about_trainer_title?: string | null
+          address?: string | null
+          business_name?: string
+          city?: string
+          country?: string
+          created_at?: string
+          email?: string | null
+          empathy_subtitle?: string | null
+          empathy_title?: string | null
+          final_cta_subtitle?: string | null
+          final_cta_title?: string | null
+          google_maps_url?: string | null
+          group_image_url?: string | null
+          hero_cta_text?: string
+          hero_image_url?: string | null
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          instagram?: string | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          phone?: string | null
+          region?: string
+          schedule_saturday?: string | null
+          schedule_sunday?: string | null
+          schedule_weekdays?: string | null
+          show_email?: boolean
+          show_group_image?: boolean
+          show_hero_image?: boolean
+          show_instagram?: boolean
+          show_location?: boolean
+          show_logo?: boolean
+          show_phone?: boolean
+          show_schedule?: boolean
+          show_trainer_image?: boolean
+          show_whatsapp?: boolean
+          testimonials?: Json | null
+          trainer_image_url?: string | null
+          updated_at?: string
+          value_prop_subtitle?: string | null
+          value_prop_title?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          about_trainer_quote?: string | null
+          about_trainer_text?: string | null
+          about_trainer_title?: string | null
+          address?: string | null
+          business_name?: string
+          city?: string
+          country?: string
+          created_at?: string
+          email?: string | null
+          empathy_subtitle?: string | null
+          empathy_title?: string | null
+          final_cta_subtitle?: string | null
+          final_cta_title?: string | null
+          google_maps_url?: string | null
+          group_image_url?: string | null
+          hero_cta_text?: string
+          hero_image_url?: string | null
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          instagram?: string | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          phone?: string | null
+          region?: string
+          schedule_saturday?: string | null
+          schedule_sunday?: string | null
+          schedule_weekdays?: string | null
+          show_email?: boolean
+          show_group_image?: boolean
+          show_hero_image?: boolean
+          show_instagram?: boolean
+          show_location?: boolean
+          show_logo?: boolean
+          show_phone?: boolean
+          show_schedule?: boolean
+          show_trainer_image?: boolean
+          show_whatsapp?: boolean
+          testimonials?: Json | null
+          trainer_image_url?: string | null
+          updated_at?: string
+          value_prop_subtitle?: string | null
+          value_prop_title?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       health_check: {
         Row: {
           created_at: string
@@ -363,6 +507,7 @@ export type Database = {
         Returns: string
       }
       admin_delete_user: { Args: { p_user_id: string }; Returns: boolean }
+      approve_user: { Args: { target_user_id: string }; Returns: undefined }
       get_admin_dashboard_data: { Args: never; Returns: Json }
       get_admin_secondary_data: { Args: never; Returns: Json }
       get_available_spots: {
@@ -372,6 +517,7 @@ export type Database = {
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { user_id: string }; Returns: boolean }
+      reject_user: { Args: { target_user_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

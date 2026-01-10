@@ -138,7 +138,7 @@ export function UserDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Usuario no encontrado</h1>
           <Button asChild>
-            <Link to="/admin/users">
+            <Link to="/app/admin/users">
               <ArrowLeft className="size-4 mr-2" />
               Volver a usuarios
             </Link>
@@ -152,7 +152,7 @@ export function UserDetailPage() {
     <div className="container mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center gap-4">
         <Button asChild variant="outline" size="sm">
-          <Link to="/admin/users">
+          <Link to="/app/admin/users">
             <ArrowLeft className="size-4 mr-2" />
             Volver
           </Link>

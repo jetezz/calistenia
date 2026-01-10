@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { XCircle, LogOut, RefreshCw } from "lucide-react";
 import { useProfile } from "@/features/auth/hooks/useProfile";
@@ -9,7 +15,8 @@ import { Navigate } from "react-router-dom";
 
 export function RejectedPage() {
   const { signOut } = useAuth();
-  const { profile, isLoading, isApproved, isPending, isAdmin, refreshProfile } = useProfile();
+  const { profile, isLoading, isApproved, isPending, isAdmin, refreshProfile } =
+    useProfile();
 
   // Refrescar el perfil cada 5 segundos para detectar cambios
   useEffect(() => {
@@ -26,7 +33,7 @@ export function RejectedPage() {
 
   // Si el usuario ya fue aprobado, redirigir a home
   if (isApproved || isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   // Si el usuario fue puesto en pendiente de nuevo, redirigir a pending
@@ -49,8 +56,8 @@ export function RejectedPage() {
         <CardContent className="space-y-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-sm text-red-800 text-center">
-              Lamentablemente, tu solicitud de acceso a la aplicación no ha sido aprobada por un
-              administrador.
+              Lamentablemente, tu solicitud de acceso a la aplicación no ha sido
+              aprobada por un administrador.
             </p>
           </div>
 
@@ -69,7 +76,8 @@ export function RejectedPage() {
 
           <div className="space-y-3">
             <p className="text-sm text-gray-600 text-center">
-              Si crees que esto es un error, contacta con el administrador. Tu estado se verifica automáticamente cada 5 segundos.
+              Si crees que esto es un error, contacta con el administrador. Tu
+              estado se verifica automáticamente cada 5 segundos.
             </p>
             <div className="flex flex-col gap-2">
               <Button
@@ -80,11 +88,7 @@ export function RejectedPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Verificar Estado Ahora
               </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={signOut}
-              >
+              <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Cerrar Sesión
               </Button>

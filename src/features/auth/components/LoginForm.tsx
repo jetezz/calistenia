@@ -1,102 +1,113 @@
-﻿import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuth } from '../hooks/useAuth'
-import { toast } from 'sonner'
-import { LoadingSpinner } from '@/components/common'
+﻿import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "../hooks/useAuth";
+import { toast } from "sonner";
+import { LoadingSpinner } from "@/components/common";
 
-type Mode = 'login' | 'register'
+type Mode = "login" | "register";
 
 export function LoginForm() {
-  const [mode, setMode] = useState<Mode>('login')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [mode, setMode] = useState<Mode>("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const { signInWithEmail, signUpWithEmail } = useAuth()
-  const navigate = useNavigate()
+  const { signInWithEmail, signUpWithEmail } = useAuth();
+  const navigate = useNavigate();
 
   const translateError = (message: string): string => {
-    if (message.includes('Invalid login credentials')) {
-      return 'Credenciales incorrectas'
+    if (message.includes("Invalid login credentials")) {
+      return "Credenciales incorrectas";
     }
-    if (message.includes('Email not confirmed')) {
-      return 'Debes confirmar tu correo electronico'
+    if (message.includes("Email not confirmed")) {
+      return "Debes confirmar tu correo electronico";
     }
-    if (message.includes('is invalid') || message.includes('invalid_email')) {
-      return 'Error de configuracion: desactiva "Confirm email" en Supabase Dashboard → Auth → Providers'
+    if (message.includes("is invalid") || message.includes("invalid_email")) {
+      return 'Error de configuracion: desactiva "Confirm email" en Supabase Dashboard → Auth → Providers';
     }
-    if (message.includes('already registered')) {
-      return 'Este correo ya esta registrado'
+    if (message.includes("already registered")) {
+      return "Este correo ya esta registrado";
     }
-    if (message.includes('Password should be at least')) {
-      return 'La contrasena debe tener al menos 6 caracteres'
+    if (message.includes("Password should be at least")) {
+      return "La contrasena debe tener al menos 6 caracteres";
     }
-    if (message.includes('rate limit') || message.includes('Email rate limit')) {
-      return 'Limite de emails alcanzado. Espera unos minutos.'
+    if (
+      message.includes("rate limit") ||
+      message.includes("Email rate limit")
+    ) {
+      return "Limite de emails alcanzado. Espera unos minutos.";
     }
-    if (message.includes('Signups not allowed')) {
-      return 'Registros deshabilitados. Activa "Enable Sign Ups" en Supabase.'
+    if (message.includes("Signups not allowed")) {
+      return 'Registros deshabilitados. Activa "Enable Sign Ups" en Supabase.';
     }
-    return message
-  }
+    return message;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccessMessage(null)
-    setIsLoading(true)
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+    setIsLoading(true);
 
     try {
-      if (mode === 'login') {
-        const { error } = await signInWithEmail(email, password)
+      if (mode === "login") {
+        const { error } = await signInWithEmail(email, password);
         if (error) {
-          toast.error(translateError(error.message))
+          toast.error(translateError(error.message));
         } else {
-          toast.success('Bienvenido a Calistenia Emérita')
-          navigate('/')
+          toast.success("Bienvenido a Calistenia Emérita");
+          navigate("/app");
         }
       } else {
-        const { error } = await signUpWithEmail(email, password, fullName)
+        const { error } = await signUpWithEmail(email, password, fullName);
         if (error) {
-          toast.error(translateError(error.message))
+          toast.error(translateError(error.message));
         } else {
-          toast.success('Cuenta creada. Esperando confirmacion del administrador.')
-          setMode('login')
+          toast.success(
+            "Cuenta creada. Esperando confirmacion del administrador."
+          );
+          setMode("login");
         }
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const toggleMode = () => {
-    setMode(mode === 'login' ? 'register' : 'login')
-    setError(null)
-    setSuccessMessage(null)
-  }
+    setMode(mode === "login" ? "register" : "login");
+    setError(null);
+    setSuccessMessage(null);
+  };
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">
-          {mode === 'login' ? 'Iniciar Sesion' : 'Crear Cuenta'}
+          {mode === "login" ? "Iniciar Sesion" : "Crear Cuenta"}
         </CardTitle>
         <CardDescription>
-          {mode === 'login' 
-            ? 'Accede a tu cuenta de Calistenia Emerita' 
-            : 'Unete a la familia Calistenia Emerita'}
+          {mode === "login"
+            ? "Accede a tu cuenta de Calistenia Emerita"
+            : "Unete a la familia Calistenia Emerita"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'register' && (
+          {mode === "register" && (
             <div className="space-y-2">
               <Label htmlFor="fullName">Nombre completo</Label>
               <Input
@@ -105,7 +116,7 @@ export function LoginForm() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Tu nombre"
-                required={mode === 'register'}
+                required={mode === "register"}
                 className="h-12"
               />
             </div>
@@ -143,11 +154,13 @@ export function LoginForm() {
           )}
 
           {successMessage && (
-            <p className="text-sm text-green-600 text-center">{successMessage}</p>
+            <p className="text-sm text-green-600 text-center">
+              {successMessage}
+            </p>
           )}
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full h-12 text-base"
             disabled={isLoading}
           >
@@ -156,23 +169,25 @@ export function LoginForm() {
                 <LoadingSpinner size="sm" />
                 <span>Cargando...</span>
               </div>
+            ) : mode === "login" ? (
+              "Entrar"
             ) : (
-              mode === 'login' ? 'Entrar' : 'Crear cuenta'
+              "Crear cuenta"
             )}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          {mode === 'login' ? 'No tienes cuenta?' : 'Ya tienes cuenta?'}{' '}
+          {mode === "login" ? "No tienes cuenta?" : "Ya tienes cuenta?"}{" "}
           <button
             type="button"
             onClick={toggleMode}
             className="font-medium text-primary hover:underline"
           >
-            {mode === 'login' ? 'Registrate' : 'Inicia sesion'}
+            {mode === "login" ? "Registrate" : "Inicia sesion"}
           </button>
         </p>
       </CardContent>
     </Card>
-  )
+  );
 }

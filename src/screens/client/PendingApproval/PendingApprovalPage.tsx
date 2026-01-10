@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, LogOut, RefreshCw } from "lucide-react";
 import { useProfile } from "@/features/auth/hooks/useProfile";
@@ -9,7 +15,14 @@ import { Navigate } from "react-router-dom";
 
 export function PendingApprovalPage() {
   const { signOut } = useAuth();
-  const { profile, isLoading, isApproved, isRejected, isAdmin, refreshProfile } = useProfile();
+  const {
+    profile,
+    isLoading,
+    isApproved,
+    isRejected,
+    isAdmin,
+    refreshProfile,
+  } = useProfile();
 
   // Refrescar el perfil cada 5 segundos para detectar cambios
   useEffect(() => {
@@ -26,7 +39,7 @@ export function PendingApprovalPage() {
 
   // Si el usuario ya fue aprobado, redirigir a home
   if (isApproved || isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   // Si el usuario fue rechazado, redirigir a rejected
@@ -41,7 +54,9 @@ export function PendingApprovalPage() {
           <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center">
             <Clock className="w-8 h-8 text-yellow-600" />
           </div>
-          <CardTitle className="text-2xl font-bold">Pendiente de Aprobación</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            Pendiente de Aprobación
+          </CardTitle>
           <CardDescription className="text-base">
             Tu cuenta está siendo revisada por un administrador
           </CardDescription>
@@ -49,8 +64,8 @@ export function PendingApprovalPage() {
         <CardContent className="space-y-6">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-yellow-800 text-center">
-              Tu cuenta ha sido creada exitosamente. Un administrador revisará tu solicitud y te
-              dará acceso a la aplicación pronto.
+              Tu cuenta ha sido creada exitosamente. Un administrador revisará
+              tu solicitud y te dará acceso a la aplicación pronto.
             </p>
           </div>
 
@@ -62,7 +77,9 @@ export function PendingApprovalPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Nombre:</span>
-                <span className="font-medium">{profile.full_name || "No especificado"}</span>
+                <span className="font-medium">
+                  {profile.full_name || "No especificado"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Estado:</span>
@@ -84,11 +101,7 @@ export function PendingApprovalPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Verificar Estado Ahora
               </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={signOut}
-              >
+              <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Cerrar Sesión
               </Button>
