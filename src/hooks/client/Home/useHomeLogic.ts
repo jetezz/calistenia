@@ -4,7 +4,7 @@ import { usePaymentRequestStore } from "@/stores/paymentRequestStore";
 import { useProfile } from "@/features/auth";
 
 export const useHomeLogic = () => {
-  const { profile } = useProfile();
+  const { profile, refreshProfile } = useProfile();
   const userId = profile?.id;
 
   const {
@@ -62,8 +62,12 @@ export const useHomeLogic = () => {
   const isLoading = isBookingsLoading || isPaymentsLoading;
 
   const refreshDashboard = useCallback(async () => {
-    await Promise.all([fetchBookings(), fetchPayments()]);
-  }, [fetchBookings, fetchPayments]);
+    await Promise.all([
+      fetchBookings(true),
+      fetchPayments(true),
+      refreshProfile(),
+    ]);
+  }, [fetchBookings, fetchPayments, refreshProfile]);
 
   return {
     upcomingBookings,

@@ -51,7 +51,7 @@ export const useAdminPricingLogic = () => {
     packages,
     isLoading,
     error,
-    refresh: fetchAll,
+    refresh: () => fetchAll(true),
     createPackage: handleCreatePackage,
     updatePackage: handleUpdatePackage,
     deletePackage: handleDeletePackage,

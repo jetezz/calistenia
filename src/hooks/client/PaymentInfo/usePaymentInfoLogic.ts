@@ -16,7 +16,7 @@ export const usePaymentInfoLogic = () => {
 
   // Refresh data
   const refresh = () => {
-    fetchActiveMethods();
+    fetchActiveMethods(true);
   };
 
   return {

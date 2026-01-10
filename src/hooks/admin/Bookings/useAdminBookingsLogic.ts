@@ -31,6 +31,6 @@ export const useAdminBookingsLogic = () => {
     error,
     handleUpdateStatus,
     handleDelete,
-    refresh: fetchAll,
+    refresh: () => fetchAll(true),
   };
 };

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageLoadingState } from "@/components/common";
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { useToast } from "@/hooks";
 import { useAdminUserDetailLogic } from "@/hooks/admin/Users/useAdminUserDetailLogic";
 
@@ -148,21 +148,43 @@ export function UserDetailPage() {
     );
   }
 
+  if (isLoading) {
+    return <PageLoadingState message="Cargando datos del usuario..." />;
+  }
+
+  if (!user) {
+    return (
+      <StandardPage
+        icon={User}
+        title="Usuario no encontrado"
+        maxWidth="max-w-4xl"
+      >
+        <div className="text-center">
+          <Button asChild>
+            <Link to="/app/admin/users">
+              <ArrowLeft className="size-4 mr-2" />
+              Volver a usuarios
+            </Link>
+          </Button>
+        </div>
+      </StandardPage>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center gap-4">
+    <StandardPage
+      icon={User}
+      title={user.full_name || "Detalle de Usuario"}
+      description="Gestiona créditos y estado de pago"
+      maxWidth="max-w-4xl"
+    >
+      <div className="flex mb-2">
         <Button asChild variant="outline" size="sm">
           <Link to="/app/admin/users">
             <ArrowLeft className="size-4 mr-2" />
             Volver
           </Link>
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Detalle de Usuario</h1>
-          <p className="text-muted-foreground">
-            Gestiona créditos y estado de pago
-          </p>
-        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -344,6 +366,6 @@ export function UserDetailPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </StandardPage>
   );
 }

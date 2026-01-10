@@ -1,17 +1,10 @@
-import {
-  Calendar,
-  Clock,
-  X,
-  RefreshCw,
-  CalendarCheck,
-  AlertCircle,
-} from "lucide-react";
+import { Calendar, Clock, X, CalendarCheck, AlertCircle } from "lucide-react";
 import { formatDateLong, formatTime } from "@/lib/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageLoadingState } from "@/components/common";
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { useMyBookingsLogic } from "@/hooks/client/MyBookings/useMyBookingsLogic";
 import { useAuth } from "@/features/auth";
 
@@ -51,17 +44,13 @@ export function MyBookingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-20 space-y-4 max-w-4xl">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Mis Reservas</h1>
-          <p className="text-sm text-muted-foreground">Gestiona tus clases</p>
-        </div>
-        <Button onClick={refresh} variant="outline" size="sm">
-          <RefreshCw className="size-4" />
-        </Button>
-      </div>
-
+    <StandardPage
+      icon={CalendarCheck}
+      title="Mis Reservas"
+      description="Gestiona tus clases"
+      onRefresh={refresh}
+      maxWidth="max-w-4xl"
+    >
       <Tabs defaultValue="upcoming" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger
@@ -245,6 +234,6 @@ export function MyBookingsPage() {
           </div>
         </div>
       )}
-    </div>
+    </StandardPage>
   );
 }

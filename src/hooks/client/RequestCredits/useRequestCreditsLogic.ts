@@ -40,8 +40,8 @@ export const useRequestCreditsLogic = () => {
 
   // Refresh data
   const refresh = useCallback(() => {
-    fetchActivePackages();
-    fetchActiveMethods();
+    fetchActivePackages(true);
+    fetchActiveMethods(true);
   }, [fetchActivePackages, fetchActiveMethods]);
 
   return {

@@ -11,7 +11,7 @@ interface TimeSlotStore
   extends BaseStoreState<TimeSlot, TimeSlotInsert, TimeSlotUpdate> {
   activeSlots: TimeSlot[];
   availabilityCache: Record<string, number>;
-  fetchActive: () => Promise<void>;
+  fetchActive: (force?: boolean) => Promise<void>;
   toggleActive: (id: string, isActive: boolean) => Promise<void>;
   setActiveSlots: (slots: TimeSlot[]) => void;
   addItem: (slot: TimeSlot) => void;
@@ -31,15 +31,15 @@ export const useTimeSlotStore = create<TimeSlotStore>((set, get, store) => {
     activeSlots: [],
     availabilityCache: {},
 
-    fetchActive: async () => {
-      // Si ya tenemos todos los items cargados, filtramos localmente
-      if (get().isInitialized) {
+    fetchActive: async (force = false) => {
+      // Si ya tenemos todos los items cargados y no forzamos, filtramos localmente
+      if (!force && get().isInitialized) {
         set({ activeSlots: get().items.filter((i) => i.is_active) });
         return;
       }
 
       // Consolidar en fetchAll para evitar duplicados
-      await get().fetchAll();
+      await get().fetchAll(force);
       set({ activeSlots: get().items.filter((i) => i.is_active) });
     },
 

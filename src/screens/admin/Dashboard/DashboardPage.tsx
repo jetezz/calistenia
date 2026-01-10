@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Sparkles,
 } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -19,9 +20,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState } from "@/components/common";
+import { StandardPage, PageLoadingState } from "@/components/common";
 import { useDashboardLogic } from "@/hooks/admin/Dashboard/useDashboardLogic";
 
 export function DashboardPage() {
@@ -177,196 +177,179 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      <div className="container mx-auto px-3 py-4 pb-20 space-y-4 max-w-4xl">
-        {/* Header */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
-                <Sparkles className="size-5 text-primary" />
-              </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                Panel Admin
-              </h1>
-            </div>
-            <Button
-              onClick={refresh}
-              variant="outline"
-              size="sm"
-              className="shadow-sm hover:shadow transition-shadow"
-            >
-              <TrendingUp className="size-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Compact Stats Grid */}
-        <div className="grid grid-cols-2 gap-2">
-          {statsCards.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Link key={stat.title} to={stat.href}>
-                <Card
-                  className={`
-                  relative overflow-hidden transition-all duration-300 
-                  hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]
-                  ${
-                    stat.highlight
-                      ? "ring-2 ring-primary/50 shadow-md"
-                      : "hover:shadow-md"
-                  }
-                `}
-                >
-                  {stat.highlight && (
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full" />
-                  )}
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div
-                        className={`p-2 rounded-lg ${stat.iconBg} transition-transform duration-300 hover:scale-110`}
-                      >
-                        <Icon className={`size-4 ${stat.iconColor}`} />
-                      </div>
-                      {stat.highlight && (
-                        <Badge
-                          variant="default"
-                          className="h-5 px-1.5 text-xs animate-pulse"
-                        >
-                          Nuevo
-                        </Badge>
-                      )}
+    <StandardPage
+      icon={Sparkles}
+      title="Panel Admin"
+      onRefresh={refresh}
+      maxWidth="max-w-4xl"
+    >
+      {/* Compact Stats Grid */}
+      <div className="grid grid-cols-2 gap-2">
+        {statsCards.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Link key={stat.title} to={stat.href}>
+              <Card
+                className={`
+                relative overflow-hidden transition-all duration-300 
+                hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]
+                ${
+                  stat.highlight
+                    ? "ring-2 ring-primary/50 shadow-md"
+                    : "hover:shadow-md"
+                }
+              `}
+              >
+                {stat.highlight && (
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full" />
+                )}
+                <CardContent className="p-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <div
+                      className={`p-2 rounded-lg ${stat.iconBg} transition-transform duration-300 hover:scale-110`}
+                    >
+                      <Icon className={`size-4 ${stat.iconColor}`} />
                     </div>
-                    <div className="space-y-0.5">
-                      <div
-                        className={`text-2xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}
-                      >
-                        {stat.value}
-                      </div>
-                      <div className="text-xs font-medium text-muted-foreground">
-                        {stat.description}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground/70">
-                        {stat.title}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Alerts Section - Only show if there are alerts */}
-        {alerts.length > 0 && (
-          <Card className="border-2 shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <AlertCircle className="size-4 text-orange-600" />
-                Atención Requerida
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {alerts.map((alert) => {
-                const Icon = alert.icon;
-                return (
-                  <Link
-                    key={alert.type}
-                    to={alert.href}
-                    onClick={alert.onClick}
-                    className={`
-                      flex items-center gap-2.5 p-2.5 rounded-lg border transition-all
-                      ${alert.bg} ${alert.border} hover:shadow-sm active:scale-[0.98]
-                    `}
-                  >
-                    <div className="shrink-0">
-                      <Icon className={`size-4 ${alert.color}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-gray-900 truncate">
-                        {alert.title}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {alert.description}
-                      </p>
-                    </div>
-                    {alert.badge && (
+                    {stat.highlight && (
                       <Badge
-                        variant="secondary"
-                        className="h-5 min-w-5 px-1.5 text-xs"
+                        variant="default"
+                        className="h-5 px-1.5 text-xs animate-pulse"
                       >
-                        {alert.badge}
+                        Nuevo
                       </Badge>
                     )}
-                    <ChevronRight className="size-4 text-muted-foreground shrink-0" />
-                  </Link>
-                );
-              })}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Quick Actions Grid */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
-              Acciones Rápidas
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Acceso directo a funciones principales
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-2">
-              {quickActions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <Link
-                    key={action.href}
-                    to={action.href}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border bg-card hover:bg-accent transition-all hover:shadow-sm active:scale-95"
-                  >
+                  </div>
+                  <div className="space-y-0.5">
                     <div
-                      className={`p-2.5 rounded-lg ${action.bg} transition-transform hover:scale-110`}
+                      className={`text-2xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}
                     >
-                      <Icon className={`size-4 ${action.color}`} />
+                      {stat.value}
                     </div>
-                    <div className="text-center">
-                      <div className="text-xs font-semibold text-gray-900 leading-tight">
-                        {action.title}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-                        {action.description}
-                      </div>
+                    <div className="text-xs font-medium text-muted-foreground">
+                      {stat.description}
                     </div>
-                  </Link>
-                );
-              })}
+                    <div className="text-[10px] text-muted-foreground/70">
+                      {stat.title}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Alerts Section - Only show if there are alerts */}
+      {alerts.length > 0 && (
+        <Card className="border-2 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <AlertCircle className="size-4 text-orange-600" />
+              Atención Requerida
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {alerts.map((alert) => {
+              const Icon = alert.icon;
+              return (
+                <Link
+                  key={alert.type}
+                  to={alert.href}
+                  onClick={alert.onClick}
+                  className={`
+                    flex items-center gap-2.5 p-2.5 rounded-lg border transition-all
+                    ${alert.bg} ${alert.border} hover:shadow-sm active:scale-[0.98]
+                  `}
+                >
+                  <div className="shrink-0">
+                    <div className={`p-1.5 rounded-md ${alert.bg}`}>
+                      <Icon className={`size-4 ${alert.color}`} />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 truncate">
+                      {alert.title}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {alert.description}
+                    </p>
+                  </div>
+                  {alert.badge && (
+                    <Badge
+                      variant="secondary"
+                      className="h-5 min-w-5 px-1.5 text-xs"
+                    >
+                      {alert.badge}
+                    </Badge>
+                  )}
+                  <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+                </Link>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick Actions Grid */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold">
+            Acciones Rápidas
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Acceso directo a funciones principales
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-2">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={action.href}
+                  to={action.href}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl border bg-card hover:bg-accent transition-all hover:shadow-sm active:scale-95"
+                >
+                  <div
+                    className={`p-2.5 rounded-lg ${action.bg} transition-transform hover:scale-110`}
+                  >
+                    <Icon className={`size-4 ${action.color}`} />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs font-semibold text-gray-900 leading-tight">
+                      {action.title}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                      {action.description}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Success State - Only show when everything is good */}
+      {alerts.length === 0 && stats.todayBookingsCount > 0 && (
+        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-full bg-green-500/10">
+                <TrendingUp className="size-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-green-900">
+                  Todo en orden
+                </p>
+                <p className="text-xs text-green-700/70">
+                  Sistema operativo sin alertas
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Success State - Only show when everything is good */}
-        {alerts.length === 0 && stats.todayBookingsCount > 0 && (
-          <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-full bg-green-500/10">
-                  <TrendingUp className="size-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-green-900">
-                    Todo en orden
-                  </p>
-                  <p className="text-xs text-green-700/70">
-                    Sistema operativo sin alertas
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
+      )}
+    </StandardPage>
   );
 }

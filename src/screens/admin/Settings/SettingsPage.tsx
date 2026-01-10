@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, RefreshCw } from "lucide-react";
+import { Save, RefreshCw, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageLoadingState } from "@/components/common";
+import { PageLoadingState, StandardPage } from "@/components/common";
 import {
   ImageUpload,
   VisibilityToggle,
@@ -118,37 +118,27 @@ export function SettingsPage() {
     return <PageLoadingState message="Cargando configuración..." />;
   }
 
-  return (
-    <div className="container mx-auto px-4 py-6 pb-32 md:pb-20 space-y-6 max-w-5xl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Configuración de Marca</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Personaliza la información que aparece en tu landing page y
-            aplicación
-          </p>
-        </div>
-        {/* Desktop buttons - hidden on mobile */}
-        <div className="hidden md:flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCw className="size-4 mr-2" />
-            Actualizar
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving || isLoading}>
-            <Save className="size-4 mr-2" />
-            {isSaving ? "Guardando..." : "Guardar Cambios"}
-          </Button>
-        </div>
-      </div>
+  if (isLoading && !settings) {
+    return <PageLoadingState message="Cargando configuración..." />;
+  }
 
+  return (
+    <StandardPage
+      icon={Settings}
+      title="Configuración"
+      description="Personaliza la información que aparece en tu landing page y aplicación"
+      onRefresh={handleRefresh}
+      actionButton={
+        <Button onClick={handleSave} disabled={isSaving || isLoading} size="sm">
+          <Save className="size-4 mr-2" />
+          {isSaving ? "Guardando..." : "Guardar"}
+        </Button>
+      }
+      maxWidth="max-w-5xl"
+    >
       {/* Tabs */}
       <Tabs defaultValue="identity" className="space-y-6">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-7 w-full overflow-x-auto">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full overflow-x-auto">
           <TabsTrigger value="identity">Identidad</TabsTrigger>
           <TabsTrigger value="images">Imágenes</TabsTrigger>
           <TabsTrigger value="contact">Contacto</TabsTrigger>
@@ -602,6 +592,7 @@ export function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
         {/* Tab: Navegación */}
         <TabsContent value="navigation" className="space-y-6">
           <Card>
@@ -689,6 +680,6 @@ export function SettingsPage() {
           </Button>
         </div>
       </div>
-    </div>
+    </StandardPage>
   );
 }

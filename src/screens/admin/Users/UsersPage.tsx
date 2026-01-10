@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, UserPlus } from "lucide-react";
+import { Users, UserPlus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PageLoadingState } from "@/components/common";
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { useAdminUsersLogic } from "@/hooks/admin/Users/useAdminUsersLogic";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import { UsersFilters } from "@/components/admin/UsersFilters";
@@ -20,8 +20,6 @@ export function UsersPage() {
   const {
     users: allUsers,
     pendingUsers,
-    approvedUsers,
-    rejectedUsers,
     isLoading,
     createUser,
     deleteUser,
@@ -30,6 +28,7 @@ export function UsersPage() {
     approveUser,
     rejectUser,
     updateApprovalStatus,
+    refresh,
   } = useAdminUsersLogic();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,27 +95,25 @@ export function UsersPage() {
     }
   };
 
-
   if (isLoading) {
     return <PageLoadingState message="Cargando usuarios..." />;
   }
 
   return (
-    <div className="container mx-auto px-3 py-4  space-y-4 max-w-4xl">
+    <StandardPage
+      icon={Users}
+      title="Usuarios"
+      description="Administra los clientes y sus créditos"
+      onRefresh={refresh}
+      actionButton={
+        <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+          <UserPlus className="size-4 mr-2" />
+          Nuevo
+        </Button>
+      }
+      maxWidth="max-w-4xl"
+    >
       <div className="space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold">Gestión de Usuarios</h1>
-            <p className="text-sm text-muted-foreground">
-              Administra los clientes y sus créditos
-            </p>
-          </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
-            <UserPlus className="size-4 mr-2" />
-            Crear Usuario
-          </Button>
-        </div>
-
         <UsersFilters
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -134,7 +131,8 @@ export function UsersPage() {
             <>
               <span>•</span>
               <span className="text-yellow-600 font-medium">
-                {pendingUsers.length} pendiente{pendingUsers.length !== 1 ? "s" : ""} de aprobación
+                {pendingUsers.length} pendiente
+                {pendingUsers.length !== 1 ? "s" : ""} de aprobación
               </span>
             </>
           )}
@@ -211,6 +209,6 @@ export function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </StandardPage>
   );
 }

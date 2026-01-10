@@ -31,7 +31,10 @@ interface UserCardProps {
   onPaymentStatusChange: (userId: string, status: string) => void;
   onApproveUser: (userId: string) => void;
   onRejectUser: (userId: string) => void;
-  onUpdateApprovalStatus: (userId: string, status: string) => void;
+  onUpdateApprovalStatus: (
+    userId: string,
+    status: "pending" | "approved" | "rejected"
+  ) => void;
   onDeleteUser: (userId: string, name: string) => void;
 }
 
@@ -61,19 +64,28 @@ export function UserCard({
     switch (status) {
       case "paid":
         return (
-          <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">
+          <Badge
+            variant="outline"
+            className="border-green-500 text-green-700 bg-green-50"
+          >
             Al día
           </Badge>
         );
       case "pending":
         return (
-          <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">
+          <Badge
+            variant="outline"
+            className="border-yellow-500 text-yellow-700 bg-yellow-50"
+          >
             Pendiente
           </Badge>
         );
       case "unpaid":
         return (
-          <Badge variant="outline" className="border-red-500 text-red-700 bg-red-50">
+          <Badge
+            variant="outline"
+            className="border-red-500 text-red-700 bg-red-50"
+          >
             No pagado
           </Badge>
         );
@@ -86,21 +98,30 @@ export function UserCard({
     switch (status) {
       case "approved":
         return (
-          <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">
+          <Badge
+            variant="outline"
+            className="border-green-500 text-green-700 bg-green-50"
+          >
             <CheckCircle className="size-3 mr-1" />
             Aprobado
           </Badge>
         );
       case "pending":
         return (
-          <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">
+          <Badge
+            variant="outline"
+            className="border-yellow-500 text-yellow-700 bg-yellow-50"
+          >
             <Clock className="size-3 mr-1" />
             Pendiente
           </Badge>
         );
       case "rejected":
         return (
-          <Badge variant="outline" className="border-red-500 text-red-700 bg-red-50">
+          <Badge
+            variant="outline"
+            className="border-red-500 text-red-700 bg-red-50"
+          >
             <XCircle className="size-3 mr-1" />
             Rechazado
           </Badge>

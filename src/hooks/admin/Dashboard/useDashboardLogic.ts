@@ -70,11 +70,13 @@ export const useDashboardLogic = () => {
     stats.todayBookingsCount
   );
 
-  const refresh = () => {
-    fetchBookings();
-    fetchProfiles();
-    fetchPayments();
-    fetchActiveSlots();
+  const refresh = async () => {
+    await Promise.all([
+      fetchBookings(true),
+      fetchProfiles(true),
+      fetchPayments(true),
+      fetchActiveSlots(true),
+    ]);
   };
 
   return {

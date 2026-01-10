@@ -11,7 +11,7 @@ import { formatDateToLocalString, formatTime } from "@/lib/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState } from "@/components/common";
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { useBookingLogic } from "@/hooks/client/Booking/useBookingLogic";
 import { useAuth } from "@/features/auth";
 
@@ -44,6 +44,7 @@ export function BookingPage() {
     createBooking,
     fetchAvailability,
     getAvailability,
+    refresh,
   } = useBookingLogic(user?.id);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -152,9 +153,14 @@ export function BookingPage() {
     return <PageLoadingState message="Cargando horarios disponibles..." />;
   }
 
-  if (timeSlots.length === 0) {
+  if (timeSlots.length === 0 && !isLoading) {
     return (
-      <div className="container mx-auto px-4 py-6">
+      <StandardPage
+        icon={CalendarDays}
+        title="Reservar Clase"
+        description="No hay horarios disponibles"
+        maxWidth="max-w-4xl"
+      >
         <Card>
           <CardContent className="py-12 text-center">
             <CalendarDays className="size-12 mx-auto text-muted-foreground mb-4" />
@@ -166,27 +172,24 @@ export function BookingPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </StandardPage>
     );
   }
 
   return (
-    <div className="container mx-auto px-3 py-4 pb-20 space-y-4 max-w-4xl">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold">Reservar Clase</h1>
-            <p className="text-sm text-muted-foreground">
-              {userProfile?.credits ?? 0} créditos disponibles
-            </p>
-          </div>
-          <Button onClick={goToToday} variant="outline" size="sm">
-            <Calendar className="size-4 mr-1" />
-            Hoy
-          </Button>
-        </div>
-      </div>
-
+    <StandardPage
+      icon={CalendarDays}
+      title="Reservar Clase"
+      description={`${userProfile?.credits ?? 0} créditos disponibles`}
+      onRefresh={refresh}
+      actionButton={
+        <Button onClick={goToToday} variant="outline" size="sm">
+          <Calendar className="size-4 mr-1" />
+          Hoy
+        </Button>
+      }
+      maxWidth="max-w-4xl"
+    >
       {/* Week Navigation */}
       <Card>
         <CardHeader className="pb-2">
@@ -397,6 +400,6 @@ export function BookingPage() {
           );
         })()}
       </div>
-    </div>
+    </StandardPage>
   );
 }

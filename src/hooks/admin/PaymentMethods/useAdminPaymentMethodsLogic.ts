@@ -48,7 +48,7 @@ export const useAdminPaymentMethodsLogic = () => {
     methods,
     isLoading,
     error,
-    refresh: fetchAll,
+    refresh: () => fetchAll(true),
     createMethod: handleCreateMethod,
     updateMethod: handleUpdateMethod,
     deleteMethod: handleDeleteMethod,

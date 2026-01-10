@@ -35,7 +35,7 @@ export const useAdminSlotsLogic = () => {
     slots,
     isLoading,
     error,
-    refresh: fetchAll,
+    refresh: () => fetchAll(true),
     createSlot: handleCreateSlot,
     deleteSlot: handleDeleteSlot,
     toggleActive: handleToggleActive,

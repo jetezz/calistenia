@@ -199,9 +199,9 @@ export const useBookingLogic = (userId?: string) => {
 
   // Refresh all data
   const refresh = useCallback(() => {
-    fetchActiveTimeSlots();
-    fetchAllBookings();
-    fetchProfiles();
+    fetchActiveTimeSlots(true);
+    fetchAllBookings(true);
+    fetchProfiles(true);
   }, [fetchActiveTimeSlots, fetchAllBookings, fetchProfiles]);
 
   return {

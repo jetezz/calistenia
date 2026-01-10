@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageLoadingState } from "@/components/common";
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { useAdminSlotsLogic } from "@/hooks/admin/Slots/useAdminSlotsLogic";
 import { bookingService } from "@/services/bookingService";
 import {
@@ -137,9 +137,22 @@ export function SlotsPage() {
   );
 
   useEffect(() => {
-    if (selectedDateSlots) {
-      loadBookingsForSlots(selectedDateSlots.slots, selectedDateSlots.date);
-    }
+    let mounted = true;
+
+    const load = async () => {
+      if (selectedDateSlots && mounted) {
+        await loadBookingsForSlots(
+          selectedDateSlots.slots,
+          selectedDateSlots.date
+        );
+      }
+    };
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
     // Eliminamos timeSlots de las dependencias para evitar recargas innecesarias si los slots globales cambian pero no la selección
   }, [selectedDateSlots, loadBookingsForSlots]);
 
@@ -328,21 +341,24 @@ export function SlotsPage() {
     );
   };
 
-  return (
-    <div className="container mx-auto px-3 py-4  space-y-4 max-w-4xl">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">Horarios</h1>
-          <Button onClick={handleCreate} size="sm">
-            <Plus className="size-4 mr-1" />
-            Nuevo
-          </Button>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Administra horarios semanales y días específicos
-        </p>
-      </div>
+  if (isLoading) {
+    return <PageLoadingState message="Cargando horarios..." />;
+  }
 
+  return (
+    <StandardPage
+      icon={Clock}
+      title="Horarios"
+      description="Administra horarios semanales y días específicos"
+      onRefresh={refresh}
+      actionButton={
+        <Button onClick={handleCreate} size="sm">
+          <Plus className="size-4 mr-2" />
+          Nuevo
+        </Button>
+      }
+      maxWidth="max-w-4xl"
+    >
       {timeSlots.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -530,6 +546,6 @@ export function SlotsPage() {
         onSuccess={refresh}
         editingSlot={editingSlot}
       />
-    </div>
+    </StandardPage>
   );
 }

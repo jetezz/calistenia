@@ -36,7 +36,7 @@ export const useAdminSettingsLogic = () => {
     settings,
     isLoading,
     error,
-    refresh: fetchAll,
+    refresh: () => fetchAll(true),
     updateSetting: handleUpdateSetting,
     updateCancellationPolicy: handleUpdateCancellationPolicy,
     getQuickActions, // Reactive

@@ -137,9 +137,9 @@ export const useMyBookingsLogic = (userId?: string) => {
 
   // Refresh all data
   const refresh = useCallback(() => {
-    fetchAllBookings();
-    fetchProfiles();
-    fetchSettings();
+    fetchAllBookings(true);
+    fetchProfiles(true);
+    fetchSettings(true);
   }, [fetchAllBookings, fetchProfiles, fetchSettings]);
 
   // Get cancellation policy info

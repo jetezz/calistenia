@@ -8,6 +8,7 @@ import {
   Calendar,
   RefreshCw,
   ChevronDown,
+  LayoutDashboard,
 } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/dateUtils";
 import { useProfile } from "@/features/auth";
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState } from "@/components/common";
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { useHomeLogic } from "@/hooks/client/Home/useHomeLogic";
 import { useState } from "react";
 
@@ -66,14 +67,13 @@ export function HomePage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          ¡Hola, {profile?.full_name?.split(" ")[0] || "deportista"}!
-        </h1>
-        <p className="text-muted-foreground">Bienvenido a Calistenia Emérita</p>
-      </div>
-
+    <StandardPage
+      icon={LayoutDashboard}
+      title={`¡Hola, ${profile?.full_name?.split(" ")[0] || "deportista"}!`}
+      description="Bienvenido a Calistenia Emérita"
+      onRefresh={handleRefresh}
+      maxWidth="max-w-4xl"
+    >
       {/* 1. Credits and Payment Status */}
       <Card>
         <CardHeader className="pb-3">
@@ -282,6 +282,6 @@ export function HomePage() {
           </Link>
         </Button>
       </div>
-    </div>
+    </StandardPage>
   );
 }

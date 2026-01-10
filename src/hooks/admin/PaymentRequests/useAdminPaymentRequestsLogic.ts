@@ -37,6 +37,6 @@ export const useAdminPaymentRequestsLogic = () => {
     error,
     handleApprove,
     handleReject,
-    refresh: fetchAll,
+    refresh: () => fetchAll(true),
   };
 };

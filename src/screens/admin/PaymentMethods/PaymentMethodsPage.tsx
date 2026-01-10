@@ -12,8 +12,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState } from "@/components/common";
-// TODO: Re-implement PaymentMethodDialog component
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { PaymentMethodDialog } from "@/components/admin";
 import { toast } from "sonner";
 import { useAdminPaymentMethodsLogic } from "@/hooks/admin/PaymentMethods/useAdminPaymentMethodsLogic";
@@ -94,21 +93,24 @@ export function PaymentMethodsPage() {
     return <PageLoadingState message="Cargando métodos de pago..." />;
   }
 
-  return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Métodos de Pago</h1>
-          <p className="text-muted-foreground mt-1">
-            Configura los métodos de pago disponibles para los clientes
-          </p>
-        </div>
-        <Button onClick={handleCreate}>
-          <Plus className="size-4 mr-2" />
-          Nuevo Método
-        </Button>
-      </div>
+  if (isLoading && methods.length === 0) {
+    return <PageLoadingState message="Cargando métodos de pago..." />;
+  }
 
+  return (
+    <StandardPage
+      icon={Wallet}
+      title="Métodos de Pago"
+      description="Configura los métodos de pago disponibles para los clientes"
+      onRefresh={refresh}
+      actionButton={
+        <Button onClick={handleCreate} size="sm">
+          <Plus className="size-4 mr-2" />
+          Nuevo
+        </Button>
+      }
+      maxWidth="max-w-4xl"
+    >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {methods.map((method) => (
           <Card
@@ -222,6 +224,6 @@ export function PaymentMethodsPage() {
         onOpenChange={handleDialogClose}
         editingMethod={editingMethod}
       />
-    </div>
+    </StandardPage>
   );
 }

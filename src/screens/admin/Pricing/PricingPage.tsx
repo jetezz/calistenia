@@ -3,8 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageLoadingState } from "@/components/common";
-// TODO: Re-implement PricingPackageDialog component
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { PricingPackageDialog } from "@/components/admin";
 import { toast } from "sonner";
 import { useAdminPricingLogic } from "@/hooks/admin/Pricing/useAdminPricingLogic";
@@ -71,21 +70,24 @@ export function PricingPage() {
     return <PageLoadingState message="Cargando paquetes de precios..." />;
   }
 
-  return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Precios</h1>
-          <p className="text-muted-foreground mt-1">
-            Configura los paquetes de clases disponibles para los clientes
-          </p>
-        </div>
-        <Button onClick={handleCreate}>
-          <Plus className="size-4 mr-2" />
-          Nuevo Paquete
-        </Button>
-      </div>
+  if (isLoading && packages.length === 0) {
+    return <PageLoadingState message="Cargando paquetes de precios..." />;
+  }
 
+  return (
+    <StandardPage
+      icon={DollarSign}
+      title="Precios"
+      description="Configura los paquetes de clases disponibles para los clientes"
+      onRefresh={refresh}
+      actionButton={
+        <Button onClick={handleCreate} size="sm">
+          <Plus className="size-4 mr-2" />
+          Nuevo
+        </Button>
+      }
+      maxWidth="max-w-4xl"
+    >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {packages.map((pkg) => (
           <Card key={pkg.id} className={!pkg.is_active ? "opacity-60" : ""}>
@@ -183,6 +185,6 @@ export function PricingPage() {
         onOpenChange={handleDialogClose}
         editingPackage={editingPackage}
       />
-    </div>
+    </StandardPage>
   );
 }

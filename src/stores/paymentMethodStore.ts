@@ -16,7 +16,7 @@ interface PaymentMethodStore
     PaymentMethodUpdate
   > {
   activeMethods: PaymentMethod[];
-  fetchActive: () => Promise<void>;
+  fetchActive: (force?: boolean) => Promise<void>;
   toggleActive: (id: string, isActive: boolean) => Promise<void>;
   updateDisplayOrder: (id: string, order: number) => Promise<void>;
 }
@@ -33,15 +33,15 @@ export const usePaymentMethodStore = create<PaymentMethodStore>(
       ...baseStore,
       activeMethods: [],
 
-      fetchActive: async () => {
+      fetchActive: async (force = false) => {
         // Cache check
-        if (get().isInitialized) {
+        if (!force && get().isInitialized) {
           set({ activeMethods: get().items.filter((m) => m.is_active) });
           return;
         }
 
         // Consolidate to fetchAll which is deduped
-        await get().fetchAll();
+        await get().fetchAll(force);
         set({ activeMethods: get().items.filter((m) => m.is_active) });
       },
 

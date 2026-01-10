@@ -16,7 +16,7 @@ interface PricingPackageStore
     PricingPackageUpdate
   > {
   activePackages: PricingPackage[];
-  fetchActive: () => Promise<void>;
+  fetchActive: (force?: boolean) => Promise<void>;
   toggleActive: (id: string, isActive: boolean) => Promise<void>;
   updateDisplayOrder: (id: string, order: number) => Promise<void>;
 }
@@ -33,15 +33,15 @@ export const usePricingPackageStore = create<PricingPackageStore>(
       ...baseStore,
       activePackages: [], // Explicitly type if needed, but [] is inferred as never[] initially which is fine for empty
 
-      fetchActive: async () => {
-        // Cache check not strictly necessary if fetchAll handles it, but good for skipping logic
-        if (get().isInitialized) {
+      fetchActive: async (force = false) => {
+        // Cache check
+        if (!force && get().isInitialized) {
           set({ activePackages: get().items.filter((p) => p.is_active) });
           return;
         }
 
         // Consolidate to fetchAll which is deduped
-        await get().fetchAll();
+        await get().fetchAll(force);
         set({ activePackages: get().items.filter((p) => p.is_active) });
       },
 

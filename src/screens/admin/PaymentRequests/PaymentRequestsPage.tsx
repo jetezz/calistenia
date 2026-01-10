@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { PageLoadingState } from "@/components/common";
+import { PageLoadingState, StandardPage } from "@/components/common";
 import { useAdminPaymentRequestsLogic } from "@/hooks/admin/PaymentRequests/useAdminPaymentRequestsLogic";
 
 export function PaymentRequestsPage() {
@@ -65,177 +65,168 @@ export function PaymentRequestsPage() {
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const processedRequests = requests.filter((r) => r.status !== "pending");
 
+  if (isLoading) {
+    return <PageLoadingState message="Cargando solicitudes de pago..." />;
+  }
+
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {isLoading ? (
-        <PageLoadingState message="Cargando solicitudes de pago..." />
-      ) : (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold">Solicitudes de Pago</h1>
+    <StandardPage
+      icon={CreditCard}
+      title="Solicitudes de Pago"
+      description="Gestiona las solicitudes de recarga de créditos"
+      onRefresh={refresh}
+      maxWidth="max-w-4xl"
+    >
+      {/* Pending Requests */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="size-5" />
+            Solicitudes Pendientes ({pendingRequests.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {pendingRequests.length === 0 ? (
+            <div className="text-center py-8">
+              <CreditCard className="size-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Gestiona las solicitudes de recarga de créditos
+                No hay solicitudes pendientes
               </p>
             </div>
-            <Button onClick={() => refresh()}>
-              <CreditCard className="size-4 mr-2" />
-              Actualizar Lista
-            </Button>
-          </div>
-
-          {/* Pending Requests */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="size-5" />
-                Solicitudes Pendientes ({pendingRequests.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pendingRequests.length === 0 ? (
-                <div className="text-center py-8">
-                  <CreditCard className="size-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    No hay solicitudes pendientes
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {pendingRequests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="flex flex-col p-4 border rounded-lg bg-yellow-50 border-yellow-200 gap-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <Avatar className="size-10 shrink-0">
-                            <AvatarFallback className="text-xs">
-                              {getInitials(request.user?.full_name || "U")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate">
-                              {request.user?.full_name || "Sin nombre"}
-                            </div>
-                            <div className="text-sm text-muted-foreground truncate">
-                              {request.user?.email || "Sin email"}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Solicitado: {formatDate(request.created_at)}
-                            </div>
-                          </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="flex flex-col p-4 border rounded-lg bg-yellow-50 border-yellow-200 gap-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <Avatar className="size-10 shrink-0">
+                        <AvatarFallback className="text-xs">
+                          {getInitials(request.user?.full_name || "U")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {request.user?.full_name || "Sin nombre"}
                         </div>
-                        <div className="text-center shrink-0 bg-white rounded-lg px-3 py-2 border">
-                          <div className="text-2xl font-bold text-primary leading-none">
-                            {request.credits_requested}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            créditos
-                          </div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {request.user?.email || "Sin email"}
                         </div>
-                      </div>
-
-                      <div className="flex gap-2 w-full">
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 flex-1"
-                          onClick={() => processRequest(request.id, "approve")}
-                          disabled={processingId === request.id}
-                        >
-                          <Check className="size-4 sm:mr-1" />
-                          <span className="hidden sm:inline">
-                            {processingId === request.id
-                              ? "Procesando..."
-                              : "Aprobar"}
-                          </span>
-                          <span className="sm:hidden">
-                            {processingId === request.id
-                              ? "Procesando..."
-                              : "Aprobar"}
-                          </span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="flex-1"
-                          onClick={() => processRequest(request.id, "reject")}
-                          disabled={processingId === request.id}
-                        >
-                          <X className="size-4 sm:mr-1" />
-                          <span className="hidden sm:inline">
-                            {processingId === request.id
-                              ? "Procesando..."
-                              : "Rechazar"}
-                          </span>
-                          <span className="sm:hidden">
-                            {processingId === request.id
-                              ? "Procesando..."
-                              : "Rechazar"}
-                          </span>
-                        </Button>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Solicitado: {formatDate(request.created_at)}
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Processed Requests */}
-          {processedRequests.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="size-5" />
-                  Solicitudes Procesadas ({processedRequests.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {processedRequests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg"
-                    >
-                      <div className="flex items-center gap-4">
-                        <Avatar className="size-10">
-                          <AvatarFallback className="text-xs">
-                            {getInitials(request.user?.full_name || "U")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">
-                            {request.user?.full_name || "Sin nombre"}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {request.credits_requested} créditos •{" "}
-                            {formatDate(request.created_at)}
-                          </div>
-                          {request.admin_notes && (
-                            <div className="text-xs text-muted-foreground italic">
-                              "{request.admin_notes}"
-                            </div>
-                          )}
-                        </div>
+                    <div className="text-center shrink-0 bg-white rounded-lg px-3 py-2 border">
+                      <div className="text-2xl font-bold text-primary leading-none">
+                        {request.credits_requested}
                       </div>
-
-                      <div className="flex flex-col items-end gap-1 mt-2 sm:mt-0">
-                        {getRequestStatusBadge(request.status)}
-                        {request.processed_at && (
-                          <div className="text-xs text-muted-foreground">
-                            {formatDate(request.processed_at)}
-                          </div>
-                        )}
+                      <div className="text-xs text-muted-foreground mt-1">
+                        créditos
                       </div>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 flex-1"
+                      onClick={() => processRequest(request.id, "approve")}
+                      disabled={processingId === request.id}
+                    >
+                      <Check className="size-4 sm:mr-1" />
+                      <span className="hidden sm:inline">
+                        {processingId === request.id
+                          ? "Procesando..."
+                          : "Aprobar"}
+                      </span>
+                      <span className="sm:hidden">
+                        {processingId === request.id
+                          ? "Procesando..."
+                          : "Aprobar"}
+                      </span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={() => processRequest(request.id, "reject")}
+                      disabled={processingId === request.id}
+                    >
+                      <X className="size-4 sm:mr-1" />
+                      <span className="hidden sm:inline">
+                        {processingId === request.id
+                          ? "Procesando..."
+                          : "Rechazar"}
+                      </span>
+                      <span className="sm:hidden">
+                        {processingId === request.id
+                          ? "Procesando..."
+                          : "Rechazar"}
+                      </span>
+                    </Button>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
           )}
-        </>
+        </CardContent>
+      </Card>
+
+      {/* Processed Requests */}
+      {processedRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="size-5" />
+              Solicitudes Procesadas ({processedRequests.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {processedRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg"
+                >
+                  <div className="flex items-center gap-4">
+                    <Avatar className="size-10">
+                      <AvatarFallback className="text-xs">
+                        {getInitials(request.user?.full_name || "U")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">
+                        {request.user?.full_name || "Sin nombre"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {request.credits_requested} créditos •{" "}
+                        {formatDate(request.created_at)}
+                      </div>
+                      {request.admin_notes && (
+                        <div className="text-xs text-muted-foreground italic">
+                          "{request.admin_notes}"
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1 mt-2 sm:mt-0">
+                    {getRequestStatusBadge(request.status)}
+                    {request.processed_at && (
+                      <div className="text-xs text-muted-foreground">
+                        {formatDate(request.processed_at)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
-    </div>
+    </StandardPage>
   );
 }

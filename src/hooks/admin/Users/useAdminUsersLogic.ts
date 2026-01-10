@@ -37,7 +37,7 @@ export const useAdminUsersLogic = () => {
     rejectedUsers,
     isLoading,
     error,
-    refresh: fetchAll,
+    refresh: () => fetchAll(true),
     createUser,
     deleteUser,
     updateCredits,
