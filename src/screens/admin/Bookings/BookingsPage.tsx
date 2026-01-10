@@ -54,7 +54,7 @@ export function BookingsPage() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
               <h1 className="text-2xl font-bold">Reservas</h1>
-              <Button onClick={refresh} size="sm">
+              <Button onClick={() => refresh()} size="sm">
                 <Plus className="size-4 mr-1" />
                 Actualizar
               </Button>

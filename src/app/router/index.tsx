@@ -16,11 +16,21 @@ import { BookingPage } from "@/screens/client/Booking/BookingPage";
 import { MyBookingsPage } from "@/screens/client/MyBookings/MyBookingsPage";
 import { PaymentInfoPage } from "@/screens/client/PaymentInfo/PaymentInfoPage";
 import { RequestCreditsPage } from "@/screens/client/RequestCredits/RequestCreditsPage";
+import { PendingApprovalPage } from "@/screens/client/PendingApproval/PendingApprovalPage";
+import { RejectedPage } from "@/screens/client/Rejected/RejectedPage";
 
 export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/pending-approval",
+    element: <PendingApprovalPage />,
+  },
+  {
+    path: "/rejected",
+    element: <RejectedPage />,
   },
   {
     path: "/",

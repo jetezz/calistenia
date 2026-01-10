@@ -3,6 +3,7 @@ import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AuthContext, type AuthContextType } from "./AuthContextValue";
+import { useProfileStore } from "@/stores/profileStore";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -90,16 +91,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async () => {
     try {
+      // Limpiar el perfil del store antes de cerrar sesión
+      useProfileStore.getState().setCurrentItem(null);
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         toast.error("Error al cerrar sesión");
         console.error("Error signing out:", error);
       } else {
-        toast.success("Sesión cerrada correctamente");
+        // No mostrar toast de éxito si es un cierre automático por usuario eliminado
+        // El mensaje se mostrará solo si es un cierre manual
+        if (!error) {
+          toast.success("Sesión cerrada correctamente");
+        }
       }
+
+      // Forzar redirección al login después de cerrar sesión
+      window.location.href = "/login";
     } catch (error) {
       toast.error("Error al cerrar sesión");
       console.error("SignOut error:", error);
+      // Incluso si hay error, limpiar e ir al login
+      window.location.href = "/login";
     }
   };
 

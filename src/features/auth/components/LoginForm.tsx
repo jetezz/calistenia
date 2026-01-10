@@ -67,7 +67,7 @@ export function LoginForm() {
         if (error) {
           toast.error(translateError(error.message))
         } else {
-          toast.success('Cuenta creada. Revisa tu correo para confirmarla.')
+          toast.success('Cuenta creada. Esperando confirmacion del administrador.')
           setMode('login')
         }
       }

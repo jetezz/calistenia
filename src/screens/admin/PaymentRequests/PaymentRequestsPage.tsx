@@ -78,7 +78,7 @@ export function PaymentRequestsPage() {
                 Gestiona las solicitudes de recarga de créditos
               </p>
             </div>
-            <Button onClick={refresh}>
+            <Button onClick={() => refresh()}>
               <CreditCard className="size-4 mr-2" />
               Actualizar Lista
             </Button>

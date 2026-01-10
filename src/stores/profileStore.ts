@@ -18,6 +18,12 @@ interface ProfileStore
     fullName: string
   ) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
+  updateApprovalStatus: (
+    id: string,
+    status: "pending" | "approved" | "rejected"
+  ) => Promise<void>;
+  approveUser: (userId: string) => Promise<void>;
+  rejectUser: (userId: string) => Promise<void>;
 }
 
 export const useProfileStore = create<ProfileStore>((set, get, store) => {
@@ -84,6 +90,63 @@ export const useProfileStore = create<ProfileStore>((set, get, store) => {
         set({ error: error.message });
         // Should revert here implicitly by fetching again or rolling back state?
         // Since we don't have easy rollback without snapshots, we might just re-fetch
+        const items = await profileService.getAll();
+        set({ items });
+      }
+    },
+
+    updateApprovalStatus: async (id, status) => {
+      // Optimistic Update
+      set((state) => ({
+        items: state.items.map((p) =>
+          p.id === id ? { ...p, approval_status: status } : p
+        ),
+      }));
+
+      try {
+        await profileService.updateApprovalStatus(id, status);
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message });
+        // Revert on error
+        const items = await profileService.getAll();
+        set({ items });
+      }
+    },
+
+    approveUser: async (userId) => {
+      // Optimistic Update
+      set((state) => ({
+        items: state.items.map((p) =>
+          p.id === userId ? { ...p, approval_status: "approved" } : p
+        ),
+      }));
+
+      try {
+        await profileService.approveUser(userId);
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message });
+        // Revert on error
+        const items = await profileService.getAll();
+        set({ items });
+      }
+    },
+
+    rejectUser: async (userId) => {
+      // Optimistic Update
+      set((state) => ({
+        items: state.items.map((p) =>
+          p.id === userId ? { ...p, approval_status: "rejected" } : p
+        ),
+      }));
+
+      try {
+        await profileService.rejectUser(userId);
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message });
+        // Revert on error
         const items = await profileService.getAll();
         set({ items });
       }

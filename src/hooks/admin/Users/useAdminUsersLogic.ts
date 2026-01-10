@@ -11,6 +11,9 @@ export const useAdminUsersLogic = () => {
     deleteUser,
     updateCredits,
     updatePaymentStatus,
+    updateApprovalStatus,
+    approveUser,
+    rejectUser,
   } = useProfileStore();
 
   useEffect(() => {
@@ -22,8 +25,16 @@ export const useAdminUsersLogic = () => {
   // Asumiremos que listamos todos y filtramos en UI o aquí.
   const users = profiles.filter((p) => !p.role || p.role === "user");
 
+  // Filtrar usuarios por estado de aprobación
+  const pendingUsers = users.filter((u) => u.approval_status === "pending");
+  const approvedUsers = users.filter((u) => u.approval_status === "approved");
+  const rejectedUsers = users.filter((u) => u.approval_status === "rejected");
+
   return {
     users, // or profiles if we want to show admins too
+    pendingUsers,
+    approvedUsers,
+    rejectedUsers,
     isLoading,
     error,
     refresh: fetchAll,
@@ -31,5 +42,8 @@ export const useAdminUsersLogic = () => {
     deleteUser,
     updateCredits,
     updatePaymentStatus,
+    updateApprovalStatus,
+    approveUser,
+    rejectUser,
   };
 };

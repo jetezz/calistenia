@@ -1,26 +1,7 @@
 import { useState } from "react";
-import {
-  Search,
-  Users,
-  Plus,
-  Minus,
-  UserCheck,
-  UserPlus,
-  Trash,
-} from "lucide-react";
-import { Link } from "react-router-dom";
+import { Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -32,19 +13,28 @@ import {
 import { PageLoadingState } from "@/components/common";
 import { useAdminUsersLogic } from "@/hooks/admin/Users/useAdminUsersLogic";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
+import { UsersFilters } from "@/components/admin/UsersFilters";
+import { UserCard } from "@/components/admin/UserCard";
 
 export function UsersPage() {
   const {
     users: allUsers,
+    pendingUsers,
+    approvedUsers,
+    rejectedUsers,
     isLoading,
     createUser,
     deleteUser,
     updateCredits,
     updatePaymentStatus,
+    approveUser,
+    rejectUser,
+    updateApprovalStatus,
   } = useAdminUsersLogic();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState("all");
   const [updatingCredits, setUpdatingCredits] = useState<
     Record<string, boolean>
   >({});
@@ -61,8 +51,15 @@ export function UsersPage() {
         false) ||
       (user.email.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
 
-    if (paymentStatusFilter === "all") return matchesSearch;
-    return matchesSearch && user.payment_status === paymentStatusFilter;
+    const matchesPaymentStatus =
+      paymentStatusFilter === "all" ||
+      user.payment_status === paymentStatusFilter;
+
+    const matchesApprovalStatus =
+      approvalStatusFilter === "all" ||
+      user.approval_status === approvalStatusFilter;
+
+    return matchesSearch && matchesPaymentStatus && matchesApprovalStatus;
   });
 
   // Handlers
@@ -99,28 +96,6 @@ export function UsersPage() {
     }
   };
 
-  const getPaymentStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return <Badge className="bg-green-500 text-white">Al día</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-500 text-white">Pendiente</Badge>;
-      case "unpaid":
-        return <Badge variant="destructive">No pagado</Badge>;
-      default:
-        return <Badge variant="secondary">Sin definir</Badge>;
-    }
-  };
-
-  const getInitials = (name: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   if (isLoading) {
     return <PageLoadingState message="Cargando usuarios..." />;
@@ -142,38 +117,27 @@ export function UsersPage() {
           </Button>
         </div>
 
-        <div className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
-            <Input
-              placeholder="Buscar por nombre o email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11"
-            />
-          </div>
-
-          <Select
-            value={paymentStatusFilter}
-            onValueChange={setPaymentStatusFilter}
-          >
-            <SelectTrigger className="h-11">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
-              <SelectItem value="paid">Al día</SelectItem>
-              <SelectItem value="pending">Pendiente</SelectItem>
-              <SelectItem value="unpaid">No pagado</SelectItem>
-              <SelectItem value="none">Sin definir</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <UsersFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          paymentStatusFilter={paymentStatusFilter}
+          onPaymentStatusChange={setPaymentStatusFilter}
+          approvalStatusFilter={approvalStatusFilter}
+          onApprovalStatusChange={setApprovalStatusFilter}
+        />
 
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span>Total: {allUsers.length}</span>
           <span>•</span>
           <span>Mostrando: {filteredUsers.length}</span>
+          {pendingUsers.length > 0 && (
+            <>
+              <span>•</span>
+              <span className="text-yellow-600 font-medium">
+                {pendingUsers.length} pendiente{pendingUsers.length !== 1 ? "s" : ""} de aprobación
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -204,111 +168,19 @@ export function UsersPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {filteredUsers.map((user) => (
-            <Card key={user.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="size-12 shrink-0">
-                      <AvatarFallback className="text-base font-medium">
-                        {getInitials(user.full_name)}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-base leading-tight mb-1">
-                        {user.full_name || "Sin nombre"}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col items-center justify-center bg-muted/50 rounded-lg p-3">
-                      <div className="text-2xl font-bold leading-none mb-1">
-                        {user.credits}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        créditos
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-12 w-12"
-                        onClick={() => handleCreditsChange(user.id, -1)}
-                        disabled={
-                          user.credits === 0 || updatingCredits[user.id]
-                        }
-                      >
-                        <Minus className="size-5" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-12 w-12"
-                        onClick={() => handleCreditsChange(user.id, 1)}
-                        disabled={updatingCredits[user.id]}
-                      >
-                        <Plus className="size-5" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Estado de pago
-                      </span>
-                      {getPaymentStatusBadge(user.payment_status)}
-                    </div>
-                    <Select
-                      value={user.payment_status}
-                      onValueChange={(value) =>
-                        updatePaymentStatus(user.id, value)
-                      }
-                    >
-                      <SelectTrigger className="h-11">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sin definir</SelectItem>
-                        <SelectItem value="paid">Al día</SelectItem>
-                        <SelectItem value="pending">Pendiente</SelectItem>
-                        <SelectItem value="unpaid">No pagado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      className="w-full h-11"
-                      onClick={() =>
-                        setUserToDelete({
-                          id: user.id,
-                          name: user.full_name || user.email,
-                        })
-                      }
-                    >
-                      <Trash className="size-4 mr-2" />
-                      Eliminar
-                    </Button>
-                    <Button asChild className="w-full h-11" variant="outline">
-                      <Link to={`/admin/users/${user.id}`}>
-                        <UserCheck className="size-4 mr-2" />
-                        Ver detalle
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <UserCard
+              key={user.id}
+              user={user}
+              isUpdatingCredits={updatingCredits[user.id] || false}
+              onCreditsChange={handleCreditsChange}
+              onPaymentStatusChange={updatePaymentStatus}
+              onApproveUser={approveUser}
+              onRejectUser={rejectUser}
+              onUpdateApprovalStatus={updateApprovalStatus}
+              onDeleteUser={(id, name) => setUserToDelete({ id, name })}
+            />
           ))}
         </div>
       )}

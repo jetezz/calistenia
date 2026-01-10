@@ -4,7 +4,7 @@ import { useAuth } from "./useAuth";
 import { useProfileStore } from "@/stores/profileStore";
 
 export function useProfile() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   // Mapeamos a la nueva estructura del store
   // currentProfile -> currentItem
@@ -48,6 +48,17 @@ export function useProfile() {
 
         if (error) {
           console.error("Error fetching profile:", error);
+
+          // Si el error es PGRST116, significa que el perfil no existe (usuario eliminado)
+          if (error.code === "PGRST116") {
+            console.warn("Profile not found. User may have been deleted. Signing out...");
+            setCurrentProfile(null);
+            setIsLoading(false);
+            // Cerrar sesión y limpiar todo
+            await signOut();
+            return;
+          }
+
           setCurrentProfile(null);
         } else {
           setCurrentProfile(data);
@@ -80,6 +91,16 @@ export function useProfile() {
 
       if (error) {
         console.error("Error refreshing profile:", error);
+
+        // Si el error es PGRST116, significa que el perfil no existe (usuario eliminado)
+        if (error.code === "PGRST116") {
+          console.warn("Profile not found during refresh. User may have been deleted. Signing out...");
+          setCurrentProfile(null);
+          setIsLoading(false);
+          // Cerrar sesión y limpiar todo
+          await signOut();
+          return;
+        }
       } else {
         setCurrentProfile(data);
       }
@@ -94,6 +115,10 @@ export function useProfile() {
     profile, // Devolvemos 'profile' para mantener contrato con componentes consumidores
     isLoading,
     isAdmin: profile?.role === "admin",
+    isApproved: profile?.approval_status === "approved",
+    isPending: profile?.approval_status === "pending",
+    isRejected: profile?.approval_status === "rejected",
+    approvalStatus: profile?.approval_status,
     refreshProfile,
   };
 }
