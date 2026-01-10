@@ -55,7 +55,7 @@ export function StandardPage({
   return (
     <div
       className={cn(
-        "container mx-auto px-4 py-6 space-y-6 animate-fade-in",
+        "container mx-auto px-4 pt-6 pb-20 md:pb-32 space-y-6",
         maxWidth,
         className
       )}
