@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   LineChart,
   Line,
@@ -8,16 +14,20 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import type { WeightCompositionChartData } from "@/hooks/client/WeightStats/useWeightStatsCharts";
+import type { IdealStats } from "@/utils/biometricsCalculators";
 
 interface WeightCompositionChartProps {
   data: WeightCompositionChartData[];
+  recommendations?: IdealStats | null;
   className?: string;
 }
 
 export const WeightCompositionChart = ({
   data,
+  recommendations,
   className,
 }: WeightCompositionChartProps) => {
   if (data.length === 0) {
@@ -28,7 +38,9 @@ export const WeightCompositionChart = ({
     <Card className={className}>
       <CardHeader>
         <CardTitle>Peso y Composición Corporal</CardTitle>
-        <CardDescription>Evolución del peso, masa muscular y masa ósea (kg)</CardDescription>
+        <CardDescription>
+          Evolución del peso, masa muscular y masa ósea (kg)
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -53,6 +65,48 @@ export const WeightCompositionChart = ({
               labelStyle={{ color: "hsl(var(--foreground))" }}
             />
             <Legend />
+            {recommendations && (
+              <>
+                <ReferenceLine
+                  y={recommendations.weight.min}
+                  stroke="#3b82f6"
+                  strokeDasharray="3 3"
+                  opacity={0.3}
+                />
+                <ReferenceLine
+                  y={recommendations.weight.max}
+                  stroke="#3b82f6"
+                  strokeDasharray="3 3"
+                  opacity={0.3}
+                  label={{
+                    value: "Peso Ideal (Max)",
+                    fontSize: 10,
+                    fill: "#3b82f6",
+                    position: "insideTopRight",
+                  }}
+                />
+
+                {/* Muscle Mass Target */}
+                <ReferenceLine
+                  y={recommendations.muscleMass.min}
+                  stroke="#10b981"
+                  strokeDasharray="3 3"
+                  opacity={0.3}
+                />
+                <ReferenceLine
+                  y={recommendations.muscleMass.max}
+                  stroke="#10b981"
+                  strokeDasharray="3 3"
+                  opacity={0.3}
+                  label={{
+                    value: "Músculo Ideal (Max)",
+                    fontSize: 10,
+                    fill: "#10b981",
+                    position: "insideBottomRight",
+                  }}
+                />
+              </>
+            )}
             <Line
               type="monotone"
               dataKey="weight"

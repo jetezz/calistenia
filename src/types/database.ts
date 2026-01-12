@@ -411,37 +411,49 @@ export type Database = {
       profiles: {
         Row: {
           approval_status: string
+          birth_date: string | null
           created_at: string
           credits: number
           email: string
           full_name: string | null
+          gender: string | null
+          height: number | null
           id: string
           payment_status: string
           phone: string | null
+          physical_objective: string | null
           role: string
           updated_at: string
         }
         Insert: {
           approval_status?: string
+          birth_date?: string | null
           created_at?: string
           credits?: number
           email: string
           full_name?: string | null
+          gender?: string | null
+          height?: number | null
           id: string
           payment_status?: string
           phone?: string | null
+          physical_objective?: string | null
           role?: string
           updated_at?: string
         }
         Update: {
           approval_status?: string
+          birth_date?: string | null
           created_at?: string
           credits?: number
           email?: string
           full_name?: string | null
+          gender?: string | null
+          height?: number | null
           id?: string
           payment_status?: string
           phone?: string | null
+          physical_objective?: string | null
           role?: string
           updated_at?: string
         }
@@ -567,6 +579,7 @@ export type Database = {
       }
       admin_delete_user: { Args: { p_user_id: string }; Returns: boolean }
       approve_user: { Args: { target_user_id: string }; Returns: undefined }
+      calculate_age: { Args: { birth_date: string }; Returns: number }
       calculate_weight_change: {
         Args: { p_end_date: string; p_start_date: string; p_user_id: string }
         Returns: {

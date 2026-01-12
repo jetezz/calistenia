@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   AreaChart,
   Area,
@@ -8,16 +14,20 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import type { BodyPercentagesChartData } from "@/hooks/client/WeightStats/useWeightStatsCharts";
+import type { IdealStats } from "@/utils/biometricsCalculators";
 
 interface BodyPercentagesChartProps {
   data: BodyPercentagesChartData[];
+  recommendations?: IdealStats | null;
   className?: string;
 }
 
 export const BodyPercentagesChart = ({
   data,
+  recommendations,
   className,
 }: BodyPercentagesChartProps) => {
   if (data.length === 0) {
@@ -28,7 +38,9 @@ export const BodyPercentagesChart = ({
     <Card className={className}>
       <CardHeader>
         <CardTitle>Composición Corporal en Porcentajes</CardTitle>
-        <CardDescription>Evolución de grasa corporal y agua corporal (%)</CardDescription>
+        <CardDescription>
+          Evolución de grasa corporal y agua corporal (%)
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -64,6 +76,28 @@ export const BodyPercentagesChart = ({
               labelStyle={{ color: "hsl(var(--foreground))" }}
             />
             <Legend />
+            {recommendations && (
+              <>
+                <ReferenceLine
+                  y={recommendations.bodyFat.min}
+                  stroke="#ef4444"
+                  strokeDasharray="3 3"
+                  opacity={0.5}
+                  label={{
+                    value: "Grasa Ideal (Min)",
+                    fontSize: 10,
+                    fill: "#ef4444",
+                    position: "insideBottomRight",
+                  }}
+                />
+                <ReferenceLine
+                  y={recommendations.bodyFat.max}
+                  stroke="#ef4444"
+                  strokeDasharray="3 3"
+                  opacity={0.5}
+                />
+              </>
+            )}
             <Area
               type="monotone"
               dataKey="bodyFat"

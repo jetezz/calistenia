@@ -15,8 +15,12 @@ interface StandardPageProps {
   description?: string;
   /** Función para recargar datos */
   onRefresh?: () => void;
-  /** Botón de acción adicional en la cabecera */
+  /** Botón de acción adicional en la cabecera (deprecated: usar topActions o bottomActions) */
   actionButton?: ReactNode;
+  /** Botones que se muestran en la fila superior (a la derecha del título) */
+  topActions?: ReactNode;
+  /** Botones que se muestran en la fila inferior (siempre alineados a la derecha) */
+  bottomActions?: ReactNode;
   /** Estado de carga */
   isLoading?: boolean;
   /** Mensaje de carga personalizado */
@@ -47,6 +51,8 @@ export function StandardPage({
   description,
   onRefresh,
   actionButton,
+  topActions,
+  bottomActions,
   isLoading,
   loadingMessage,
   maxWidth = "max-w-4xl",
@@ -67,6 +73,8 @@ export function StandardPage({
           description={description}
           onRefresh={onRefresh}
           actionButton={actionButton}
+          topActions={topActions}
+          bottomActions={bottomActions}
         />
       )}
       {isLoading ? (

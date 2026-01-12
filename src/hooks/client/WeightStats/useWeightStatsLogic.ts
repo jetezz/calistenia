@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useCallback } from "react";
 import { useWeightStatsStore, type TimeRange } from "@/stores/weightStatsStore";
 import { useProfile } from "@/features/auth";
+import { calculateRecommendations } from "@/utils/biometricsCalculators";
 
 /**
  * Hook principal para la lógica de la página de Weight Stats
  * Maneja la carga de datos, filtrado y estado general
  */
 export const useWeightStatsLogic = () => {
-  const { profile } = useProfile();
+  const { profile, refreshProfile } = useProfile();
   const userId = profile?.id;
 
   const {
@@ -76,7 +77,12 @@ export const useWeightStatsLogic = () => {
   }, [firstStat, lastStat]);
 
   const muscleMassChange = useMemo(() => {
-    if (!firstStat || !lastStat || !firstStat.muscle_mass || !lastStat.muscle_mass)
+    if (
+      !firstStat ||
+      !lastStat ||
+      !firstStat.muscle_mass ||
+      !lastStat.muscle_mass
+    )
       return null;
     const change = lastStat.muscle_mass - firstStat.muscle_mass;
     const percentage = ((change / firstStat.muscle_mass) * 100).toFixed(1);
@@ -86,6 +92,32 @@ export const useWeightStatsLogic = () => {
       isPositive: change >= 0,
     };
   }, [firstStat, lastStat]);
+
+  // Recomendaciones
+  const recommendations = useMemo(() => {
+    if (
+      !profile?.height ||
+      !profile?.gender ||
+      !profile?.birth_date ||
+      !profile?.physical_objective
+    ) {
+      return null;
+    }
+
+    try {
+      return calculateRecommendations({
+        height: profile.height,
+        gender: profile.gender as any,
+        birth_date: profile.birth_date,
+        physical_objective: profile.physical_objective as any,
+      });
+    } catch (e) {
+      console.error("Error calculating recommendations", e);
+      return null;
+    }
+  }, [profile]);
+
+  const hasBiometrics = !!recommendations;
 
   // Handlers
   const handleTimeRangeChange = useCallback(
@@ -97,8 +129,12 @@ export const useWeightStatsLogic = () => {
 
   const refreshData = useCallback(async () => {
     if (!userId) return;
-    await Promise.all([fetchByUserId(userId, true), fetchLatest(userId, true)]);
-  }, [userId, fetchByUserId, fetchLatest]);
+    await Promise.all([
+      fetchByUserId(userId, true),
+      fetchLatest(userId, true),
+      refreshProfile(),
+    ]);
+  }, [userId, fetchByUserId, fetchLatest, refreshProfile]);
 
   return {
     // Data
@@ -129,5 +165,10 @@ export const useWeightStatsLogic = () => {
 
     // User
     userId,
+    profile,
+
+    // Metadata
+    recommendations,
+    hasBiometrics,
   };
 };

@@ -273,6 +273,13 @@ export function HomePage() {
           </Button>
         )}
 
+        <Button asChild variant="outline" size="lg" className="h-14 text-lg">
+          <Link to="/app/weight-stats">
+            <LayoutDashboard className="mr-2 size-5" />
+            Mis Estadísticas
+          </Link>
+        </Button>
+
         <Button asChild variant="ghost" size="lg" className="h-14">
           <Link to="/app/payment-info">
             <Info className="mr-2 size-5" />

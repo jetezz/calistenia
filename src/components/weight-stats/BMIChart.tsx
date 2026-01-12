@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   LineChart,
   Line,
@@ -12,13 +18,19 @@ import {
   ReferenceArea,
 } from "recharts";
 import type { BMIChartData } from "@/hooks/client/WeightStats/useWeightStatsCharts";
+import type { IdealStats } from "@/utils/biometricsCalculators";
 
 interface BMIChartProps {
   data: BMIChartData[];
+  recommendations?: IdealStats | null;
   className?: string;
 }
 
-export const BMIChart = ({ data, className }: BMIChartProps) => {
+export const BMIChart = ({
+  data,
+  recommendations,
+  className,
+}: BMIChartProps) => {
   if (data.length === 0) {
     return null;
   }
@@ -62,29 +74,63 @@ export const BMIChart = ({ data, className }: BMIChartProps) => {
               y2={18.5}
               fill="#facc15"
               fillOpacity={0.1}
-              label={{ value: "Bajo peso", position: "insideTopLeft", fontSize: 10 }}
+              label={{
+                value: "Bajo peso",
+                position: "insideTopLeft",
+                fontSize: 10,
+              }}
             />
             <ReferenceArea
               y1={18.5}
               y2={25}
               fill="#10b981"
               fillOpacity={0.1}
-              label={{ value: "Normal", position: "insideTopLeft", fontSize: 10 }}
+              label={{
+                value: "Normal",
+                position: "insideTopLeft",
+                fontSize: 10,
+              }}
             />
             <ReferenceArea
               y1={25}
               y2={30}
               fill="#f97316"
               fillOpacity={0.1}
-              label={{ value: "Sobrepeso", position: "insideTopLeft", fontSize: 10 }}
+              label={{
+                value: "Sobrepeso",
+                position: "insideTopLeft",
+                fontSize: 10,
+              }}
             />
             <ReferenceArea
               y1={30}
               y2={40}
               fill="#ef4444"
               fillOpacity={0.1}
-              label={{ value: "Obesidad", position: "insideTopLeft", fontSize: 10 }}
+              label={{
+                value: "Obesidad",
+                position: "insideTopLeft",
+                fontSize: 10,
+              }}
             />
+
+            {/* User Target Zone */}
+            {recommendations && (
+              <ReferenceArea
+                y1={recommendations.bmi.min}
+                y2={recommendations.bmi.max}
+                fill="#3b82f6"
+                fillOpacity={0.2}
+                stroke="#3b82f6"
+                label={{
+                  value: "Tu Objetivo",
+                  position: "insideRight",
+                  fontSize: 12,
+                  fill: "#3b82f6",
+                  fontWeight: "bold",
+                }}
+              />
+            )}
 
             {/* Líneas de referencia */}
             <ReferenceLine y={18.5} stroke="#facc15" strokeDasharray="3 3" />
