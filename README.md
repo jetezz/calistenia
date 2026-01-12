@@ -1,882 +1,586 @@
-# Calistenia Emérita App
+<div align="center">
 
-## Project Context
+# 🏋️ Calistenia Emérita
 
-**Calistenia Emérita** is a boutique calisthenics center with a clear mission: **democratize access to an active life** through a close, family-oriented approach.
+### _Sistema de Gestión de Clases de Calistenia_
 
-This web application is designed for **"Miguel Ángel"**, our buyer persona:
-- 40-50 years old
-- Values health over aesthetics
-- Fears injury
-- Needs external commitment (appointments) to stay consistent
+[![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Supabase](https://img.shields.io/badge/Supabase-2.89-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![Capacitor](https://img.shields.io/badge/Capacitor-8.0-119EFF?style=for-the-badge&logo=capacitor&logoColor=white)](https://capacitorjs.com)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
 
-### Design Philosophy
+[✨ Demo](https://calistenia-emerita.vercel.app) • [📱 Android APK](#-instalación-de-la-app-android) • [📚 Docs](./REFACTOR_ARCHITECTURE.md)
 
-- **Mobile First**: Primary use case is on smartphones
-- **Extreme Simplicity**: Large buttons, clear text, high contrast
-- **Accessibility**: Designed for users who are not digital natives
-- **Direct Interaction**: Avoid complexity of apps like Wodify
+</div>
 
 ---
 
-## Tech Stack Overview
+## 📖 Índice
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **React** | 19.x | UI library with latest features |
-| **TypeScript** | 5.9+ | Type safety and developer experience |
-| **Vite** | 7.x (rolldown) | Fast development and build |
-| **Tailwind CSS** | 4.x | Utility-first styling |
-| **shadcn/ui** | latest | Accessible, modular UI components |
-| **Lucide React** | latest | Icon library |
-| **Supabase** | 2.x | Backend as a Service (Auth, Database, RLS) |
-| **React Router** | 7.x | Client-side navigation |
-| **pnpm** | 9.x | Fast, efficient package manager |
-
-### Why This Stack?
-
-- **React 19**: Latest features including improved concurrent rendering
-- **Tailwind v4**: Native CSS variables, better performance, OKLCH colors
-- **shadcn/ui**: Copy-paste components, full control, Radix UI accessibility
-- **Supabase**: Real-time database, built-in auth, Row Level Security
-- **Vite + Rolldown**: Blazing fast builds and HMR
+- [Acerca del Proyecto](#-acerca-del-proyecto)
+- [Características Principales](#-características-principales)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Arquitectura](#-arquitectura)
+- [Instalación](#-instalación)
+- [Builds y Deployment](#-builds-y-deployment)
+- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Base de Datos](#-base-de-datos)
+- [Roadmap](#-roadmap)
+- [Licencia](#-licencia)
 
 ---
 
-## Authentication Architecture
+## 🎯 Acerca del Proyecto
 
-### Core Principles
+**Calistenia Emérita** es una aplicación web y móvil diseñada para democratizar el acceso a una vida activa a través de la calistenia. La plataforma conecta a usuarios con un sistema de reservas de clases, gestión de créditos y pagos.
 
-The authentication system follows Supabase best practices with a clear separation of concerns:
+### Buyer Persona: "Miguel Ángel"
 
-1. **AuthContext**: Manages session state and authentication methods
-2. **useProfile hook**: Handles profile data independently from auth state
-3. **Simple loading states**: No skeletons, just clean loading indicators
-4. **Proper session initialization**: Uses `getSession()` followed by `onAuthStateChange()` listener
+- **Edad**: 40-50 años
+- **Prioridad**: Salud sobre estética
+- **Preocupación**: Prevención de lesiones
+- **Necesidad**: Compromiso externo (citas) para mantener la constancia
 
-### Implementation Details
+### Filosofía de Diseño
 
-**AuthContext (`src/features/auth/context/AuthContext.tsx`)**:
-- Manages `user`, `session`, and `isLoading` states
-- Provides auth methods: `signInWithEmail`, `signUpWithEmail`, `signInWithGoogle`, `signOut`
-- Clean session initialization without race conditions
-- No profile fetching (handled separately)
-
-**useProfile Hook (`src/features/auth/hooks/useProfile.ts`)**:
-- Fetches profile data when user is available
-- Provides `profile`, `isLoading`, `isAdmin`, and `refreshProfile`
-- Independent of auth state changes for better performance
-
-**AuthGuard Component**:
-- Simple loading state ("Loading..." instead of skeletons)
-- Only checks authentication, no admin role checking
-- Clean redirect to login when not authenticated
-
-### Usage Patterns
-
-```tsx
-// For components that only need auth state
-import { useAuth } from '@/features/auth'
-const { user, isLoading, signOut } = useAuth()
-
-// For components that need profile data
-import { useProfile } from '@/features/auth'
-const { profile, isAdmin, isLoading } = useProfile()
-
-// For components that need both
-import { useAuth, useProfile } from '@/features/auth'
-const { signOut } = useAuth()
-const { profile, isAdmin } = useProfile()
-```
+- ✅ **Mobile First** - Optimizado para smartphones
+- ✅ **Simplicidad Extrema** - Botones grandes, texto claro, alto contraste
+- ✅ **Accesibilidad** - Pensado para no nativos digitales
+- ✅ **Interacción Directa** - Sin complejidad innecesaria
 
 ---
 
-## Database Schema
+## ✨ Características Principales
 
-### Entity Relationship
-
-```
-profiles (1) ──────── (N) bookings
-    │                      │
-    │                      │
-    │                      │
-    └── (1) ──── (N) payment_requests
-                           │
-time_slots (1) ──── (N) bookings
-```
-
-### SQL Schema for Supabase
-
-```sql
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- PROFILES TABLE
--- Extends Supabase auth.users with app-specific data
-CREATE TABLE public.profiles (
-    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-    email TEXT NOT NULL,
-    full_name TEXT,
-    phone TEXT,
-    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
-    credits INTEGER NOT NULL DEFAULT 0 CHECK (credits >= 0),
-    payment_status TEXT NOT NULL DEFAULT 'none' CHECK (payment_status IN ('paid', 'pending', 'unpaid', 'none')),
-    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
--- TIME_SLOTS TABLE
--- Available training slots created by admin
-CREATE TABLE public.time_slots (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6), -- 0=Sunday, 6=Saturday
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    capacity INTEGER NOT NULL DEFAULT 4 CHECK (capacity > 0),
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    UNIQUE(day_of_week, start_time)
-);
-
--- BOOKINGS TABLE
--- Reservations made by users for specific slots
-CREATE TABLE public.bookings (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-    time_slot_id UUID REFERENCES public.time_slots(id) ON DELETE CASCADE NOT NULL,
-    booking_date DATE NOT NULL,
-    status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled', 'completed')),
-    created_by UUID REFERENCES public.profiles(id), -- NULL if self-booked, admin_id if booked by admin
-    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    UNIQUE(user_id, time_slot_id, booking_date)
-);
-
--- PAYMENT_REQUESTS TABLE
--- Credit recharge requests from users
-CREATE TABLE public.payment_requests (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-    credits_requested INTEGER NOT NULL CHECK (credits_requested > 0),
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-    admin_notes TEXT,
-    processed_by UUID REFERENCES public.profiles(id),
-    processed_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
--- INDEXES
-CREATE INDEX idx_bookings_user_id ON public.bookings(user_id);
-CREATE INDEX idx_bookings_date ON public.bookings(booking_date);
-CREATE INDEX idx_bookings_slot ON public.bookings(time_slot_id);
-CREATE INDEX idx_payment_requests_user ON public.payment_requests(user_id);
-CREATE INDEX idx_payment_requests_status ON public.payment_requests(status);
-CREATE INDEX idx_time_slots_day ON public.time_slots(day_of_week);
-
--- UPDATED_AT TRIGGER FUNCTION
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- APPLY UPDATED_AT TRIGGERS
-CREATE TRIGGER update_profiles_updated_at
-    BEFORE UPDATE ON public.profiles
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_time_slots_updated_at
-    BEFORE UPDATE ON public.time_slots
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_bookings_updated_at
-    BEFORE UPDATE ON public.bookings
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_payment_requests_updated_at
-    BEFORE UPDATE ON public.payment_requests
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- AUTO-CREATE PROFILE ON USER SIGNUP
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.profiles (id, email, full_name)
-    VALUES (
-        NEW.id,
-        NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', '')
-    );
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-```
-
-### Row Level Security (RLS) Policies
-
-```sql
--- ENABLE RLS ON ALL TABLES
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.time_slots ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payment_requests ENABLE ROW LEVEL SECURITY;
-
--- PROFILES POLICIES
-CREATE POLICY "Users can view own profile"
-    ON public.profiles FOR SELECT
-    USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-    ON public.profiles FOR UPDATE
-    USING (auth.uid() = id)
-    WITH CHECK (auth.uid() = id AND role = 'user'); -- Prevent role escalation
-
-CREATE POLICY "Admins can view all profiles"
-    ON public.profiles FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
-
-CREATE POLICY "Admins can update all profiles"
-    ON public.profiles FOR UPDATE
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
-
--- TIME_SLOTS POLICIES
-CREATE POLICY "Anyone can view active time slots"
-    ON public.time_slots FOR SELECT
-    USING (is_active = true);
-
-CREATE POLICY "Admins can manage time slots"
-    ON public.time_slots FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
-
--- BOOKINGS POLICIES
-CREATE POLICY "Users can view own bookings"
-    ON public.bookings FOR SELECT
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can create own bookings"
-    ON public.bookings FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can cancel own bookings"
-    ON public.bookings FOR UPDATE
-    USING (auth.uid() = user_id)
-    WITH CHECK (status = 'cancelled');
-
-CREATE POLICY "Admins can manage all bookings"
-    ON public.bookings FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
-
--- PAYMENT_REQUESTS POLICIES
-CREATE POLICY "Users can view own payment requests"
-    ON public.payment_requests FOR SELECT
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can create payment requests"
-    ON public.payment_requests FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Admins can manage all payment requests"
-    ON public.payment_requests FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'admin'
-        )
-    );
-```
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <h3>👤 Panel de Cliente</h3>
+      <ul align="left">
+        <li>🔐 Autenticación con email y Google</li>
+        <li>📅 Reserva de clases en tiempo real</li>
+        <li>💳 Sistema de créditos virtuales</li>
+        <li>🔔 Notificaciones de confirmación</li>
+        <li>📊 Historial de reservas</li>
+        <li>💰 Solicitud de paquetes de créditos</li>
+      </ul>
+    </td>
+    <td align="center" width="50%">
+      <h3>👨‍💼 Panel de Admin</h3>
+      <ul align="left">
+        <li>👥 Gestión de usuarios y perfiles</li>
+        <li>🕐 Configuración de horarios semanales</li>
+        <li>📋 Vista de reservas y capacidad</li>
+        <li>💵 Aprobación de solicitudes de pago</li>
+        <li>⚙️ Configuración de precios y métodos de pago</li>
+        <li>📈 Dashboard con estadísticas en tiempo real</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## Application Overview
+## 🛠 Stack Tecnológico
 
-### Current Implementation Status
-- **Authentication & User Management**: Complete with role-based access
-- **Admin Dashboard**: Full user, booking, and payment management  
-- **Client Features**: Booking system, credit requests, payment info
-- **Mobile-First Design**: Optimized for 40-50 age demographic
-- **Technical Excellence**: Clean architecture with TypeScript integration
+### Frontend
 
----
+| Tecnología | Versión | Propósito |
+|------------|---------|-----------|
+| **React** | 19.2 | UI library con las últimas características |
+| **TypeScript** | 5.9+ | Type safety y developer experience |
+| **Vite** | 7.2 (Rolldown) | Fast development y build ultrarrápido |
+| **Tailwind CSS** | 4.1 | Utility-first styling con CSS variables nativas |
+| **shadcn/ui** | latest | Componentes accesibles con Radix UI |
+| **Lucide React** | latest | Iconografía moderna |
+| **Framer Motion** | 12.25 | Animaciones fluidas |
+| **Zustand** | 5.0 | State management ligero y eficiente |
 
-## Project Structure
+### Backend & Infrastructure
 
-```
-src/
-├── app/                    # Application configuration
-│   ├── providers/          # Context providers (Auth, Theme, etc.)
-│   └── router/             # Route configuration with role guards
-├── components/             # Reusable components
-│   ├── common/             # Shared business components
-│   ├── layout/             # Layout components
-│   └── ui/                 # shadcn/ui components
-├── features/               # Feature modules (domain-driven)
-│   ├── auth/               # Authentication & user management
-│   ├── admin/              # Admin dashboard and management
-│   ├── client/             # Client booking and profile
-│   ├── errors/             # Error pages (404, 500)
-│   └── home/               # Landing/home page
-├── hooks/                  # Global custom hooks (model-level)
-├── stores/                 # Zustand state management
-├── services/               # Database operations (Supabase)
-├── lib/                    # External library configurations
-├── types/                  # TypeScript types and interfaces
-└── utils/                  # Utility functions
-```
+| Tecnología | Propósito |
+|------------|-----------|
+| **Supabase** | Backend as a Service (Auth, Database, RLS) |
+| **PostgreSQL** | Base de datos relacional |
+| **Vercel** | Hosting y deployment web |
+| **Capacitor** | Cross-platform mobile apps (Android/iOS) |
+
+### Tools & Package Manager
+
+- **pnpm** 9.x - Fast, efficient package manager
+- **ESLint** - Code quality y linting
+- **React Router** 7.x - Client-side navigation
 
 ---
 
-## Clean Architecture with Zustand
+## 🏗 Arquitectura
 
-### Architecture Overview
-
-The application follows a **strict 3-layer clean architecture** with Zustand for state management:
+Este proyecto sigue una **arquitectura limpia de 3 capas** con separación estricta de responsabilidades:
 
 ```
-┌─────────────────────┐
-│    UI Layer         │  Pages & Components (Pure presentation)
-│  (React Components) │  ↓ Only calls hooks, renders UI
-└─────────────────────┘  
-           ↓
-┌─────────────────────┐
-│  Business Logic     │  Custom Hooks (Orchestration & business logic)
-│    (Hooks)          │  ↓ Connects UI with data layer
-└─────────────────────┘  
-           ↓
-┌─────────────────────┐
-│   Data Layer        │  Stores (Zustand) + Services (Database)
-│ (Stores + Services) │  ↓ State management + DB operations
-└─────────────────────┘  
-           ↓
-┌─────────────────────┐
-│     Database        │  Supabase (PostgreSQL + RLS)
-│    (Supabase)       │  
-└─────────────────────┘  
+┌─────────────────────────────────────────────────────────────┐
+│                     UX Layer (React)                        │
+│                   Screens & Components                      │
+│              Pure presentation & user interaction           │
+└────────────────────────┬────────────────────────────────────┘
+                         │ Only uses Hooks
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│                  Business Logic Layer                       │
+│                   Custom Hooks                              │
+│         Orchestrates business rules & data flow             │
+└────────────────────────┬────────────────────────────────────┘
+                         │ Calls Stores
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    Data Layer                               │
+│              Stores (Zustand) + Services                    │
+│        State management + database operations               │
+└────────────────────────┬────────────────────────────────────┘
+                         │ API Calls
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│                  Database (Supabase)                        │
+│            PostgreSQL + Row Level Security                  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Layer Relationships & Responsibilities
-
-#### **1. UI Layer (Components & Pages)**
-- **Responsibility**: Pure presentation and user interaction handling
-- **What they can do**: 
-  - Render UI based on props and hook data
-  - Handle user events (clicks, form submissions)
-  - Manage local UI state (form inputs, modal states)
-- **What they CANNOT do**:
-  - Direct database calls
-  - Business logic or data processing
-  - Direct store mutations
-- **How they get data**: Only through custom hooks
-
-#### **2. Business Logic Layer (Hooks)**
-- **Responsibility**: Orchestrate business logic and connect UI with data
-- **Types**:
-  - **Model Hooks**: Direct connection to stores (`useProfile`, `useBooking`)
-  - **Feature Hooks**: Complex workflows combining multiple models
-  - **Component Hooks**: Form logic and component-specific behavior
-- **What they do**:
-  - Call store actions and read store state
-  - Implement business rules and validation
-  - Handle async operations and error states
-  - Transform data for UI consumption
-
-#### **3. Data Layer (Stores + Services)**
-
-**Stores (Zustand State Management)**
-- **Responsibility**: Global application state and computed values
-- **What they contain**:
-  - Current data state (entities, loading, errors)
-  - Computed values and derived state
-  - Actions to mutate state
-- **What they do**: 
-  - Call services for data operations
-  - Update global state based on service responses
-  - Provide reactive state to hooks
-
-**Services (Database Operations)**
-- **Responsibility**: All database interactions and API calls
-- **What they do**:
-  - CRUD operations with Supabase
-  - Data transformation and validation
-  - Error handling for database operations
-- **What they return**: Raw data or throw errors
-
-### Data Flow Architecture
+### Flujo de Datos
 
 ```
 User Action → Component → Hook → Store → Service → Database
-    ↓           ↓         ↓       ↓        ↓         ↓
-UI Event → Event Handler → Business Logic → State Update → DB Call → Response
-    ↓           ↓         ↓       ↓        ↓         ↓
-   Result ← UI Update ← Hook Response ← Store State ← Service Result ← DB Data
+     ↓           ↓         ↓       ↓        ↓         ↓
+UI Event → Event Handler → Business → State → DB Call → Response
+     ↓           ↓         ↓       ↓        ↓         ↓
+  Result ← UI Update ← Hook Resp ← Store ← Service ← DB Data
 ```
 
-### Example Flow: Creating a Booking
+> 📚 **Documentación completa de arquitectura**: [REFACTOR_ARCHITECTURE.md](./REFACTOR_ARCHITECTURE.md)
 
-```typescript
-// 1. User clicks "Book" button in BookingPage component
-<Button onClick={handleBookSlot}>Book Slot</Button>
+---
 
-// 2. Component calls hook method
-const { createBooking, isLoading } = useBooking()
-const handleBookSlot = () => createBooking(slotId, date)
+## 🚀 Instalación
 
-// 3. Hook calls store action
-const useBooking = () => {
-  const createBooking = useBookingStore(state => state.createBooking)
-  // Hook orchestrates business logic
-}
+### Prerrequisitos
 
-// 4. Store action calls service and updates state
-const createBooking = async (slotId, date) => {
-  set({ isLoading: true })
-  const booking = await bookingService.createBooking(slotId, date)
-  set({ bookings: [...bookings, booking], isLoading: false })
-}
+- **Node.js** >= 18.x
+- **pnpm** >= 9.x
+- **Supabase CLI** (opcional para desarrollo)
 
-// 5. Service makes database call
-const createBooking = async (slotId, date) => {
-  const { data, error } = await supabase.from('bookings').insert({...})
-  if (error) throw error
-  return data
-}
+### 1️⃣ Clonar el Repositorio
+
+```bash
+git clone https://github.com/tu-usuario/calistenia.git
+cd calistenia
+```
+
+### 2️⃣ Instalar Dependencias
+
+```bash
+pnpm install
+```
+
+### 3️⃣ Configurar Variables de Entorno
+
+Crea un archivo `.env` en la raíz del proyecto:
+
+```env
+VITE_SUPABASE_URL=tu_supabase_url
+VITE_SUPABASE_ANON_KEY=tu_supabase_anon_key
+```
+
+> 💡 **Nota**: Obtén las credenciales desde tu proyecto de Supabase en [supabase.com](https://supabase.com)
+
+### 4️⃣ Configurar la Base de Datos
+
+1. Crea un proyecto en Supabase
+2. Ejecuta las migraciones SQL desde la carpeta `supabase/migrations/`
+3. Configura las políticas de Row Level Security (RLS)
+
+> Ver esquema completo en [Base de Datos](#-base-de-datos)
+
+### 5️⃣ Ejecutar en Desarrollo
+
+```bash
+pnpm dev
+```
+
+La aplicación estará disponible en `http://localhost:5173`
+
+---
+
+## 📦 Builds y Deployment
+
+### 🌐 Build Web (Vercel)
+
+#### Build de Producción
+
+```bash
+pnpm build:web
+```
+
+#### Vista Previa Local
+
+```bash
+pnpm preview
+```
+
+#### Deploy a Vercel
+
+```bash
+# Instalar Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+El archivo `vercel.json` ya está configurado para SPA routing.
+
+---
+
+### 📱 Instalación de la App Android
+
+#### Prerrequisitos Móvil
+
+- **Android Studio** con Android SDK
+- **JDK** 17+
+- **Gradle** (incluido en Android Studio)
+
+#### Build APK (Debug)
+
+```bash
+pnpm build:apk
+```
+
+El APK se generará en: `android/app/build/outputs/apk/debug/app-debug.apk`
+
+#### Build AAB (Release - Play Store)
+
+```bash
+pnpm build:aab
+```
+
+El AAB se generará en: `android/app/build/outputs/bundle/release/app-release.aab`
+
+#### Sincronizar Capacitor Manualmente
+
+```bash
+pnpm sync:android
+```
+
+#### Abrir en Android Studio
+
+```bash
+npx cap open android
+```
+
+> 📱 **Configuración de Capacitor**: Ver [capacitor.config.ts](./capacitor.config.ts)
+
+---
+
+## 📂 Estructura del Proyecto
+
+```
+calistenia/
+│
+├── src/
+│   ├── screens/              # 🖥️ Vistas de la aplicación
+│   │   ├── client/           # Vistas de cliente (Booking, Profile, etc.)
+│   │   └── admin/            # Vistas de admin (Dashboard, Users, etc.)
+│   │
+│   ├── hooks/                # 🎣 Custom hooks (Business logic layer)
+│   │   ├── client/           # Hooks específicos del cliente
+│   │   └── admin/            # Hooks específicos del admin
+│   │
+│   ├── stores/               # 🗄️ Zustand stores (State management)
+│   │   ├── bookingStore.ts
+│   │   ├── profileStore.ts
+│   │   ├── paymentRequestStore.ts
+│   │   └── ...
+│   │
+│   ├── services/             # 🔌 Database operations (API layer)
+│   │   ├── bookingService.ts
+│   │   ├── profileService.ts
+│   │   └── ...
+│   │
+│   ├── components/           # 🧩 Componentes reutilizables
+│   │   ├── common/           # Componentes de negocio compartidos
+│   │   ├── layout/           # Layout components (Header, Footer, etc.)
+│   │   └── ui/               # shadcn/ui components
+│   │
+│   ├── app/                  # ⚙️ Configuración de la aplicación
+│   │   ├── providers/        # Context providers (Auth, Theme)
+│   │   └── router/           # Configuración de rutas
+│   │
+│   ├── lib/                  # 📚 Utilidades y configuraciones
+│   ├── types/                # 📝 TypeScript types & interfaces
+│   └── utils/                # 🛠️ Utility functions
+│
+├── supabase/                 # 🗃️ Configuración de Supabase
+│   ├── migrations/           # Migraciones SQL
+│   └── scripts/              # Scripts de mantenimiento
+│
+├── public/                   # 📦 Assets estáticos
+├── android/                  # 📱 Proyecto Android (Capacitor)
+│
+├── package.json              # 📦 Dependencies y scripts
+├── tsconfig.json             # ⚙️ TypeScript configuration
+├── tailwind.config.js        # 🎨 Tailwind configuration
+├── vite.config.ts            # ⚡ Vite configuration
+├── capacitor.config.ts       # 📱 Capacitor configuration
+└── vercel.json               # ☁️ Vercel deployment config
 ```
 
 ---
 
-## Domain Models & Business Logic
+## 🗄️ Base de Datos
 
-### **Profile Model** - User Identity & Credit Management
+### Esquema de Base de Datos
 
-**Objective**: Manage user identity, role-based access, and credit system for class bookings.
-
-**Core Functionality**:
-- **Identity Management**: User profiles with authentication integration
-- **Role-Based Access**: Admin vs Client permissions and UI variations
-- **Credit System**: Virtual currency for class reservations
-- **Payment Status Tracking**: Monitor user payment states
-
-**Business Rules**:
-- Users start with 0 credits and must request more to book classes
-- Admin approval required for credit requests
-- Credits are deducted automatically when booking confirmed
-- Role escalation prevented (users cannot promote themselves to admin)
-
-**Store State** (`profileStore.ts`):
-```typescript
-{
-  profiles: Profile[],           // All user profiles (admin view)
-  currentProfile: Profile | null, // Currently viewed/edited profile
-  loading: boolean,
-  error: string | null
-}
+```
+┌──────────────┐
+│   profiles   │──────┐
+└──────────────┘      │
+       │              │
+       │ (1)          │ (1)
+       │              │
+       │              │ (N)
+       ↓              ↓
+┌──────────────┐   ┌──────────────────┐
+│   bookings   │   │ payment_requests │
+└──────────────┘   └──────────────────┘
+       │
+       │ (N)
+       │
+       │ (1)
+       ↓
+┌──────────────┐
+│  time_slots  │
+└──────────────┘
 ```
 
-**Service Operations** (`profileService.ts`):
-- `fetchProfileById()` - Get user by ID
-- `fetchAllProfiles()` - Get all users (admin only)
-- `updateProfile()` - Update user data
-- `updateCredits()` - Add/subtract credits
-- `updatePaymentStatus()` - Change payment state
+### Tablas Principales
 
-**Hook Interface** (`useProfile.ts`):
-```typescript
-{
-  profiles: Profile[],
-  currentProfile: Profile | null,
-  loading: boolean,
-  fetchProfileById: (id: string) => Promise<void>,
-  updateCredits: (userId: string, amount: number) => Promise<void>,
-  updatePaymentStatus: (userId: string, status: PaymentStatus) => Promise<void>
-}
-```
+#### **`profiles`** - Usuarios del Sistema
 
-### **TimeSlot Model** - Schedule Management
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID (PK) | ID del usuario (FK a `auth.users`) |
+| `email` | TEXT | Email del usuario |
+| `full_name` | TEXT | Nombre completo |
+| `phone` | TEXT | Teléfono de contacto |
+| `role` | TEXT | `admin` o `user` |
+| `credits` | INTEGER | Créditos disponibles para reservas |
+| `payment_status` | TEXT | Estado de pago (`paid`, `pending`, `unpaid`, `none`) |
+| `approval_status` | TEXT | Estado de aprobación del usuario |
 
-**Objective**: Define weekly recurring training schedules with capacity management and availability tracking.
+#### **`time_slots`** - Horarios de Clases
 
-**Core Functionality**:
-- **Weekly Scheduling**: Recurring slots by day of week and time
-- **Capacity Management**: Maximum participants per session
-- **Availability Tracking**: Real-time booking count vs capacity
-- **Admin Control**: Enable/disable slots, modify capacity
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID (PK) | ID del slot |
+| `day_of_week` | INTEGER | Día de la semana (0=Domingo, 6=Sábado) |
+| `start_time` | TIME | Hora de inicio |
+| `end_time` | TIME | Hora de fin |
+| `capacity` | INTEGER | Capacidad máxima |
+| `is_active` | BOOLEAN | Si el slot está activo |
+| `slot_type` | TEXT | Tipo de slot (`recurring`, `one_time`) |
 
-**Business Rules**:
-- Each time slot has a fixed capacity (default 4 people)
-- Slots are weekly recurring (Monday 18:00, Tuesday 19:00, etc.)
-- Users can only book available slots (not at capacity)
-- Only active slots are visible to clients
-- Admin can modify all slot properties
+#### **`bookings`** - Reservas de Clases
 
-**Store State** (`timeSlotStore.ts`):
-```typescript
-{
-  timeSlots: TimeSlot[],
-  activeTimeSlots: TimeSlot[],     // Only active slots
-  slotAvailability: Record<string, {
-    capacity: number,
-    booked: number,
-    available: number
-  }>,
-  loading: boolean,
-  error: string | null
-}
-```
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID (PK) | ID de la reserva |
+| `user_id` | UUID (FK) | Usuario que reserva |
+| `time_slot_id` | UUID (FK) | Slot reservado |
+| `booking_date` | DATE | Fecha de la reserva |
+| `status` | TEXT | Estado (`confirmed`, `cancelled`, `completed`) |
+| `created_by` | UUID (FK) | Admin que creó la reserva (null si auto-reserva) |
 
-**Service Operations** (`timeSlotService.ts`):
-- `fetchTimeSlots()` - Get all time slots
-- `fetchActiveTimeSlots()` - Get only active slots
-- `createTimeSlot()` - Create new recurring slot
-- `updateTimeSlot()` - Modify slot properties
-- `deleteTimeSlot()` - Remove slot
-- `fetchAvailableSpots()` - Get availability for specific slot/date
+#### **`payment_requests`** - Solicitudes de Créditos
 
-**Hook Interface** (`useTimeSlot.ts`):
-```typescript
-{
-  timeSlots: TimeSlot[],
-  activeTimeSlots: TimeSlot[],
-  availability: Record<string, SlotAvailability>,
-  loading: boolean,
-  createTimeSlot: (slot: CreateTimeSlotData) => Promise<void>,
-  fetchAvailableSpots: (slotId: string, date: string) => Promise<number>
-}
-```
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID (PK) | ID de la solicitud |
+| `user_id` | UUID (FK) | Usuario solicitante |
+| `credits_requested` | INTEGER | Créditos solicitados |
+| `status` | TEXT | Estado (`pending`, `approved`, `rejected`) |
+| `admin_notes` | TEXT | Notas del admin |
+| `payment_method_id` | UUID (FK) | Método de pago usado |
 
-### **Booking Model** - Reservation Management
+#### **`pricing_packages`** - Paquetes de Precios
 
-**Objective**: Handle class reservations with conflict prevention, credit management, and scheduling constraints.
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID (PK) | ID del paquete |
+| `package_name` | TEXT | Nombre del paquete (ej. "Pack Básico") |
+| `credits` | INTEGER | Número de clases |
+| `price` | NUMERIC | Precio en EUR |
+| `is_active` | BOOLEAN | Si está disponible |
+| `display_order` | INTEGER | Orden de visualización |
 
-**Core Functionality**:
-- **Reservation System**: Book users into specific time slots for specific dates
-- **Conflict Prevention**: Prevent double-booking same user/slot/date
-- **Credit Integration**: Automatic credit deduction on confirmed bookings
-- **Status Tracking**: Confirmed, cancelled, completed states
-- **Admin Booking**: Admins can book on behalf of users
+#### **`payment_methods`** - Métodos de Pago
 
-**Business Rules**:
-- One booking per user per time slot per date
-- Credits deducted only on confirmation (not on creation)
-- Users can cancel own bookings (credits refunded)
-- Admin can manage all bookings
-- Booking requires sufficient credits
-- Cannot book past dates or inactive slots
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID (PK) | ID del método |
+| `name` | TEXT | Nombre (ej. "Bizum") |
+| `type` | TEXT | Tipo (`bizum`, `paypal`, `bank_transfer`, `cash`) |
+| `contact_phone` | TEXT | Teléfono para Bizum |
+| `contact_email` | TEXT | Email para PayPal |
+| `bank_account` | TEXT | Cuenta bancaria |
+| `instructions` | TEXT | Instrucciones de pago |
 
-**Store State** (`bookingStore.ts`):
-```typescript
-{
-  bookings: Booking[],
-  userBookings: Booking[],         // Current user's bookings
-  recentBookings: Booking[],       // Admin dashboard recent activity
-  loading: boolean,
-  error: string | null
-}
-```
+#### **`app_settings`** - Configuración Global
 
-**Service Operations** (`bookingService.ts`):
-- `fetchBookings()` - Get all bookings (admin)
-- `fetchUserBookings()` - Get bookings for specific user
-- `createBooking()` - Create new reservation
-- `updateBooking()` - Modify booking (status changes)
-- `deleteBooking()` - Remove booking
-- `checkBookingConflict()` - Validate no conflicts exist
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID (PK) | ID de la configuración |
+| `key` | TEXT | Clave de configuración |
+| `value` | JSON | Valor de configuración |
+| `description` | TEXT | Descripción |
 
-**Hook Interface** (`useBooking.ts`):
-```typescript
-{
-  bookings: Booking[],
-  userBookings: Booking[],
-  loading: boolean,
-  createBooking: (slotId: string, date: string, userId?: string) => Promise<void>,
-  cancelBooking: (bookingId: string) => Promise<void>,
-  checkBookingConflict: (slotId: string, date: string, userId: string) => Promise<boolean>
-}
-```
+### Row Level Security (RLS)
 
-### **PaymentRequest Model** - Credit Purchase Management
+Todas las tablas tienen políticas RLS habilitadas:
 
-**Objective**: Handle user requests for credit purchases with admin approval workflow and payment tracking.
+- ✅ **Usuarios**: Solo pueden ver y editar su propio perfil
+- ✅ **Admins**: Acceso completo a todos los datos
+- ✅ **Reservas**: Los usuarios solo ven sus propias reservas
+- ✅ **Time Slots**: Visibles para todos (solo activos), editables por admins
+- ✅ **Payment Requests**: Los usuarios solo ven sus propias solicitudes
 
-**Core Functionality**:
-- **Credit Requests**: Users request specific amounts of class credits
-- **Approval Workflow**: Admin review and approve/reject with notes
-- **Payment Tracking**: Link requests to actual payments
-- **Package Pricing**: Predefined credit packages with pricing
+> 💡 **Ver esquema completo**: [src/types/database.ts](./src/types/database.ts)
 
-**Business Rules**:
-- Users can request credits using predefined packages
-- All requests require admin approval
-- Approved requests automatically add credits to user account
-- Rejected requests can include admin notes explaining why
-- One pending request per user at a time
-- Payment confirmation tracked separately from credit granting
+---
 
-**Store State** (`paymentRequestStore.ts`):
-```typescript
-{
-  paymentRequests: PaymentRequest[],
-  userRequests: PaymentRequest[],    // Current user's requests
-  pendingRequests: PaymentRequest[], // Admin: requests needing review
-  loading: boolean,
-  error: string | null
-}
-```
+## 🎨 Modelos de Dominio
 
-**Service Operations** (`paymentRequestService.ts`):
-- `fetchPaymentRequests()` - Get all requests (admin)
-- `fetchUserPaymentRequests()` - Get requests for specific user
-- `createPaymentRequest()` - Submit new credit request
-- `updatePaymentRequest()` - Process request (approve/reject)
-- `fetchPendingRequests()` - Get requests awaiting approval
+### 1. **Profile Model** - Gestión de Usuarios y Créditos
 
-**Hook Interface** (`usePaymentRequest.ts`):
-```typescript
-{
-  paymentRequests: PaymentRequest[],
-  userRequests: PaymentRequest[],
-  pendingRequests: PaymentRequest[],
-  loading: boolean,
-  createPaymentRequest: (credits: number, notes?: string) => Promise<void>,
-  updatePaymentRequest: (id: string, updates: PaymentRequestUpdate) => Promise<void>
-}
+**Objetivo**: Identidad de usuario, roles y sistema de créditos virtuales.
+
+**Reglas de Negocio**:
+- Los usuarios empiezan con 0 créditos
+- Se requiere aprobación del admin para solicitudes de créditos
+- Los créditos se deducen automáticamente al confirmar reserva
+- Prevención de escalada de privilegios (users no pueden auto-promover a admin)
+
+### 2. **TimeSlot Model** - Gestión de Horarios
+
+**Objetivo**: Definir horarios semanales recurrentes con control de capacidad.
+
+**Reglas de Negocio**:
+- Cada slot tiene capacidad fija (default 4 personas)
+- Los slots son semanalmente recurrentes (ej. Lunes 18:00)
+- Solo slots activos son visibles para clientes
+- Tracking en tiempo real de disponibilidad
+
+### 3. **Booking Model** - Sistema de Reservas
+
+**Objetivo**: Gestionar reservas con prevención de conflictos y gestión de créditos.
+
+**Reglas de Negocio**:
+- Una reserva por usuario/slot/fecha
+- Créditos deducidos solo al confirmar (no al crear)
+- Usuarios pueden cancelar reservas propias (créditos reembolsados)
+- No se permiten reservas de fechas pasadas o slots inactivos
+
+### 4. **PaymentRequest Model** - Compra de Créditos
+
+**Objetivo**: Workflow de aprobación de admin para compra de créditos.
+
+**Reglas de Negocio**:
+- Los usuarios solicitan paquetes de créditos predefinidos
+- Todas las solicitudes requieren aprobación del admin
+- Las solicitudes aprobadas agregan créditos automáticamente
+- Una solicitud pendiente por usuario a la vez
+
+---
+
+## 🗺️ Roadmap
+
+### ✅ Completado
+
+- [x] Sistema de autenticación con email y Google
+- [x] Panel de cliente con reservas y créditos
+- [x] Panel de admin con gestión completa
+- [x] Sistema de notificaciones en tiempo real
+- [x] Gestión dinámica de precios y métodos de pago
+- [x] Configuración de políticas de cancelación
+- [x] Build Android APK/AAB
+- [x] Deploy en Vercel
+
+### 🚧 En Desarrollo
+
+- [ ] Sistema de estadísticas de peso y composición corporal
+- [ ] Branding settings dinámicos desde admin
+- [ ] Push notifications móvil
+- [ ] Sistema de recordatorios de clases
+
+### 💡 Futuro
+
+- [ ] Integración con pasarelas de pago (Stripe/PayPal)
+- [ ] Sistema de puntuación y gamificación
+- [ ] Chat en tiempo real con el entrenador
+- [ ] Video-tutoriales de ejercicios
+- [ ] App iOS (Capacitor)
+
+---
+
+## 👨‍💻 Desarrollo
+
+### Scripts Disponibles
+
+```bash
+# Desarrollo
+pnpm dev                 # Inicia servidor de desarrollo
+
+# Build
+pnpm build              # Build de producción
+pnpm build:web          # Build específico web
+pnpm preview            # Vista previa del build
+
+# Linting
+pnpm lint               # Ejecuta ESLint
+
+# Supabase
+pnpm types              # Genera types de Supabase
+
+# Android
+pnpm sync:android       # Sincroniza con Android
+pnpm build:apk          # Build APK debug
+pnpm build:aab          # Build AAB release
+
+# Utilidades
+pnpm clean-data         # Limpia datos de desarrollo
 ```
 
 ---
 
-## Component Integration Patterns
+## 📄 Licencia
 
-### Page Components (Pure UI)
-
-```typescript
-// ✅ CORRECT: Pure presentation, hooks for data
-export function AdminUsersPage() {
-  const { profiles, loading, updateCredits } = useProfile()
-  
-  if (loading) return <PageLoadingState />
-  
-  return (
-    <div>
-      {profiles.map(user => (
-        <UserCard 
-          key={user.id} 
-          user={user} 
-          onUpdateCredits={updateCredits}
-        />
-      ))}
-    </div>
-  )
-}
-
-// ❌ WRONG: Direct service calls, business logic
-export function AdminUsersPage() {
-  const [users, setUsers] = useState([])
-  
-  useEffect(() => {
-    // ❌ Direct service call in component
-    profileService.fetchAllProfiles().then(setUsers)
-  }, [])
-  
-  // ❌ Business logic in component
-  const handleUpdateCredits = async (userId, credits) => {
-    await profileService.updateCredits(userId, credits)
-    // ❌ Manual state updates
-    setUsers(prev => prev.map(u => u.id === userId ? {...u, credits} : u))
-  }
-}
-```
-
-### Hook Composition (Business Logic)
-
-```typescript
-// Model Hook - Direct store connection
-export function useProfile() {
-  const {
-    profiles,
-    loading,
-    updateCredits: updateCreditsAction
-  } = useProfileStore()
-  
-  const updateCredits = useCallback(async (userId: string, amount: number) => {
-    await updateCreditsAction(userId, amount)
-  }, [updateCreditsAction])
-  
-  return {
-    profiles,
-    loading,
-    updateCredits
-  }
-}
-
-// Feature Hook - Multiple model orchestration  
-export function useClientDashboard() {
-  const { profile } = useProfile()
-  const { userBookings } = useBooking()
-  const { userRequests } = usePaymentRequest()
-  
-  // Business logic combining multiple models
-  const dashboardData = useMemo(() => ({
-    credits: profile?.credits || 0,
-    upcomingBookings: userBookings.filter(b => 
-      new Date(b.booking_date) > new Date() && b.status === 'confirmed'
-    ),
-    lastPaymentRequest: userRequests[0],
-    hasInsufficientCredits: (profile?.credits || 0) < 1
-  }), [profile, userBookings, userRequests])
-  
-  return dashboardData
-}
-```
+Este proyecto es privado y no está bajo una licencia open source. Todos los derechos reservados.
 
 ---
 
-## Migration Benefits Achieved
+## 📧 Contacto
 
-### **Code Quality**
-- **Zero Business Logic in UI**: All pages are pure presentation components
-- **Consistent Patterns**: Same approach for all CRUD operations across models
-- **Type Safety**: Full TypeScript integration with compile-time error checking
-- **Predictable Structure**: Developers know exactly where to find specific functionality
+Para consultas sobre el proyecto, contacta a:
 
-### **Performance**
-- **Centralized State**: Zustand prevents unnecessary re-renders with selective subscriptions
-- **Optimized Updates**: Store actions batch related updates for efficiency  
-- **Computed Values**: Derived state calculated once and cached in stores
-- **Minimal API Calls**: Smart caching and state management reduces database requests
-
-### **Maintainability**
-- **Single Responsibility**: Each layer has one clear purpose and responsibility
-- **Easy Testing**: Each layer can be tested independently with clear interfaces
-- **Scalable Architecture**: Adding new models follows the same established patterns
-- **Clear Dependencies**: Unidirectional data flow makes debugging straightforward
-
-### **Developer Experience**
-- **Fast Development**: Reusable hooks accelerate feature implementation
-- **Easy Onboarding**: Clear architecture helps new developers understand the codebase
-- **Consistent APIs**: All models follow the same store → service → database pattern
-- **Excellent TypeScript**: Full type safety catches errors at compile time
+- **Email**: [tu-email@ejemplo.com]
+- **LinkedIn**: [Tu Perfil]
+- **GitHub**: [Tu Usuario]
 
 ---
 
-## Changelog
+<div align="center">
 
-### [2025-01-07] - Admin Notification System for Bookings
-- **NEW**: Simple real-time notification system for admin users
-- **NEW**: Notification badge in admin header showing new bookings count
-- **NEW**: System alerts section in admin dashboard showing new bookings
-- **NEW**: Automatic notification when client creates a booking (via Supabase realtime)
-- **NEW**: Click on notification navigates to bookings page and clears counter
-- **NEW**: Zustand store `notificationStore` for tracking new bookings count
-- **NEW**: Hook `useNotifications` with Supabase realtime subscriptions
-- **NEW**: Component `NotificationBell` for notification badge in header
-- **IMPROVED**: Admin receives immediate visual feedback for new bookings
-- **IMPROVED**: Counter resets when admin visits bookings page
-- **IMPROVED**: Clean and simple implementation using in-memory state
+**Hecho con ❤️ por [Tu Nombre]**
 
-### [2025-01-08] - Cancellation Policy Configuration Feature
-- **NEW**: Admin can configure minimum time required before booking cancellation
-- **NEW**: Database table `app_settings` for application-wide configuration
-- **NEW**: Service layer `appSettingsService` for settings CRUD operations
-- **NEW**: Zustand store `appSettingsStore` for settings state management
-- **NEW**: Hook `useAppSettings` for component integration
-- **NEW**: Admin page `AdminSettingsPage` for cancellation policy configuration
-- **NEW**: Route `/admin/settings` added to admin panel
-- **NEW**: Quick action "Configuración" in admin dashboard
-- **IMPROVED**: `useUserBookings` hook now validates cancellation against dynamic policy
-- **IMPROVED**: `MyBookingsPage` displays actual policy (not hardcoded 2 hours)
-- **IMPROVED**: Cancel button disabled when outside policy window with clear feedback
-- **IMPROVED**: Policy can be configured in hours or days
-- **MIGRATION**: `20250108000000_app_settings_cancellation_policy.sql` created with default 2-hour policy
-- **DOCUMENTATION**: Full feature documentation in `docs/CANCELLATION_POLICY_FEATURE.md`
+⭐ Si te gusta este proyecto, dale una estrella en GitHub
 
-### [2025-01-07] - Payment Methods Management System
-- **NEW**: Dynamic payment methods configuration in admin panel
-- **NEW**: Admin page for managing payment methods (Bizum, PayPal, Bank Transfer, Cash, etc.)
-- **NEW**: Database table `payment_methods` for configurable payment options
-- **NEW**: Service layer `paymentMethodService` for payment method operations
-- **NEW**: Zustand store `paymentMethodStore` for state management
-- **NEW**: Hook `usePaymentMethod` for component integration
-- **NEW**: Component `PaymentMethodDialog` for creating/editing payment methods
-- **NEW**: Admin page `AdminPaymentMethodsPage` for payment methods management
-- **NEW**: Route `/admin/payment-methods` added to admin navigation
-- **IMPROVED**: `PaymentInfoPage` now displays dynamic payment methods from database
-- **IMPROVED**: Admin dashboard includes payment methods quick action
-- **IMPROVED**: Mobile navigation includes payment methods option for admins
-- **REMOVED**: Hardcoded payment method details from `PaymentInfoPage`
-- **MIGRATION**: `20250107000003_payment_methods.sql` created with seed data for Bizum, PayPal, Bank Transfer, and Cash
-
-### [2025-01-07] - Pricing Package Names Enhancement
-- **NEW**: Added `package_name` optional field to pricing packages
-- **NEW**: Package names now display before the class count (e.g., "Pack Básico - 4 clases")
-- **IMPROVED**: Admin pricing dialog now includes package name field
-- **IMPROVED**: Client view shows package names in the selection dropdown
-- **IMPROVED**: Better visual hierarchy in package display
-- **MIGRATION**: `20250107000002_add_package_name.sql` created with default names
-
-### [2025-01-07] - Pricing Management System
-- **NEW**: Dynamic pricing packages management for admin
-- **NEW**: Admin pricing page with full CRUD operations for class packages
-- **NEW**: Database table `pricing_packages` for configurable pricing
-- **NEW**: Service layer `pricingPackageService` for database operations
-- **NEW**: Zustand store `pricingPackageStore` for state management
-- **NEW**: Hook `usePricingPackage` for component integration
-- **NEW**: Component `PricingPackageDialog` for creating/editing packages
-- **NEW**: Admin page `AdminPricingPage` for pricing management UI
-- **IMPROVED**: Client credit request page now fetches pricing packages dynamically from database
-- **IMPROVED**: Admin dashboard includes quick access link to pricing management
-- **REMOVED**: Hardcoded credit packages from `RequestCreditsPage`
-- **MIGRATION**: `20250107000001_pricing_packages.sql` created with seed data
-
-### [2024-12-30] - Clean Architecture Migration Complete
-- **MAJOR**: Implemented complete 3-layer clean architecture
-- **MAJOR**: Created centralized services layer for all database operations
-- **MAJOR**: Implemented Zustand stores for global state management
-- **MAJOR**: Refactored all pages to use centralized hooks instead of direct service calls
-- **MAJOR**: Removed all deprecated `adminService` and `clientService` files
-- **REMOVED**: Business logic from UI components (moved to hooks layer)
-- **REMOVED**: useState for data management in pages (moved to stores)
-- **REMOVED**: Direct Supabase calls outside services layer
-- **NEW**: Model-level hooks (`useProfile`, `useBooking`, `useTimeSlot`, `usePaymentRequest`)
-- **NEW**: Feature-level orchestration hooks for complex workflows
-- **IMPROVED**: Code maintainability and testability with clear separation of concerns
-- **IMPROVED**: Performance with centralized state management
-- **FIXED**: Duplicate business logic across features
-- **ACHIEVED**: 100% clean architecture compliance
-
-### [2024-12-30] - Authentication Refactor
-- **MAJOR**: Complete authentication system refactor following Supabase best practices
-- **NEW**: Separated `AuthContext` (session management) from profile data management
-- **NEW**: Created `useProfile` hook for independent profile data fetching
-- **REMOVED**: Complex profile fetching from auth state changes (eliminates race conditions)
-- **REMOVED**: Skeleton loading states in favor of simple loading indicators
-- **REMOVED**: `refreshProfile` and `isAdmin` from AuthContext (moved to useProfile)
-- **FIXED**: Page reload infinite loading issue by proper session initialization
-- **FIXED**: localStorage corruption issues by letting Supabase handle session storage
-- **IMPROVED**: AuthGuard component simplified (no admin role checking)
-- **IMPROVED**: Clean session management without manual state clearing on signOut
+</div>
