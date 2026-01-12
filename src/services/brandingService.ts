@@ -28,7 +28,7 @@ export const brandingService = {
       throw new Error(`Error fetching branding settings: ${error.message}`);
     }
 
-    return data as BrandingSettings;
+    return data as unknown as BrandingSettings;
   },
 
   /**
@@ -45,7 +45,7 @@ export const brandingService = {
       // Update existing settings
       const { data, error } = await supabase
         .from("branding_settings")
-        .update(updates)
+        .update(updates as any)
         .eq("id", existing.id)
         .select()
         .single();
@@ -54,12 +54,12 @@ export const brandingService = {
         throw new Error(`Error updating branding settings: ${error.message}`);
       }
 
-      return data as BrandingSettings;
+      return data as unknown as BrandingSettings;
     } else {
       // Create new settings
       const { data, error } = await supabase
         .from("branding_settings")
-        .insert(updates)
+        .insert(updates as any)
         .select()
         .single();
 
@@ -67,7 +67,7 @@ export const brandingService = {
         throw new Error(`Error creating branding settings: ${error.message}`);
       }
 
-      return data as BrandingSettings;
+      return data as unknown as BrandingSettings;
     }
   },
 

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, CalendarDays, CreditCard, Calendar } from "lucide-react";
+import { Home, CalendarDays, CreditCard, Calendar, Activity } from "lucide-react";
 import { useProfile } from "@/features/auth";
 import { cn } from "@/lib/utils";
 import { useAppSettingsStore } from "@/stores/appSettingsStore";
@@ -25,6 +25,11 @@ export function MobileNav() {
       to: "/app/my-bookings",
       icon: <Calendar className="size-5" />,
       label: "Mis Clases",
+    },
+    {
+      to: "/app/weight-stats",
+      icon: <Activity className="size-5" />,
+      label: "Estadísticas",
     },
     {
       to: "/app/request-credits",

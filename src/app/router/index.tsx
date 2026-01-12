@@ -19,6 +19,7 @@ import { PaymentInfoPage } from "@/screens/client/PaymentInfo/PaymentInfoPage";
 import { RequestCreditsPage } from "@/screens/client/RequestCredits/RequestCreditsPage";
 import { PendingApprovalPage } from "@/screens/client/PendingApproval/PendingApprovalPage";
 import { RejectedPage } from "@/screens/client/Rejected/RejectedPage";
+import WeightStatsPage from "@/screens/client/WeightStatsPage";
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
       {
         path: "payment-info",
         element: <PaymentInfoPage />,
+      },
+      {
+        path: "weight-stats",
+        element: <WeightStatsPage />,
       },
       {
         path: "admin",

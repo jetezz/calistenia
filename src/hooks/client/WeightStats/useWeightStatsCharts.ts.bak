@@ -1,0 +1,212 @@
+import { useMemo } from "react";
+import type { WeightStats } from "@/services/weightStatsService";
+
+/**
+ * Datos formateados para Recharts - Gráfico de peso
+ */
+export interface WeightChartData {
+  date: string;
+  weight: number;
+  formattedDate: string;
+}
+
+/**
+ * Datos formateados para Recharts - Composición corporal
+ */
+export interface BodyCompositionChartData {
+  date: string;
+  bodyFat: number | null;
+  muscleMass: number | null;
+  boneMass: number | null;
+  formattedDate: string;
+}
+
+/**
+ * Datos formateados para Recharts - Métricas adicionales
+ */
+export interface AdditionalMetricsChartData {
+  date: string;
+  bmi: number | null;
+  metabolicAge: number | null;
+  waterPercentage: number | null;
+  calories: number | null;
+  formattedDate: string;
+}
+
+/**
+ * Hook para transformar datos de Weight Stats en formato para gráficos
+ */
+export const useWeightStatsCharts = (stats: WeightStats[]) => {
+  // Formatear fecha para display
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+    });
+  };
+
+  // Formatear fecha completa
+  const formatFullDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  // Datos para gráfico de peso
+  const weightChartData = useMemo((): WeightChartData[] => {
+    return stats
+      .slice()
+      .reverse() // Ordenar cronológicamente
+      .map((stat) => ({
+        date: stat.recorded_at,
+        weight: stat.weight,
+        formattedDate: formatDate(stat.recorded_at),
+      }));
+  }, [stats]);
+
+  // Datos para gráfico de composición corporal
+  const bodyCompositionData = useMemo((): BodyCompositionChartData[] => {
+    return stats
+      .slice()
+      .reverse()
+      .map((stat) => ({
+        date: stat.recorded_at,
+        bodyFat: stat.body_fat_percentage,
+        muscleMass: stat.muscle_mass,
+        boneMass: stat.bone_mass,
+        formattedDate: formatDate(stat.recorded_at),
+      }));
+  }, [stats]);
+
+  // Datos para gráfico de BMI
+  const bmiChartData = useMemo(() => {
+    return stats
+      .slice()
+      .reverse()
+      .filter((stat) => stat.bmi !== null)
+      .map((stat) => ({
+        date: stat.recorded_at,
+        bmi: stat.bmi,
+        formattedDate: formatDate(stat.recorded_at),
+      }));
+  }, [stats]);
+
+  // Datos para gráfico de edad metabólica
+  const metabolicAgeData = useMemo(() => {
+    return stats
+      .slice()
+      .reverse()
+      .filter((stat) => stat.metabolic_age !== null)
+      .map((stat) => ({
+        date: stat.recorded_at,
+        age: stat.metabolic_age,
+        formattedDate: formatDate(stat.recorded_at),
+      }));
+  }, [stats]);
+
+  // Datos para gráfico de agua corporal
+  const waterPercentageData = useMemo(() => {
+    return stats
+      .slice()
+      .reverse()
+      .filter((stat) => stat.total_body_water_percentage !== null)
+      .map((stat) => ({
+        date: stat.recorded_at,
+        percentage: stat.total_body_water_percentage,
+        formattedDate: formatDate(stat.recorded_at),
+      }));
+  }, [stats]);
+
+  // Datos para gráfico de calorías
+  const caloriesData = useMemo(() => {
+    return stats
+      .slice()
+      .reverse()
+      .filter((stat) => stat.daily_calorie_intake !== null)
+      .map((stat) => ({
+        date: stat.recorded_at,
+        calories: stat.daily_calorie_intake,
+        formattedDate: formatDate(stat.recorded_at),
+      }));
+  }, [stats]);
+
+  // Métricas agregadas para el último dato disponible
+  const latestMetrics = useMemo(() => {
+    if (stats.length === 0) return null;
+
+    const latest = stats[0]; // El más reciente (ya ordenado descendente)
+
+    return {
+      weight: latest.weight,
+      bodyFat: latest.body_fat_percentage,
+      muscleMass: latest.muscle_mass,
+      boneMass: latest.bone_mass,
+      bmi: latest.bmi,
+      calories: latest.daily_calorie_intake,
+      metabolicAge: latest.metabolic_age,
+      waterPercentage: latest.total_body_water_percentage,
+      date: formatFullDate(latest.recorded_at),
+      notes: latest.notes,
+    };
+  }, [stats]);
+
+  // Verificar si hay datos suficientes para mostrar gráficos
+  const hasEnoughData = useMemo(() => stats.length >= 2, [stats]);
+
+  // Estadísticas de tendencias
+  const trends = useMemo(() => {
+    if (stats.length < 2) return null;
+
+    const recent = stats[0];
+    const previous = stats[1];
+
+    return {
+      weight: {
+        current: recent.weight,
+        previous: previous.weight,
+        change: recent.weight - previous.weight,
+        percentage: ((recent.weight - previous.weight) / previous.weight) * 100,
+      },
+      bodyFat:
+        recent.body_fat_percentage && previous.body_fat_percentage
+          ? {
+              current: recent.body_fat_percentage,
+              previous: previous.body_fat_percentage,
+              change: recent.body_fat_percentage - previous.body_fat_percentage,
+            }
+          : null,
+      muscleMass:
+        recent.muscle_mass && previous.muscle_mass
+          ? {
+              current: recent.muscle_mass,
+              previous: previous.muscle_mass,
+              change: recent.muscle_mass - previous.muscle_mass,
+              percentage: ((recent.muscle_mass - previous.muscle_mass) / previous.muscle_mass) * 100,
+            }
+          : null,
+    };
+  }, [stats]);
+
+  return {
+    // Datos formateados para gráficos
+    weightChartData,
+    bodyCompositionData,
+    bmiChartData,
+    metabolicAgeData,
+    waterPercentageData,
+    caloriesData,
+
+    // Métricas y tendencias
+    latestMetrics,
+    trends,
+
+    // Helpers
+    hasEnoughData,
+    formatDate,
+    formatFullDate,
+  };
+};

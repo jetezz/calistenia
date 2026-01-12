@@ -497,6 +497,65 @@ export type Database = {
           },
         ]
       }
+      weight_stats: {
+        Row: {
+          bmi: number | null
+          body_fat_percentage: number | null
+          bone_mass: number | null
+          created_at: string
+          daily_calorie_intake: number | null
+          id: string
+          metabolic_age: number | null
+          muscle_mass: number | null
+          notes: string | null
+          recorded_at: string
+          total_body_water_percentage: number | null
+          updated_at: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          bmi?: number | null
+          body_fat_percentage?: number | null
+          bone_mass?: number | null
+          created_at?: string
+          daily_calorie_intake?: number | null
+          id?: string
+          metabolic_age?: number | null
+          muscle_mass?: number | null
+          notes?: string | null
+          recorded_at?: string
+          total_body_water_percentage?: number | null
+          updated_at?: string
+          user_id: string
+          weight: number
+        }
+        Update: {
+          bmi?: number | null
+          body_fat_percentage?: number | null
+          bone_mass?: number | null
+          created_at?: string
+          daily_calorie_intake?: number | null
+          id?: string
+          metabolic_age?: number | null
+          muscle_mass?: number | null
+          notes?: string | null
+          recorded_at?: string
+          total_body_water_percentage?: number | null
+          updated_at?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weight_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -508,11 +567,58 @@ export type Database = {
       }
       admin_delete_user: { Args: { p_user_id: string }; Returns: boolean }
       approve_user: { Args: { target_user_id: string }; Returns: undefined }
+      calculate_weight_change: {
+        Args: { p_end_date: string; p_start_date: string; p_user_id: string }
+        Returns: {
+          end_weight: number
+          percentage_change: number
+          start_weight: number
+          weight_change: number
+        }[]
+      }
       get_admin_dashboard_data: { Args: never; Returns: Json }
       get_admin_secondary_data: { Args: never; Returns: Json }
       get_available_spots: {
         Args: { slot_id: string; target_date: string }
         Returns: number
+      }
+      get_latest_weight_stat: {
+        Args: { p_user_id: string }
+        Returns: {
+          bmi: number
+          body_fat_percentage: number
+          bone_mass: number
+          created_at: string
+          daily_calorie_intake: number
+          id: string
+          metabolic_age: number
+          muscle_mass: number
+          notes: string
+          recorded_at: string
+          total_body_water_percentage: number
+          updated_at: string
+          user_id: string
+          weight: number
+        }[]
+      }
+      get_weight_stats_by_date_range: {
+        Args: { p_end_date: string; p_start_date: string; p_user_id: string }
+        Returns: {
+          bmi: number
+          body_fat_percentage: number
+          bone_mass: number
+          created_at: string
+          daily_calorie_intake: number
+          id: string
+          metabolic_age: number
+          muscle_mass: number
+          notes: string
+          recorded_at: string
+          total_body_water_percentage: number
+          updated_at: string
+          user_id: string
+          weight: number
+        }[]
       }
       is_admin:
         | { Args: never; Returns: boolean }
