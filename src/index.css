@@ -136,6 +136,10 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.safe-area-pb {
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+
 /* Mobile-specific optimizations */
 @supports (-webkit-touch-callout: none) {
   /* iOS specific styles */
@@ -403,4 +407,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+.mobile-nav-container {
+  /* Fixed height + safe area for bottom navigation */
+  height: calc(4rem + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
 }

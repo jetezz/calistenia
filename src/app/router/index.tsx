@@ -1,4 +1,5 @@
-import { createBrowserRouter } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RootLayout } from "@/components/layout/RootLayout";
 import { HomePage } from "@/screens/client/Home/HomePage";
 import { LandingPage } from "@/screens/LandingPage";
@@ -21,10 +22,17 @@ import { PendingApprovalPage } from "@/screens/client/PendingApproval/PendingApp
 import { RejectedPage } from "@/screens/client/Rejected/RejectedPage";
 import WeightStatsPage from "@/screens/client/WeightStatsPage";
 
+const LandingOrApp = () => {
+  if (Capacitor.isNativePlatform()) {
+    return <Navigate to="/app" replace />;
+  }
+  return <LandingPage />;
+};
+
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <LandingPage />,
+    element: <LandingOrApp />,
   },
   {
     path: "/login",

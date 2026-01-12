@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm run build:*)",
+      "Bash(npx cap:*)",
+      "Bash(gradlew.bat assembleDebug:*)",
+      "Bash(dir androidgradlew.bat)",
+      "Bash(.gradlew.bat assembleDebug:*)",
+      "Bash(cmd.exe /c gradlew.bat assembleDebug)",
+      "Bash(java:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(pnpm run build:apk:*)"
+    ]
+  }
+}

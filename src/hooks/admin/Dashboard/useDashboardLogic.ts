@@ -61,6 +61,9 @@ export const useDashboardLogic = () => {
       ).length,
       totalUsersCount: profiles.filter((p) => p.role === "user").length,
       activeTimeSlotsCount: activeSlots.length,
+      pendingUsersCount: profiles.filter(
+        (p) => (p.role === "user" || !p.role) && p.approval_status === "pending"
+      ).length,
     };
   }, [bookings, paymentRequests, profiles, activeSlots]);
 

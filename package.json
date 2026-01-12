@@ -9,9 +9,15 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "types": "supabase gen types typescript --project-id gnptmzkxmludhdwoulia > src/types/database.ts",
-    "clean-data": "tsx supabase/scripts/clean-data.ts"
+    "clean-data": "tsx supabase/scripts/clean-data.ts",
+    "build:web": "tsc -b && vite build",
+    "sync:android": "npx cap sync",
+    "build:apk": "pnpm run build:web && pnpm run sync:android && node build-android.mjs apk",
+    "build:aab": "pnpm run build:web && pnpm run sync:android && node build-android.mjs aab"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-checkbox": "^1.1.15",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -40,6 +46,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.0.0",
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",

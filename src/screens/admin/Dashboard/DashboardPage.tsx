@@ -60,6 +60,7 @@ export function DashboardPage() {
       iconBg: "bg-green-500/10",
       iconColor: "text-green-600",
       href: "/app/admin/users",
+      highlight: stats.pendingUsersCount > 0,
     },
     {
       title: "Horarios",
@@ -140,6 +141,22 @@ export function DashboardPage() {
       href: "/app/admin/bookings",
       badge: newBookingsCount,
       onClick: markAsSeen,
+    });
+  }
+
+  if (stats.pendingUsersCount > 0) {
+    alerts.push({
+      type: "pending-users",
+      title: `${stats.pendingUsersCount} usuario${
+        stats.pendingUsersCount > 1 ? "s" : ""
+      } pendiente${stats.pendingUsersCount > 1 ? "s" : ""}`,
+      description: "Requieren validación",
+      icon: Users,
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+      href: "/app/admin/users",
+      badge: stats.pendingUsersCount,
     });
   }
 

@@ -99,7 +99,7 @@ export const WeightChart = ({ data, recommendations }: WeightChartProps) => {
               fontWeight: "bold",
               marginBottom: "4px",
             }}
-            formatter={(value: number) => [`${value} kg`, "Peso"]}
+            formatter={(value: any) => [`${value} kg`, "Peso"]}
             labelFormatter={(label) => label} // formattedDate is used as key but we might want full date in tooltip if we passed it
           />
 

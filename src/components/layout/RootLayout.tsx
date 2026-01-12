@@ -12,7 +12,7 @@ export function RootLayout() {
     <AuthGuard>
       <div className="h-screen flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden safe-area-pb custom-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
