@@ -132,13 +132,6 @@ body {
   }
 }
 
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.safe-area-pb {
-  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
-}
 
 /* Mobile-specific optimizations */
 @supports (-webkit-touch-callout: none) {
