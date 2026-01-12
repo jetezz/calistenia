@@ -132,7 +132,6 @@ body {
   }
 }
 
-
 /* Mobile-specific optimizations */
 @supports (-webkit-touch-callout: none) {
   /* iOS specific styles */
@@ -400,6 +399,23 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Safe area utilities for mobile devices */
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-pl {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-pr {
+  padding-right: env(safe-area-inset-right);
 }
 
 .mobile-nav-container {

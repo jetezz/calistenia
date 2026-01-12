@@ -36,7 +36,7 @@ export function LoginPage() {
             Calistenia Emérita
           </h1>
           <p className="text-muted-foreground">
-            Tu centro de entrenamiento familiar 3
+            Tu centro de entrenamiento familiar
           </p>
         </div>
         <LoginForm />

@@ -3,10 +3,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Header } from "./Header";
 import { MobileNav } from "./MobileNav";
 import { AuthGuard } from "@/features/auth";
+import { useStatusBar } from "@/hooks";
 
 export function RootLayout() {
   const location = useLocation();
   const element = useOutlet();
+
+  // Configurar la barra de estado en dispositivos móviles
+  useStatusBar();
 
   return (
     <AuthGuard>

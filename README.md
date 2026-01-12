@@ -11,7 +11,12 @@
 [![Capacitor](https://img.shields.io/badge/Capacitor-8.0-119EFF?style=for-the-badge&logo=capacitor&logoColor=white)](https://capacitorjs.com)
 [![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
 
-[✨ Demo](https://calistenia-emerita.vercel.app) • [📱 Android APK](#-instalación-de-la-app-android) • [📚 Docs](./REFACTOR_ARCHITECTURE.md)
+### 🚀 Accesos Directos
+
+[![Landing Page](https://img.shields.io/badge/🏠_Landing_Page-Visitar-4CAF50?style=for-the-badge)](https://emerita.vercel.app/)
+[![Aplicación Web](https://img.shields.io/badge/📱_App_Web-Entrar-2196F3?style=for-the-badge)](https://emerita.vercel.app/app)
+[![Documentación](https://img.shields.io/badge/📚_Docs-Leer-FF9800?style=for-the-badge)](./REFACTOR_ARCHITECTURE.md)
+[![Android APK](https://img.shields.io/badge/📥_Android_APK-Descargar-00C853?style=for-the-badge)](#-instalación-de-la-app-android)
 
 </div>
 
@@ -65,6 +70,7 @@
         <li>🔔 Notificaciones de confirmación</li>
         <li>📊 Historial de reservas</li>
         <li>💰 Solicitud de paquetes de créditos</li>
+        <li>📈 Estadísticas de peso y composición corporal</li>
       </ul>
     </td>
     <td align="center" width="50%">
@@ -87,25 +93,25 @@
 
 ### Frontend
 
-| Tecnología | Versión | Propósito |
-|------------|---------|-----------|
-| **React** | 19.2 | UI library con las últimas características |
-| **TypeScript** | 5.9+ | Type safety y developer experience |
-| **Vite** | 7.2 (Rolldown) | Fast development y build ultrarrápido |
-| **Tailwind CSS** | 4.1 | Utility-first styling con CSS variables nativas |
-| **shadcn/ui** | latest | Componentes accesibles con Radix UI |
-| **Lucide React** | latest | Iconografía moderna |
-| **Framer Motion** | 12.25 | Animaciones fluidas |
-| **Zustand** | 5.0 | State management ligero y eficiente |
+| Tecnología        | Versión        | Propósito                                       |
+| ----------------- | -------------- | ----------------------------------------------- |
+| **React**         | 19.2           | UI library con las últimas características      |
+| **TypeScript**    | 5.9+           | Type safety y developer experience              |
+| **Vite**          | 7.2 (Rolldown) | Fast development y build ultrarrápido           |
+| **Tailwind CSS**  | 4.1            | Utility-first styling con CSS variables nativas |
+| **shadcn/ui**     | latest         | Componentes accesibles con Radix UI             |
+| **Lucide React**  | latest         | Iconografía moderna                             |
+| **Framer Motion** | 12.25          | Animaciones fluidas                             |
+| **Zustand**       | 5.0            | State management ligero y eficiente             |
 
 ### Backend & Infrastructure
 
-| Tecnología | Propósito |
-|------------|-----------|
-| **Supabase** | Backend as a Service (Auth, Database, RLS) |
-| **PostgreSQL** | Base de datos relacional |
-| **Vercel** | Hosting y deployment web |
-| **Capacitor** | Cross-platform mobile apps (Android/iOS) |
+| Tecnología     | Propósito                                  |
+| -------------- | ------------------------------------------ |
+| **Supabase**   | Backend as a Service (Auth, Database, RLS) |
+| **PostgreSQL** | Base de datos relacional                   |
+| **Vercel**     | Hosting y deployment web                   |
+| **Capacitor**  | Cross-platform mobile apps (Android/iOS)   |
 
 ### Tools & Package Manager
 
@@ -338,122 +344,243 @@ calistenia/
 
 ## 🗄️ Base de Datos
 
-### Esquema de Base de Datos
+El sistema utiliza **PostgreSQL** con **Supabase** como backend.
+
+### Esquema de Relaciones (ER Diagram)
 
 ```
-┌──────────────┐
-│   profiles   │──────┐
-└──────────────┘      │
-       │              │
-       │ (1)          │ (1)
-       │              │
-       │              │ (N)
-       ↓              ↓
-┌──────────────┐   ┌──────────────────┐
-│   bookings   │   │ payment_requests │
-└──────────────┘   └──────────────────┘
-       │
-       │ (N)
-       │
-       │ (1)
-       ↓
-┌──────────────┐
-│  time_slots  │
-└──────────────┘
+                  ┌──────────────────┐
+                  │   auth.users     │
+                  │   (Supabase)     │
+                  └────────┬─────────┘
+                           │
+                           │ (1:1)
+                           ↓
+        ┌──────────────────────────────────────┐
+        │           profiles                   │
+        │  • id (PK, FK → auth.users)         │
+        │  • email, full_name, phone          │
+        │  • role, credits, approval_status   │
+        │  • birth_date, gender, height       │
+        └──┬──────────────┬────────────────┬──┘
+           │              │                │
+           │ (1:N)        │ (1:N)          │ (1:N)
+           ↓              ↓                ↓
+  ┌────────────────┐  ┌──────────────┐  ┌──────────────────┐
+  │   bookings     │  │ weight_stats │  │ payment_requests │
+  │  • user_id (FK)│  │ • user_id (FK)│  │ • user_id (FK)   │
+  │  • created_by  │  │ • weight, bmi │  │ • credits_req    │
+  └────────┬───────┘  │ • body_fat_%  │  │ • status         │
+           │          │ • muscle_mass │  └────────┬─────────┘
+           │ (N:1)    └───────────────┘           │
+           ↓                                      │ (N:1)
+  ┌────────────────┐                    ┌─────────────────┐
+  │   time_slots   │                    │ payment_methods │
+  │  • day_of_week │                    │ • name, type    │
+  │  • start/end   │                    │ • contact_phone │
+  │  • capacity    │                    └─────────────────┘
+  │  • slot_type   │
+  │  • created_by  │
+  └────────────────┘
+                    ┌──────────────────┐
+  ┌──────────────┐  │ pricing_packages │
+  │ app_settings │  │ • name, credits  │
+  │ • key, value │  │ • price          │
+  └──────────────┘  └──────────────────┘
+
+  ┌──────────────────┐
+  │ branding_settings│
+  │ • business_name  │
+  │ • hero_title     │
+  │ • images, contact│
+  └──────────────────┘
 ```
 
-### Tablas Principales
+### 📋 Tablas Principales
+
+<details>
+<summary><strong>📊 Ver todas las tablas (10 tablas)</strong></summary>
 
 #### **`profiles`** - Usuarios del Sistema
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | UUID (PK) | ID del usuario (FK a `auth.users`) |
-| `email` | TEXT | Email del usuario |
-| `full_name` | TEXT | Nombre completo |
-| `phone` | TEXT | Teléfono de contacto |
-| `role` | TEXT | `admin` o `user` |
-| `credits` | INTEGER | Créditos disponibles para reservas |
-| `payment_status` | TEXT | Estado de pago (`paid`, `pending`, `unpaid`, `none`) |
-| `approval_status` | TEXT | Estado de aprobación del usuario |
-
-#### **`time_slots`** - Horarios de Clases
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | UUID (PK) | ID del slot |
-| `day_of_week` | INTEGER | Día de la semana (0=Domingo, 6=Sábado) |
-| `start_time` | TIME | Hora de inicio |
-| `end_time` | TIME | Hora de fin |
-| `capacity` | INTEGER | Capacidad máxima |
-| `is_active` | BOOLEAN | Si el slot está activo |
-| `slot_type` | TEXT | Tipo de slot (`recurring`, `one_time`) |
+| Campo                | Tipo        | Descripción                          |
+| -------------------- | ----------- | ------------------------------------ |
+| `id`                 | UUID (PK)   | FK → `auth.users.id`                 |
+| `email`              | TEXT        | Email del usuario                    |
+| `full_name`          | TEXT        | Nombre completo                      |
+| `phone`              | TEXT        | Teléfono                             |
+| `role`               | TEXT        | `admin` o `user`                     |
+| `credits`            | INTEGER     | Créditos disponibles (default: 0)    |
+| `payment_status`     | TEXT        | `paid`, `pending`, `unpaid`, `none`  |
+| `approval_status`    | TEXT        | Estado de aprobación                 |
+| `birth_date`         | DATE        | Fecha de nacimiento                  |
+| `gender`             | TEXT        | Género                               |
+| `height`             | NUMERIC     | Altura en cm                         |
+| `physical_objective` | TEXT        | Objetivo físico                      |
+| `created_at`         | TIMESTAMPTZ | Fecha de creación                    |
+| `updated_at`         | TIMESTAMPTZ | Última actualización                 |
 
 #### **`bookings`** - Reservas de Clases
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | UUID (PK) | ID de la reserva |
-| `user_id` | UUID (FK) | Usuario que reserva |
-| `time_slot_id` | UUID (FK) | Slot reservado |
-| `booking_date` | DATE | Fecha de la reserva |
-| `status` | TEXT | Estado (`confirmed`, `cancelled`, `completed`) |
-| `created_by` | UUID (FK) | Admin que creó la reserva (null si auto-reserva) |
+| Campo          | Tipo        | Descripción                       |
+| -------------- | ----------- | --------------------------------- |
+| `id`           | UUID (PK)   | ID de la reserva                  |
+| `user_id`      | UUID (FK)   | Usuario → `profiles.id`           |
+| `time_slot_id` | UUID (FK)   | Slot → `time_slots.id`            |
+| `booking_date` | DATE        | Fecha de la clase                 |
+| `status`       | TEXT        | `confirmed`, `cancelled`, `completed` |
+| `created_by`   | UUID (FK)   | Admin (null=auto-reserva)         |
+| `created_at`   | TIMESTAMPTZ | Fecha de creación                 |
+| `updated_at`   | TIMESTAMPTZ | Última actualización              |
+
+**Constraint**: `UNIQUE(user_id, time_slot_id, booking_date)`
+
+#### **`time_slots`** - Horarios de Clases
+
+| Campo           | Tipo        | Descripción                   |
+| --------------- | ----------- | ----------------------------- |
+| `id`            | UUID (PK)   | ID del slot                   |
+| `day_of_week`   | INTEGER     | 0=Domingo, 6=Sábado           |
+| `start_time`    | TIME        | Hora de inicio                |
+| `end_time`      | TIME        | Hora de fin                   |
+| `capacity`      | INTEGER     | Capacidad máxima (default: 4) |
+| `is_active`     | BOOLEAN     | Si está activo                |
+| `slot_type`     | TEXT        | `recurring` o `one_time`      |
+| `specific_date` | DATE        | Fecha (solo one_time)         |
+| `created_by`    | UUID (FK)   | Admin → `profiles.id`         |
+| `created_at`    | TIMESTAMPTZ | Fecha de creación             |
+| `updated_at`    | TIMESTAMPTZ | Última actualización          |
+
+#### **`weight_stats`** - Estadísticas de Composición Corporal
+
+| Campo                          | Tipo        | Descripción              |
+| ------------------------------ | ----------- | ------------------------ |
+| `id`                           | UUID (PK)   | ID de la estadística     |
+| `user_id`                      | UUID (FK)   | Usuario → `profiles.id`  |
+| `weight`                       | NUMERIC     | Peso en kg               |
+| `bmi`                          | NUMERIC     | Índice de masa corporal  |
+| `body_fat_percentage`          | NUMERIC     | % grasa corporal         |
+| `muscle_mass`                  | NUMERIC     | Masa muscular            |
+| `bone_mass`                    | NUMERIC     | Masa ósea                |
+| `total_body_water_percentage`  | NUMERIC     | % agua corporal          |
+| `metabolic_age`                | INTEGER     | Edad metabólica          |
+| `daily_calorie_intake`         | INTEGER     | Calorías diarias         |
+| `notes`                        | TEXT        | Notas                    |
+| `recorded_at`                  | TIMESTAMPTZ | Fecha de medición        |
+| `created_at`                   | TIMESTAMPTZ | Fecha de creación        |
+| `updated_at`                   | TIMESTAMPTZ | Última actualización     |
 
 #### **`payment_requests`** - Solicitudes de Créditos
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | UUID (PK) | ID de la solicitud |
-| `user_id` | UUID (FK) | Usuario solicitante |
-| `credits_requested` | INTEGER | Créditos solicitados |
-| `status` | TEXT | Estado (`pending`, `approved`, `rejected`) |
-| `admin_notes` | TEXT | Notas del admin |
-| `payment_method_id` | UUID (FK) | Método de pago usado |
+| Campo               | Tipo        | Descripción                    |
+| ------------------- | ----------- | ------------------------------ |
+| `id`                | UUID (PK)   | ID de la solicitud             |
+| `user_id`           | UUID (FK)   | Usuario → `profiles.id`        |
+| `credits_requested` | INTEGER     | Créditos solicitados           |
+| `status`            | TEXT        | `pending`, `approved`, `rejected` |
+| `payment_method_id` | UUID (FK)   | Método → `payment_methods.id`  |
+| `admin_notes`       | TEXT        | Notas del admin                |
+| `processed_by`      | UUID (FK)   | Admin → `profiles.id`          |
+| `processed_at`      | TIMESTAMPTZ | Fecha de procesamiento         |
+| `created_at`        | TIMESTAMPTZ | Fecha de creación              |
+| `updated_at`        | TIMESTAMPTZ | Última actualización           |
 
 #### **`pricing_packages`** - Paquetes de Precios
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | UUID (PK) | ID del paquete |
-| `package_name` | TEXT | Nombre del paquete (ej. "Pack Básico") |
-| `credits` | INTEGER | Número de clases |
-| `price` | NUMERIC | Precio en EUR |
-| `is_active` | BOOLEAN | Si está disponible |
-| `display_order` | INTEGER | Orden de visualización |
+| Campo           | Tipo        | Descripción                 |
+| --------------- | ----------- | --------------------------- |
+| `id`            | UUID (PK)   | ID del paquete              |
+| `name`          | TEXT        | Nombre descriptivo          |
+| `package_name`  | TEXT        | Nombre comercial            |
+| `credits`       | INTEGER     | Número de clases            |
+| `price`         | NUMERIC     | Precio en EUR               |
+| `is_active`     | BOOLEAN     | Si está disponible          |
+| `display_order` | INTEGER     | Orden de visualización      |
+| `created_at`    | TIMESTAMPTZ | Fecha de creación           |
+| `updated_at`    | TIMESTAMPTZ | Última actualización        |
 
 #### **`payment_methods`** - Métodos de Pago
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | UUID (PK) | ID del método |
-| `name` | TEXT | Nombre (ej. "Bizum") |
-| `type` | TEXT | Tipo (`bizum`, `paypal`, `bank_transfer`, `cash`) |
-| `contact_phone` | TEXT | Teléfono para Bizum |
-| `contact_email` | TEXT | Email para PayPal |
-| `bank_account` | TEXT | Cuenta bancaria |
-| `instructions` | TEXT | Instrucciones de pago |
+| Campo           | Tipo        | Descripción                              |
+| --------------- | ----------- | ---------------------------------------- |
+| `id`            | UUID (PK)   | ID del método                            |
+| `name`          | TEXT        | Nombre ("Bizum", "PayPal")               |
+| `type`          | TEXT        | `bizum`, `paypal`, `bank_transfer`, `cash` |
+| `contact_phone` | TEXT        | Teléfono (Bizum)                         |
+| `contact_email` | TEXT        | Email (PayPal)                           |
+| `bank_account`  | TEXT        | IBAN                                     |
+| `instructions`  | TEXT        | Instrucciones                            |
+| `is_active`     | BOOLEAN     | Si está disponible                       |
+| `display_order` | INTEGER     | Orden de visualización                   |
+| `created_at`    | TIMESTAMPTZ | Fecha de creación                        |
+| `updated_at`    | TIMESTAMPTZ | Última actualización                     |
 
 #### **`app_settings`** - Configuración Global
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | UUID (PK) | ID de la configuración |
-| `key` | TEXT | Clave de configuración |
-| `value` | JSON | Valor de configuración |
-| `description` | TEXT | Descripción |
+| Campo         | Tipo        | Descripción              |
+| ------------- | ----------- | ------------------------ |
+| `id`          | UUID (PK)   | ID de configuración      |
+| `key`         | TEXT        | Clave única              |
+| `value`       | JSON        | Valor flexible           |
+| `description` | TEXT        | Descripción              |
+| `updated_by`  | UUID (FK)   | Admin → `profiles.id`    |
+| `created_at`  | TIMESTAMPTZ | Fecha de creación        |
+| `updated_at`  | TIMESTAMPTZ | Última actualización     |
 
-### Row Level Security (RLS)
+#### **`branding_settings`** - Configuración de Landing Page
+
+| Campo (resumido)         | Tipo        | Descripción                       |
+| ------------------------ | ----------- | --------------------------------- |
+| `id`                     | UUID (PK)   | ID                                |
+| `business_name`          | TEXT        | Nombre del negocio                |
+| `hero_title/subtitle`    | TEXT        | Textos del hero                   |
+| `*_image_url`            | TEXT        | URLs de imágenes                  |
+| `phone/email/whatsapp`   | TEXT        | Datos de contacto                 |
+| `address/city/region`    | TEXT        | Ubicación                         |
+| `latitude/longitude`     | NUMERIC     | Coordenadas mapa                  |
+| `schedule_*`             | TEXT        | Horarios                          |
+| `testimonials`           | JSON        | Array de testimonios              |
+| `show_*`                 | BOOLEAN     | Flags de visibilidad              |
+
+**Nota**: Esta tabla tiene +30 campos para personalizar completamente la landing page.
+
+#### **`health_check`** - Health Check del Sistema
+
+| Campo        | Tipo        | Descripción   |
+| ------------ | ----------- | ------------- |
+| `id`         | UUID (PK)   | ID            |
+| `status`     | TEXT        | Estado        |
+| `created_at` | TIMESTAMPTZ | Fecha check   |
+
+</details>
+
+### 🔒 Row Level Security (RLS)
 
 Todas las tablas tienen políticas RLS habilitadas:
 
-- ✅ **Usuarios**: Solo pueden ver y editar su propio perfil
-- ✅ **Admins**: Acceso completo a todos los datos
-- ✅ **Reservas**: Los usuarios solo ven sus propias reservas
-- ✅ **Time Slots**: Visibles para todos (solo activos), editables por admins
-- ✅ **Payment Requests**: Los usuarios solo ven sus propias solicitudes
+- ✅ **Profiles**: Users ven solo su perfil, Admins ven todos
+- ✅ **Bookings**: Users ven/crean/cancelan propias, Admins gestionan todas
+- ✅ **Time Slots**: Users ven activos, Admins CRUD completo
+- ✅ **Weight Stats**: Users ven/crean propias, Admins ven todas
+- ✅ **Payment Requests**: Users ven/crean propias, Admins aprueban/rechazan
+- ✅ **Pricing & Payment Methods**: Users lectura, Admins CRUD
+- ✅ **App Settings & Branding**: Users lectura, Admins CRUD
 
-> 💡 **Ver esquema completo**: [src/types/database.ts](./src/types/database.ts)
+### 📊 Funciones PostgreSQL
+
+El sistema incluye **10+ funciones** para lógica de negocio:
+
+- `admin_create_user()` - Crear usuarios desde admin
+- `calculate_age()` - Calcular edad desde fecha nacimiento
+- `calculate_weight_change()` - Cambio de peso en rango fechas
+- `get_admin_dashboard_data()` - Datos agregados dashboard
+- `get_available_spots()` - Espacios disponibles por slot/fecha
+- `get_latest_weight_stat()` - Última estadística de peso
+- `is_admin()` - Verificar si usuario es admin
+- Y más...
+
+> 📚 **Esquema completo con diagrama ER**: [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)
+> 💡 **Types TypeScript**: [src/types/database.ts](./src/types/database.ts)
 
 ---
 
@@ -464,6 +591,7 @@ Todas las tablas tienen políticas RLS habilitadas:
 **Objetivo**: Identidad de usuario, roles y sistema de créditos virtuales.
 
 **Reglas de Negocio**:
+
 - Los usuarios empiezan con 0 créditos
 - Se requiere aprobación del admin para solicitudes de créditos
 - Los créditos se deducen automáticamente al confirmar reserva
@@ -474,6 +602,7 @@ Todas las tablas tienen políticas RLS habilitadas:
 **Objetivo**: Definir horarios semanales recurrentes con control de capacidad.
 
 **Reglas de Negocio**:
+
 - Cada slot tiene capacidad fija (default 4 personas)
 - Los slots son semanalmente recurrentes (ej. Lunes 18:00)
 - Solo slots activos son visibles para clientes
@@ -484,6 +613,7 @@ Todas las tablas tienen políticas RLS habilitadas:
 **Objetivo**: Gestionar reservas con prevención de conflictos y gestión de créditos.
 
 **Reglas de Negocio**:
+
 - Una reserva por usuario/slot/fecha
 - Créditos deducidos solo al confirmar (no al crear)
 - Usuarios pueden cancelar reservas propias (créditos reembolsados)
@@ -494,6 +624,7 @@ Todas las tablas tienen políticas RLS habilitadas:
 **Objetivo**: Workflow de aprobación de admin para compra de créditos.
 
 **Reglas de Negocio**:
+
 - Los usuarios solicitan paquetes de créditos predefinidos
 - Todas las solicitudes requieren aprobación del admin
 - Las solicitudes aprobadas agregan créditos automáticamente
@@ -513,21 +644,7 @@ Todas las tablas tienen políticas RLS habilitadas:
 - [x] Configuración de políticas de cancelación
 - [x] Build Android APK/AAB
 - [x] Deploy en Vercel
-
-### 🚧 En Desarrollo
-
-- [ ] Sistema de estadísticas de peso y composición corporal
-- [ ] Branding settings dinámicos desde admin
-- [ ] Push notifications móvil
-- [ ] Sistema de recordatorios de clases
-
-### 💡 Futuro
-
-- [ ] Integración con pasarelas de pago (Stripe/PayPal)
-- [ ] Sistema de puntuación y gamificación
-- [ ] Chat en tiempo real con el entrenador
-- [ ] Video-tutoriales de ejercicios
-- [ ] App iOS (Capacitor)
+- [x] Sistema de estadísticas de peso y composición corporal
 
 ---
 
@@ -571,15 +688,13 @@ Este proyecto es privado y no está bajo una licencia open source. Todos los der
 
 Para consultas sobre el proyecto, contacta a:
 
-- **Email**: [tu-email@ejemplo.com]
-- **LinkedIn**: [Tu Perfil]
-- **GitHub**: [Tu Usuario]
+- **LinkedIn**: [\[Tu Perfil\]](https://www.linkedin.com/in/jesus-cuadra-tellez-0931a6189/)
 
 ---
 
 <div align="center">
 
-**Hecho con ❤️ por [Tu Nombre]**
+**Hecho por Jetezz**
 
 ⭐ Si te gusta este proyecto, dale una estrella en GitHub
 

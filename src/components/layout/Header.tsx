@@ -54,7 +54,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border safe-area-pt">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between min-h-[64px]">
         <Link
           to={isAdmin ? "/app/admin" : "/app"}

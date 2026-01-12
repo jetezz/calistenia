@@ -61,7 +61,7 @@ export function StandardPage({
   return (
     <div
       className={cn(
-     "container mx-auto px-4 pt-6 pb-32 md:pb-40 space-y-6",
+        "container mx-auto px-4 pt-6 pb-20 md:pb-40 space-y-6",
         maxWidth,
         className
       )}
@@ -77,11 +77,7 @@ export function StandardPage({
           bottomActions={bottomActions}
         />
       )}
-      {isLoading ? (
-        <LoadingState message={loadingMessage} />
-      ) : (
-        children
-      )}
+      {isLoading ? <LoadingState message={loadingMessage} /> : children}
     </div>
   );
 }

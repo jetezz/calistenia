@@ -13,11 +13,13 @@
     "build:web": "tsc -b && vite build",
     "sync:android": "npx cap sync",
     "build:apk": "pnpm run build:web && pnpm run sync:android && node build-android.mjs apk",
-    "build:aab": "pnpm run build:web && pnpm run sync:android && node build-android.mjs aab"
+    "build:aab": "pnpm run build:web && pnpm run sync:android && node build-android.mjs aab",
+    "backup": "npx supabase db dump --data-only -f supabase/dump.sql"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
     "@capacitor/core": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-checkbox": "^1.1.15",
     "@radix-ui/react-dialog": "^1.1.15",
