@@ -119,6 +119,7 @@ export function useProfile() {
     profile, // Devolvemos 'profile' para mantener contrato con componentes consumidores
     isLoading,
     isRefreshing: store.isRefreshing,
+    viewMode: store.viewMode,
     isAdmin: profile?.role === "admin",
     isApproved: profile?.approval_status === "approved",
     isPending: profile?.approval_status === "pending",

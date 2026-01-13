@@ -28,7 +28,7 @@ import { useHomeLogic } from "@/hooks/client/Home/useHomeLogic";
 import { useState } from "react";
 
 export function HomePage() {
-  const { profile, isAdmin, isLoading: authLoading } = useProfile();
+  const { profile, isAdmin, isLoading: authLoading, viewMode } = useProfile();
   const {
     upcomingBookings,
     recentPaymentRequests,
@@ -39,7 +39,7 @@ export function HomePage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAllRequests, setShowAllRequests] = useState(false);
 
-  if (isAdmin && !authLoading) {
+  if (isAdmin && !authLoading && viewMode !== "client") {
     return <Navigate to={getFullPath(ROUTES.ADMIN.ROOT)} replace />;
   }
 

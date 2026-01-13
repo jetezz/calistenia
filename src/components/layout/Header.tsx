@@ -1,10 +1,11 @@
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { LogOut, LayoutDashboard, Store } from "lucide-react";
 import { useAuth, useProfile } from "@/features/auth";
 import { NotificationBell } from "@/components/admin";
 import { useNotifications } from "@/hooks";
 import { useBookingStore } from "@/stores/bookingStore";
+import { useProfileStore } from "@/stores/profileStore"; // Added import
 import { useBrandingSettings } from "@/hooks/admin/Branding/useBrandingSettings";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,7 +18,11 @@ export function Header() {
   const { signOut } = useAuth();
   const { profile, isAdmin } = useProfile();
   const navigate = useNavigate();
+  const location = useLocation();
   const { settings } = useBrandingSettings();
+  const { setViewMode } = useProfileStore(); // Get action
+
+  const isOnAdminRoute = location.pathname.startsWith("/app/admin");
 
   const { items: bookings, fetchAll } = useBookingStore();
 
@@ -55,6 +60,18 @@ export function Header() {
       .slice(0, 2);
   };
 
+  const handleViewSwitch = () => {
+    if (isOnAdminRoute) {
+      // Switch to Client View
+      setViewMode("client");
+      navigate(ROUTES.APP.ROOT);
+    } else {
+      // Switch to Admin View
+      setViewMode("default");
+      navigate(getFullPath(ROUTES.ADMIN.ROOT));
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border safe-area-pt">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between min-h-[64px]">
@@ -85,6 +102,24 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-3">
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleViewSwitch}
+              className="text-muted-foreground hover:text-foreground"
+              title={isOnAdminRoute ? "Ir a Vista Cliente" : "Ir a Panel Admin"}
+            >
+              {isOnAdminRoute ? (
+                <Store className="size-4 sm:mr-2" />
+              ) : (
+                <LayoutDashboard className="size-4 sm:mr-2" />
+              )}
+              <span className="hidden sm:inline">
+                {isOnAdminRoute ? "Vista Cliente" : "Vista Admin"}
+              </span>
+            </Button>
+          )}
           <NotificationBell isAdmin={isAdmin} onMarkAsSeen={markAsSeen} />
           <div className="flex items-center gap-2">
             <Avatar className="size-9">

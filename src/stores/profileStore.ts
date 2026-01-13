@@ -12,6 +12,9 @@ interface ProfileStore
   // Estado para recargas en segundo plano
   isRefreshing: boolean;
   setRefreshing: (isRefreshing: boolean) => void;
+  // Estado para controlar la vista de administrador (default) o cliente
+  viewMode: "default" | "client";
+  setViewMode: (mode: "default" | "client") => void;
 
   // Métodos extra específicos de usuarios
   updateCredits: (id: string, credits: number) => Promise<void>;
@@ -41,6 +44,9 @@ export const useProfileStore = create<ProfileStore>((set, get, store) => {
     // Estado y método para recargas en segundo plano
     isRefreshing: false,
     setRefreshing: (isRefreshing: boolean) => set({ isRefreshing }),
+
+    viewMode: "default",
+    setViewMode: (mode) => set({ viewMode: mode }),
 
     updateCredits: async (id: string, credits: number) => {
       // Optimistic Update
