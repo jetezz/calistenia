@@ -34,7 +34,7 @@ export function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Calistenia Emérita DEBUG 7
+            Calistenia Emérita DEBUG 12
           </h1>
           <p className="text-muted-foreground">
             Tu centro de entrenamiento familiar

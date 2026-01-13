@@ -25,5 +25,18 @@ dist-ssr
 
 .vercel
 
-# Mobile
-android/
+# Mobile - Android
+android/app/build/
+android/.gradle/
+android/local.properties
+android/*/build/
+android/app/src/main/assets/public/
+android/*.iml
+android/.idea/
+android/.navigation/
+android/captures/
+
+# Android - Resource images (reduce git size)
+# Uncomment the following lines if you have a way to regenerate these assets (e.g. capacitor-assets)
+# android/app/src/main/res/drawable-*/
+# android/app/src/main/res/mipmap-*/
