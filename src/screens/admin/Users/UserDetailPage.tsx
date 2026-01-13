@@ -214,9 +214,19 @@ export function UserDetailPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="text-xl font-medium">
-                      {user.full_name || "Sin nombre"}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-medium">
+                        {user.full_name || "Sin nombre"}
+                      </h3>
+                      {user.role === "admin" && (
+                        <Badge
+                          variant="outline"
+                          className="border-primary text-primary bg-primary/5"
+                        >
+                          Administrador
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-muted-foreground">{user.email}</p>
                     {user.phone && (
                       <p className="text-sm text-muted-foreground">

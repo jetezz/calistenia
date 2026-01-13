@@ -32,9 +32,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // 2. Explicit check - reliable for initial state
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted && !isLoading) {
-        // Only update if we are still "loading" or if session differs?
-        // Actually, just syncing state is fine.
+      if (mounted) {
+        // Sync state
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
@@ -43,10 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // 3. Safety timeout - prevents infinite loading state if Supabase hangs
     const timeout = setTimeout(() => {
-      if (mounted && isLoading) {
-        console.warn(
-          "Auth initialization timed out, forcing load state completion"
-        );
+      if (mounted) {
         setIsLoading(false);
       }
     }, 1000); // 1s max wait time
@@ -172,27 +168,60 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async () => {
     try {
-      // Limpiar el perfil del store antes de cerrar sesión
+      console.log("[AUTH] Starting signOut process...");
+
+      // 1. Limpiar el estado local inmediatamente para evitar bucles
+      setUser(null);
+      setSession(null);
+      setIsLoading(false);
+
+      // 2. Limpiar el store del perfil
       useProfileStore.getState().setCurrentItem(null);
 
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        toast.error("Error al cerrar sesión");
-        console.error("Error signing out:", error);
-      } else {
-        // No mostrar toast de éxito si es un cierre automático por usuario eliminado
-        // El mensaje se mostrará solo si es un cierre manual
-        if (!error) {
-          toast.success("Sesión cerrada correctamente");
+      // 3. Limpiar storage manualmente por si acaso
+      // Esto es una medida de seguridad extra para evitar bucles si Supabase falla
+      const clearStorage = () => {
+        try {
+          // Limpiar localStorage
+          Object.keys(localStorage).forEach((key) => {
+            if (
+              key.startsWith("sb-") ||
+              key.includes("supabase") ||
+              key.includes("auth-token")
+            ) {
+              localStorage.removeItem(key);
+            }
+          });
+          // Limpiar sessionStorage
+          Object.keys(sessionStorage).forEach((key) => {
+            if (
+              key.startsWith("sb-") ||
+              key.includes("supabase") ||
+              key.includes("auth-token")
+            ) {
+              sessionStorage.removeItem(key);
+            }
+          });
+        } catch (e) {
+          console.error("[AUTH] Error clearing storage:", e);
         }
+      };
+
+      clearStorage();
+
+      // 4. Llamar a Supabase signOut (puede fallar si no hay red, pero ya limpiamos lo local)
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.warn("[AUTH] Supabase signOut error (ignoring):", error);
+      } else {
+        console.log("[AUTH] Supabase signOut successful");
       }
 
-      // Forzar redirección al login después de cerrar sesión
+      // 5. Redirigir siempre
       window.location.href = "/login";
     } catch (error) {
-      toast.error("Error al cerrar sesión");
-      console.error("SignOut error:", error);
-      // Incluso si hay error, limpiar e ir al login
+      console.error("[AUTH] Unexpected error during signOut:", error);
       window.location.href = "/login";
     }
   };

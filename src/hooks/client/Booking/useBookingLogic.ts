@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTimeSlotStore } from "@/stores/timeSlotStore";
 import { useBookingStore } from "@/stores/bookingStore";
-import { useProfileStore } from "@/stores/profileStore";
+import { useProfile } from "@/features/auth";
 import { useToast } from "@/hooks/useToast";
 import type { Database } from "@/types/database";
 
@@ -26,7 +26,7 @@ export const useBookingLogic = (userId?: string) => {
     fetchAll: fetchAllBookings,
   } = useBookingStore();
 
-  const { items: profiles, fetchAll: fetchProfiles } = useProfileStore();
+  const { profile: userProfile, refreshProfile } = useProfile();
 
   // Local state
   const [bookingAvailability, setBookingAvailability] = useState<
@@ -51,17 +51,12 @@ export const useBookingLogic = (userId?: string) => {
     [userId, allBookings]
   );
 
-  // Get user profile
-  const userProfile = userId
-    ? profiles.find((p) => p.id === userId)
-    : undefined;
-
   // Initial fetch
   useEffect(() => {
-    fetchActiveTimeSlots();
-    fetchAllBookings();
-    fetchProfiles();
-  }, [fetchActiveTimeSlots, fetchAllBookings, fetchProfiles]);
+    fetchActiveTimeSlots(true);
+    fetchAllBookings(true);
+    refreshProfile();
+  }, [fetchActiveTimeSlots, fetchAllBookings, refreshProfile]);
 
   // Fetch availability for a specific time slot and date
   const fetchAvailability = useCallback(
@@ -166,8 +161,8 @@ export const useBookingLogic = (userId?: string) => {
         const booking = await createBookingInStore(newBooking);
 
         // Refresh data
-        await fetchAllBookings();
-        await fetchProfiles();
+        await fetchAllBookings(true);
+        await refreshProfile();
         await fetchAvailability(timeSlotId, bookingDate);
 
         dismiss(loadingToast);
@@ -189,7 +184,7 @@ export const useBookingLogic = (userId?: string) => {
       fetchAvailability,
       createBookingInStore,
       fetchAllBookings,
-      fetchProfiles,
+      refreshProfile,
       showError,
       showLoading,
       success,
@@ -201,8 +196,8 @@ export const useBookingLogic = (userId?: string) => {
   const refresh = useCallback(() => {
     fetchActiveTimeSlots(true);
     fetchAllBookings(true);
-    fetchProfiles(true);
-  }, [fetchActiveTimeSlots, fetchAllBookings, fetchProfiles]);
+    refreshProfile();
+  }, [fetchActiveTimeSlots, fetchAllBookings, refreshProfile]);
 
   return {
     // Data

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "./useAuth";
 import { useProfileStore } from "@/stores/profileStore";
@@ -11,12 +11,14 @@ export function useProfile() {
   // setCurrentProfile -> setCurrentItem
   // loading -> isLoading (el store tiene isLoading)
   // setLoading -> setLoading (ahora existe en BaseStore)
-  const store = useProfileStore();
+  const profile = useProfileStore((state) => state.currentItem);
+  const isLoading = useProfileStore((state) => state.isLoading);
+  const isRefreshing = useProfileStore((state) => state.isRefreshing);
+  const viewMode = useProfileStore((state) => state.viewMode);
 
-  const profile = store.currentItem;
-  const isLoading = store.isLoading;
-  const setCurrentProfile = store.setCurrentItem;
-  const setIsLoading = store.setLoading;
+  const setCurrentProfile = useProfileStore((state) => state.setCurrentItem);
+  const setIsLoading = useProfileStore((state) => state.setLoading);
+  const setRefreshing = useProfileStore((state) => state.setRefreshing);
 
   useEffect(() => {
     if (!user) {
@@ -80,10 +82,10 @@ export function useProfile() {
     };
   }, [user, setCurrentProfile, setIsLoading, signOut]);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (!user) return;
 
-    store.setRefreshing(true);
+    setRefreshing(true);
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -100,7 +102,7 @@ export function useProfile() {
             "Profile not found during refresh. User may have been deleted. Signing out..."
           );
           setCurrentProfile(null);
-          store.setRefreshing(false);
+          setRefreshing(false);
           // Cerrar sesión y limpiar todo
           await signOut();
           return;
@@ -111,15 +113,15 @@ export function useProfile() {
     } catch (error) {
       console.error("Profile refresh failed:", error);
     } finally {
-      store.setRefreshing(false);
+      setRefreshing(false);
     }
-  };
+  }, [user, setCurrentProfile, setRefreshing, signOut]);
 
   return {
     profile, // Devolvemos 'profile' para mantener contrato con componentes consumidores
     isLoading,
-    isRefreshing: store.isRefreshing,
-    viewMode: store.viewMode,
+    isRefreshing,
+    viewMode,
     isAdmin: profile?.role === "admin",
     isApproved: profile?.approval_status === "approved",
     isPending: profile?.approval_status === "pending",

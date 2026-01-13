@@ -174,6 +174,14 @@ export function UserCard({
         </div>
 
         <div className="flex items-center gap-2 mt-3">
+          {user.role === "admin" && (
+            <Badge
+              variant="outline"
+              className="border-primary text-primary bg-primary/5"
+            >
+              Administrador
+            </Badge>
+          )}
           {getApprovalStatusBadge(user.approval_status)}
           {getPaymentStatusBadge(user.payment_status)}
         </div>

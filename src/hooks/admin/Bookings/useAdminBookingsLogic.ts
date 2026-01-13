@@ -20,9 +20,7 @@ export const useAdminBookingsLogic = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar esta reserva?")) {
-      await deleteBooking(id);
-    }
+    await deleteBooking(id);
   };
 
   return {

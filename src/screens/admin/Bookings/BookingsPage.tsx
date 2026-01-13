@@ -1,13 +1,52 @@
-import { Calendar, Clock, User, Mail } from "lucide-react";
+import { useState } from "react";
+import {
+  Calendar,
+  Clock,
+  User,
+  Mail,
+  Trash2,
+  AlertTriangle,
+  CheckCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StandardPage } from "@/components/common";
 import { useAdminBookingsLogic } from "@/hooks/admin/Bookings/useAdminBookingsLogic";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import type { Tables } from "@/types/database";
+
+type BookingWithDetails = Tables<"bookings"> & {
+  time_slot: Tables<"time_slots"> | null;
+  user: { id: string; full_name: string | null; email: string } | null;
+};
 
 export function BookingsPage() {
-  const { bookings, isLoading, handleUpdateStatus, refresh } =
+  const { bookings, isLoading, handleUpdateStatus, handleDelete, refresh } =
     useAdminBookingsLogic();
+
+  const [bookingToDelete, setBookingToDelete] =
+    useState<BookingWithDetails | null>(null);
+
+  const confirmDelete = async () => {
+    if (bookingToDelete) {
+      await handleDelete(bookingToDelete.id);
+      setBookingToDelete(null);
+    }
+  };
 
   // Helper local para renderizado
   const formatDate = (dateString: string) => {
@@ -30,13 +69,38 @@ export function BookingsPage() {
   const getBookingStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed":
-        return <Badge className="bg-blue-500 text-white">Confirmada</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="border-green-500 text-green-700 bg-green-50 shrink-0"
+          >
+            Confirmada
+          </Badge>
+        );
       case "cancelled":
-        return <Badge variant="destructive">Cancelada</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="border-red-500 text-red-700 bg-red-50 shrink-0"
+          >
+            Cancelada
+          </Badge>
+        );
       case "completed":
-        return <Badge className="bg-green-500 text-white">Completada</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="border-blue-500 text-blue-700 bg-blue-50 shrink-0"
+          >
+            Completada
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return (
+          <Badge variant="secondary" className="shrink-0">
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -44,6 +108,8 @@ export function BookingsPage() {
   const convertDayOfWeekToDisplayIndex = (dbDayOfWeek: number) => {
     return dbDayOfWeek === 0 ? 6 : dbDayOfWeek - 1;
   };
+
+  const todayStr = new Date().toLocaleDateString("en-CA");
 
   return (
     <StandardPage
@@ -68,114 +134,313 @@ export function BookingsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 px-1 mb-2">
-            <Calendar className="size-4 text-muted-foreground" />
-            <h2 className="font-semibold text-base">Todas las Reservas</h2>
-            <Badge variant="outline" className="text-xs">
-              {bookings.length}
-            </Badge>
-          </div>
-
-          <div className="space-y-2">
-            {bookings.map((booking) => (
-              <div key={booking.id} className="p-3 rounded-lg border bg-card">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <User className="size-3 text-muted-foreground shrink-0" />
-                        <span className="font-semibold text-sm truncate">
-                          {booking.user?.full_name || "Sin nombre"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Mail className="size-3 shrink-0" />
-                        <span className="truncate">{booking.user?.email}</span>
-                      </div>
-                    </div>
-                    {getBookingStatusBadge(booking.status)}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground">Fecha</div>
-                      <div className="font-medium">
-                        {formatDate(booking.booking_date)}
-                      </div>
-                      <div className="text-muted-foreground text-[10px]">
-                        {booking.time_slot &&
-                          DAYS_OF_WEEK[
-                            convertDayOfWeekToDisplayIndex(
-                              booking.time_slot.day_of_week
-                            )
-                          ]}
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground">Horario</div>
-                      <div className="flex items-center gap-1 font-medium">
-                        <Clock className="size-3" />
-                        <span>
-                          {booking.time_slot
-                            ? `${formatTime(
-                                booking.time_slot.start_time
-                              )} - ${formatTime(booking.time_slot.end_time)}`
-                            : "Horario eliminado"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 pt-2 border-t">
-                    {booking.status === "confirmed" && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            handleUpdateStatus(booking.id, "completed")
-                          }
-                          className="flex-1 h-8 text-xs"
-                        >
-                          Completar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            handleUpdateStatus(booking.id, "cancelled")
-                          }
-                          className="flex-1 h-8 text-xs"
-                        >
-                          Cancelar
-                        </Button>
-                      </>
-                    )}
-                    {booking.status === "cancelled" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          handleUpdateStatus(booking.id, "confirmed")
+        <Accordion
+          type="multiple"
+          defaultValue={["today"]}
+          className="space-y-4"
+        >
+          {/* Reservas para hoy */}
+          <AccordionItem value="today" className="border-none">
+            <AccordionTrigger className="hover:no-underline py-2 px-1">
+              <div className="flex items-center gap-2">
+                <Calendar className="size-4 text-primary" />
+                <h2 className="font-semibold text-lg">Reservas para hoy</h2>
+                <Badge variant="secondary" className="text-xs">
+                  {bookings.filter((b) => b.booking_date === todayStr).length}
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-2">
+              <div className="space-y-3">
+                {bookings.filter((b) => b.booking_date === todayStr).length ===
+                0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-lg">
+                    No hay reservas para hoy
+                  </p>
+                ) : (
+                  bookings
+                    .filter((b) => b.booking_date === todayStr)
+                    .map((booking) => (
+                      <BookingCard
+                        key={booking.id}
+                        booking={booking}
+                        formatDate={formatDate}
+                        formatTime={formatTime}
+                        getBookingStatusBadge={getBookingStatusBadge}
+                        DAYS_OF_WEEK={DAYS_OF_WEEK}
+                        convertDayOfWeekToDisplayIndex={
+                          convertDayOfWeekToDisplayIndex
                         }
-                        className="w-full h-8 text-xs"
-                      >
-                        Restaurar
-                      </Button>
-                    )}
-                    {booking.status === "completed" && (
-                      <div className="w-full text-center text-xs text-muted-foreground py-1">
-                        Finalizada
-                      </div>
-                    )}
-                  </div>
+                        handleUpdateStatus={handleUpdateStatus}
+                        onDeleteClick={() => setBookingToDelete(booking)}
+                      />
+                    ))
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Reservas completadas */}
+          <AccordionItem value="completed" className="border-none">
+            <AccordionTrigger className="hover:no-underline py-2 px-1">
+              <div className="flex items-center gap-2">
+                <div className="bg-green-500 size-2 rounded-full" />
+                <h2 className="font-semibold text-lg text-muted-foreground">
+                  Reservas completadas
+                </h2>
+                <Badge
+                  variant="outline"
+                  className="text-xs text-muted-foreground"
+                >
+                  {bookings.filter((b) => b.status === "completed").length}
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-2">
+              <div className="space-y-3">
+                {bookings.filter((b) => b.status === "completed").length ===
+                0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-lg">
+                    No hay reservas completadas
+                  </p>
+                ) : (
+                  bookings
+                    .filter((b) => b.status === "completed")
+                    .map((booking) => (
+                      <BookingCard
+                        key={booking.id}
+                        booking={booking}
+                        formatDate={formatDate}
+                        formatTime={formatTime}
+                        getBookingStatusBadge={getBookingStatusBadge}
+                        DAYS_OF_WEEK={DAYS_OF_WEEK}
+                        convertDayOfWeekToDisplayIndex={
+                          convertDayOfWeekToDisplayIndex
+                        }
+                        handleUpdateStatus={handleUpdateStatus}
+                        onDeleteClick={() => setBookingToDelete(booking)}
+                      />
+                    ))
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Otras Reservas */}
+          {bookings.filter(
+            (b) => b.booking_date !== todayStr && b.status !== "completed"
+          ).length > 0 && (
+            <AccordionItem value="other" className="border-none">
+              <AccordionTrigger className="hover:no-underline py-2 px-1">
+                <div className="flex items-center gap-2">
+                  <Clock className="size-4 text-muted-foreground" />
+                  <h2 className="font-semibold text-lg text-muted-foreground">
+                    Otras reservas
+                  </h2>
+                  <Badge variant="outline" className="text-xs">
+                    {
+                      bookings.filter(
+                        (b) =>
+                          b.booking_date !== todayStr &&
+                          b.status !== "completed"
+                      ).length
+                    }
+                  </Badge>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="space-y-3">
+                  {bookings
+                    .filter(
+                      (b) =>
+                        b.booking_date !== todayStr && b.status !== "completed"
+                    )
+                    .map((booking) => (
+                      <BookingCard
+                        key={booking.id}
+                        booking={booking}
+                        formatDate={formatDate}
+                        formatTime={formatTime}
+                        getBookingStatusBadge={getBookingStatusBadge}
+                        DAYS_OF_WEEK={DAYS_OF_WEEK}
+                        convertDayOfWeekToDisplayIndex={
+                          convertDayOfWeekToDisplayIndex
+                        }
+                        handleUpdateStatus={handleUpdateStatus}
+                        onDeleteClick={() => setBookingToDelete(booking)}
+                      />
+                    ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+        </Accordion>
+      )}
+
+      <Dialog
+        open={!!bookingToDelete}
+        onOpenChange={() => setBookingToDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="size-5 text-destructive" />
+              ¿Eliminar reserva?
+            </DialogTitle>
+            <DialogDescription>
+              Estás a punto de eliminar la reserva de{" "}
+              <strong>{bookingToDelete?.user?.full_name}</strong> para el día{" "}
+              <strong>
+                {bookingToDelete && formatDate(bookingToDelete.booking_date)}
+              </strong>
+              . Esta acción no se puede deshacer y devolverá el crédito al
+              usuario si la reserva estaba confirmada.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setBookingToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Eliminar Permanentemente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </StandardPage>
+  );
+}
+
+function BookingCard({
+  booking,
+  formatDate,
+  formatTime,
+  getBookingStatusBadge,
+  DAYS_OF_WEEK,
+  convertDayOfWeekToDisplayIndex,
+  handleUpdateStatus,
+  onDeleteClick,
+}: {
+  booking: BookingWithDetails;
+  formatDate: (d: string) => string;
+  formatTime: (t: string) => string;
+  getBookingStatusBadge: (s: string) => React.ReactNode;
+  DAYS_OF_WEEK: string[];
+  convertDayOfWeekToDisplayIndex: (d: number) => number;
+  handleUpdateStatus: (id: string, s: string) => void;
+  onDeleteClick: () => void;
+}) {
+  return (
+    <Card className="hover:shadow-md transition-shadow overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <User className="size-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <span className="font-semibold text-sm block truncate">
+                  {booking.user?.full_name || "Sin nombre"}
+                </span>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Mail className="size-3 shrink-0" />
+                  <span className="truncate">{booking.user?.email}</span>
                 </div>
               </div>
-            ))}
+            </div>
+          </div>
+          <div className="shrink-0">
+            {getBookingStatusBadge(booking.status)}
           </div>
         </div>
-      )}
-    </StandardPage>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="p-2.5 rounded-lg bg-muted/50">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+              <Calendar className="size-3" />
+              Fecha
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold">
+                {formatDate(booking.booking_date)}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium">
+                {booking.time_slot &&
+                  DAYS_OF_WEEK[
+                    convertDayOfWeekToDisplayIndex(
+                      booking.time_slot.day_of_week
+                    )
+                  ]}
+              </span>
+            </div>
+          </div>
+          <div className="p-2.5 rounded-lg bg-muted/50">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+              <Clock className="size-3" />
+              Horario
+            </div>
+            <div className="text-sm font-semibold">
+              {booking.time_slot
+                ? `${formatTime(booking.time_slot.start_time)} - ${formatTime(
+                    booking.time_slot.end_time
+                  )}`
+                : "Eliminado"}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-3 border-t">
+          <div className="flex-1 flex gap-2">
+            {booking.status === "confirmed" && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-8 text-xs font-semibold border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+                  onClick={() => handleUpdateStatus(booking.id, "completed")}
+                >
+                  Completar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-8 text-xs font-semibold border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => handleUpdateStatus(booking.id, "cancelled")}
+                >
+                  Cancelar
+                </Button>
+              </>
+            )}
+            {booking.status === "cancelled" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleUpdateStatus(booking.id, "confirmed")}
+                className="flex-1 h-8 text-xs font-medium"
+              >
+                Restaurar reserva
+              </Button>
+            )}
+            {booking.status === "completed" && (
+              <div className="flex-1 text-center text-[10px] text-muted-foreground py-1.5 font-bold uppercase tracking-widest bg-muted/50 rounded-md flex items-center justify-center gap-1.5 transition-colors">
+                <CheckCircle className="size-3" />
+                Reserva Finalizada
+              </div>
+            )}
+          </div>
+
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onDeleteClick}
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-full shrink-0"
+            title="Eliminar reserva"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -94,7 +94,6 @@ export function AddUserToSlotDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {profiles
-                    .filter((p) => p.role === "user")
                     .sort((a, b) =>
                       (a.full_name || "").localeCompare(b.full_name || "")
                     )

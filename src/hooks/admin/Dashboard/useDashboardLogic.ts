@@ -59,11 +59,10 @@ export const useDashboardLogic = () => {
       pendingPaymentRequestsCount: paymentRequests.filter(
         (p) => p.status === "pending"
       ).length,
-      totalUsersCount: profiles.filter((p) => p.role === "user").length,
+      totalUsersCount: profiles.length,
       activeTimeSlotsCount: activeSlots.length,
-      pendingUsersCount: profiles.filter(
-        (p) => (p.role === "user" || !p.role) && p.approval_status === "pending"
-      ).length,
+      pendingUsersCount: profiles.filter((p) => p.approval_status === "pending")
+        .length,
     };
   }, [bookings, paymentRequests, profiles, activeSlots]);
 

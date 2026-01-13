@@ -14,6 +14,7 @@ export const useAdminUsersLogic = () => {
     updateApprovalStatus,
     approveUser,
     rejectUser,
+    resetAllCredits,
   } = useProfileStore();
 
   useEffect(() => {
@@ -23,7 +24,8 @@ export const useAdminUsersLogic = () => {
   // Filtrar usuarios normales (role = 'user') usualmente, pero si es admin page listamos todos
   // o solo clientes? Normalmente los admins gestionan clientes.
   // Asumiremos que listamos todos y filtramos en UI o aquí.
-  const users = profiles.filter((p) => !p.role || p.role === "user");
+  // Listamos todos los perfiles para que el admin pueda verse y auto-gestionarse
+  const users = profiles;
 
   // Filtrar usuarios por estado de aprobación
   const pendingUsers = users.filter((u) => u.approval_status === "pending");
@@ -45,5 +47,6 @@ export const useAdminUsersLogic = () => {
     updateApprovalStatus,
     approveUser,
     rejectUser,
+    resetAllCredits,
   };
 };

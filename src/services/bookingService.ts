@@ -89,6 +89,22 @@ const update = async (
 };
 
 const _delete = async (id: string): Promise<void> => {
+  // Check the booking status first to see if we should refund credits
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("status, user_id")
+    .eq("id", id)
+    .single();
+
+  if (booking && booking.status === "confirmed") {
+    // Updating to 'cancelled' triggers the DB 'handle_booking_cancellation_refund' function
+    // which automatically refunds the credit to the user profile.
+    await supabase
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("id", id);
+  }
+
   const { error } = await supabase.from("bookings").delete().eq("id", id);
 
   if (error) throw error;

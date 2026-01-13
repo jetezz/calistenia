@@ -1,10 +1,6 @@
-import { useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LogOut, LayoutDashboard, Store } from "lucide-react";
 import { useAuth, useProfile } from "@/features/auth";
-import { NotificationBell } from "@/components/admin";
-import { useNotifications } from "@/hooks";
-import { useBookingStore } from "@/stores/bookingStore";
 import { useProfileStore } from "@/stores/profileStore"; // Added import
 import { useBrandingSettings } from "@/hooks/admin/Branding/useBrandingSettings";
 import { Button } from "@/components/ui/button";
@@ -13,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ROUTES } from "@/constants/routes";
 import { getFullPath } from "@/lib/routeUtils";
+import { NotificationCenter } from "@/features/notifications/components/NotificationCenter";
 
 export function Header() {
   const { signOut } = useAuth();
@@ -23,22 +20,6 @@ export function Header() {
   const { setViewMode } = useProfileStore(); // Get action
 
   const isOnAdminRoute = location.pathname.startsWith("/app/admin");
-
-  const { items: bookings, fetchAll } = useBookingStore();
-
-  // Fetch bookings if admin to show notifications
-  useEffect(() => {
-    if (isAdmin) {
-      fetchAll();
-    }
-  }, [isAdmin, fetchAll]);
-
-  const today = new Date().toISOString().split("T")[0];
-  const todayBookingsCount = bookings.filter(
-    (b) => b.booking_date === today && b.status === "confirmed"
-  ).length;
-
-  const { markAsSeen } = useNotifications(isAdmin, todayBookingsCount);
 
   const handleSignOut = async () => {
     try {
@@ -120,7 +101,7 @@ export function Header() {
               </span>
             </Button>
           )}
-          <NotificationBell isAdmin={isAdmin} onMarkAsSeen={markAsSeen} />
+          <NotificationCenter isAdmin={isAdmin} />
           <div className="flex items-center gap-2">
             <Avatar className="size-9">
               <AvatarFallback className="text-sm font-medium">

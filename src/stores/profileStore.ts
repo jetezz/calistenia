@@ -31,6 +31,7 @@ interface ProfileStore
   ) => Promise<void>;
   approveUser: (userId: string) => Promise<void>;
   rejectUser: (userId: string) => Promise<void>;
+  resetAllCredits: () => Promise<void>;
 }
 
 export const useProfileStore = create<ProfileStore>((set, get, store) => {
@@ -163,6 +164,18 @@ export const useProfileStore = create<ProfileStore>((set, get, store) => {
         // Revert on error
         const items = await profileService.getAll();
         set({ items });
+      }
+    },
+
+    resetAllCredits: async () => {
+      set({ isLoading: true, error: null });
+      try {
+        await profileService.resetAllCredits();
+        const items = await profileService.getAll();
+        set({ items, isLoading: false });
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        set({ error: error.message, isLoading: false });
       }
     },
   };

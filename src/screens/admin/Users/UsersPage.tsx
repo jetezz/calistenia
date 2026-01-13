@@ -28,6 +28,7 @@ export function UsersPage() {
     approveUser,
     rejectUser,
     updateApprovalStatus,
+    resetAllCredits,
     refresh,
   } = useAdminUsersLogic();
 
@@ -42,6 +43,8 @@ export function UsersPage() {
     id: string;
     name: string;
   } | null>(null);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Filtering logic moved from hook to UI/Logic adaptation
   const filteredUsers = allUsers.filter((user) => {
@@ -92,6 +95,18 @@ export function UsersPage() {
       console.error("Error updating credits:", error);
     } finally {
       setUpdatingCredits((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const handleResetMonth = async () => {
+    try {
+      setIsResetting(true);
+      await resetAllCredits();
+      setIsResetDialogOpen(false);
+    } catch (error) {
+      console.error("Error resetting month:", error);
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -181,6 +196,18 @@ export function UsersPage() {
         </div>
       )}
 
+      {allUsers.length > 0 && (
+        <div className="mt-8 flex justify-center">
+          <Button
+            variant="outline"
+            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+            onClick={() => setIsResetDialogOpen(true)}
+          >
+            Resetear mes
+          </Button>
+        </div>
+      )}
+
       <CreateUserDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
@@ -203,6 +230,36 @@ export function UsersPage() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteUser}>
               Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Resetear créditos del mes?</DialogTitle>
+            <DialogDescription>
+              Esta acción pondrá los créditos de{" "}
+              <strong>todos los usuarios (incluyendo administradores)</strong> a
+              0. Úsala al inicio de un nuevo mes o periodo. Esta acción no se
+              puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsResetDialogOpen(false)}
+              disabled={isResetting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleResetMonth}
+              disabled={isResetting}
+            >
+              {isResetting ? "Reseteando..." : "Confirmar Reset"}
             </Button>
           </DialogFooter>
         </DialogContent>

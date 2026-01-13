@@ -149,6 +149,16 @@ const rejectUser = async (userId: string) => {
   return data;
 };
 
+const resetAllCredits = async () => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ credits: 0 })
+    .neq("id", "00000000-0000-0000-0000-000000000000"); // Filtro para permitir actualización masiva de todos los perfiles
+
+  if (error) throw error;
+  return data;
+};
+
 export const profileService: CrudService<
   Profile,
   ProfileInsert,
@@ -163,6 +173,7 @@ export const profileService: CrudService<
   updateApprovalStatus: typeof updateApprovalStatus;
   approveUser: typeof approveUser;
   rejectUser: typeof rejectUser;
+  resetAllCredits: typeof resetAllCredits;
 } = {
   getAll,
   create,
@@ -177,4 +188,5 @@ export const profileService: CrudService<
   updateApprovalStatus,
   approveUser,
   rejectUser,
+  resetAllCredits,
 };

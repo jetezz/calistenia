@@ -1,4 +1,3 @@
-export * from "./NotificationBell";
 export * from "./CreateUserDialog";
 export * from "./PaymentMethodDialog";
 export * from "./EnhancedTimeSlotDialog";
