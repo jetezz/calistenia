@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Home,
   CalendarDays,
@@ -21,6 +21,10 @@ interface NavItem {
 
 export function MobileNav() {
   const { isAdmin } = useProfile();
+  const location = useLocation();
+
+  // Check if currently on an admin route
+  const isOnAdminRoute = location.pathname.startsWith("/app/admin");
 
   const clientNavItems: NavItem[] = [
     { to: ROUTES.APP.ROOT, icon: <Home className="size-5" />, label: "Inicio" },
@@ -78,7 +82,8 @@ export function MobileNav() {
     }),
   ].filter((item) => item !== null) as NavItem[];
 
-  const navItems = isAdmin ? adminNavItems : clientNavItems;
+  // Show admin nav if user is admin AND currently on an admin route
+  const navItems = isAdmin && isOnAdminRoute ? adminNavItems : clientNavItems;
 
   return (
     <nav

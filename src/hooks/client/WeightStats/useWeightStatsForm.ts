@@ -47,21 +47,25 @@ const initialFormData: WeightStatsFormData = {
 /**
  * Hook para el formulario de agregar mediciones
  */
-export const useWeightStatsForm = () => {
+export const useWeightStatsForm = (externalUserId?: string) => {
   const { profile } = useProfile();
-  const userId = profile?.id;
+  const userId = externalUserId || profile?.id;
   const { create } = useWeightStatsStore();
 
-  const [formData, setFormData] = useState<WeightStatsFormData>(initialFormData);
+  const [formData, setFormData] =
+    useState<WeightStatsFormData>(initialFormData);
   const [errors, setErrors] = useState<WeightStatsFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Actualizar un campo del formulario
-  const updateField = useCallback((field: keyof WeightStatsFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Limpiar error del campo al editarlo
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
-  }, []);
+  const updateField = useCallback(
+    (field: keyof WeightStatsFormData, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      // Limpiar error del campo al editarlo
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    },
+    []
+  );
 
   // Validar formulario
   const validate = useCallback((): boolean => {
@@ -159,7 +163,9 @@ export const useWeightStatsForm = () => {
         body_fat_percentage: formData.body_fat_percentage
           ? parseFloat(formData.body_fat_percentage)
           : null,
-        muscle_mass: formData.muscle_mass ? parseFloat(formData.muscle_mass) : null,
+        muscle_mass: formData.muscle_mass
+          ? parseFloat(formData.muscle_mass)
+          : null,
         bone_mass: formData.bone_mass ? parseFloat(formData.bone_mass) : null,
         bmi: formData.bmi ? parseFloat(formData.bmi) : null,
         daily_calorie_intake: formData.daily_calorie_intake
@@ -183,7 +189,8 @@ export const useWeightStatsForm = () => {
 
       return true;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error al guardar";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error al guardar";
       setErrors({ weight: errorMessage });
       return false;
     } finally {
@@ -198,11 +205,14 @@ export const useWeightStatsForm = () => {
   }, []);
 
   // Calcular BMI automáticamente (opcional, requiere altura del perfil)
-  const calculateBMI = useCallback((weight: number, heightInMeters: number): string => {
-    if (heightInMeters <= 0) return "";
-    const bmi = weight / (heightInMeters * heightInMeters);
-    return bmi.toFixed(2);
-  }, []);
+  const calculateBMI = useCallback(
+    (weight: number, heightInMeters: number): string => {
+      if (heightInMeters <= 0) return "";
+      const bmi = weight / (heightInMeters * heightInMeters);
+      return bmi.toFixed(2);
+    },
+    []
+  );
 
   return {
     formData,

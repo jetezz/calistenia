@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProfileStore } from "@/stores/profileStore";
 import { useBookingStore } from "@/stores/bookingStore";
@@ -10,10 +10,8 @@ export const useAdminUserDetailLogic = () => {
 
   const {
     items: profiles,
-    currentItem: user,
     isLoading: isUserLoading,
-    select: selectUser,
-    fetchAll: fetchUsers, // Ensure we have data if refreshed on this page
+    fetchAll: fetchUsers,
     updateCredits,
     updatePaymentStatus,
   } = useProfileStore();
@@ -32,24 +30,22 @@ export const useAdminUserDetailLogic = () => {
 
   // Load data on mount
   useEffect(() => {
-    // If we don't have the user, we might need to fetch all users or implement fetchById in store
-    // Current BaseStore implementation of fetchById is missing, relies on select from getAll.
-    // We will trigger fetchAll if list is empty, then select.
-
     const load = async () => {
       if (profiles.length === 0) await fetchUsers();
       fetchBookings();
       fetchPayments();
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Effect to select user once profiles are loaded or when userId changes
-  useEffect(() => {
-    if (userId) {
-      selectUser(userId);
+  // Find user from profiles array instead of using select()
+  // This prevents overwriting the currentItem which is used by useProfile()
+  const user = useMemo(() => {
+    if (userId && profiles.length > 0) {
+      return profiles.find((p) => p.id === userId) || null;
     }
-    return () => selectUser(null);
+    return null;
   }, [userId, profiles]);
 
   // Computed data for specific user

@@ -19,19 +19,23 @@ import {
 } from "@/utils/biometricsCalculators";
 import { Target, Scale, Activity } from "lucide-react";
 import { ResponsiveModal } from "./ResponsiveModal";
+import { type Tables } from "@/types/database";
 
 interface BiometricsSetupModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onComplete?: () => void;
+  user?: Tables<"profiles">; // Allow passing a specific user profile
 }
 
 export function BiometricsSetupModal({
   open,
   onOpenChange,
   onComplete,
+  user: externalUser,
 }: BiometricsSetupModalProps) {
-  const { profile } = useProfile();
+  const { profile: loggedInProfile } = useProfile();
+  const profile = externalUser || loggedInProfile;
   const updateProfile = useProfileStore((state) => state.update);
 
   const [loading, setLoading] = useState(false);

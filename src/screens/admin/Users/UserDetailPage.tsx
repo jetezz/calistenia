@@ -8,6 +8,8 @@ import {
   Plus,
   Minus,
   History,
+  Settings2,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,20 +27,34 @@ import { Label } from "@/components/ui/label";
 import { StandardPage } from "@/components/common";
 import { useToast } from "@/hooks";
 import { useAdminUserDetailLogic } from "@/hooks/admin/Users/useAdminUserDetailLogic";
-
+import { useWeightStatsStore } from "@/stores/weightStatsStore";
+import { AddMeasurementForm } from "@/components/weight-stats/AddMeasurementForm";
+import { BiometricsSetupModal } from "@/components/weight-stats/BiometricsSetupModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 export function UserDetailPage() {
   const { user, userBookings, isLoading, updateCredits, updatePaymentStatus } =
     useAdminUserDetailLogic();
 
   const [creditsInput, setCreditsInput] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isAddStatOpen, setIsAddStatOpen] = useState(false);
+  const [isConfigureOpen, setIsConfigureOpen] = useState(false);
   const { success, error: showError } = useToast();
+
+  const { items: weightStats, fetchByUserId } = useWeightStatsStore();
 
   useEffect(() => {
     if (user) {
       setCreditsInput(user.credits.toString());
+      fetchByUserId(user.id, true);
     }
-  }, [user]);
+  }, [user, fetchByUserId]);
 
   const handleUpdateCredits = async (newCredits: number) => {
     if (!user) return;
@@ -155,18 +171,33 @@ export function UserDetailPage() {
       isLoading={isLoading}
       loadingMessage="Cargando datos del usuario..."
       maxWidth="max-w-4xl"
+      topActions={
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/app/admin/users">
+              <ArrowLeft className="size-4 mr-2" />
+              Volver
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsConfigureOpen(true)}
+          >
+            <Settings2 className="size-4 mr-2" />
+            Configurar
+          </Button>
+        </div>
+      }
+      bottomActions={
+        <Button size="sm" onClick={() => setIsAddStatOpen(true)}>
+          <Plus className="size-4 mr-2" />
+          Añadir Estadística
+        </Button>
+      }
     >
       {user && (
         <>
-          <div className="flex mb-2">
-            <Button asChild variant="outline" size="sm">
-              <Link to="/app/admin/users">
-                <ArrowLeft className="size-4 mr-2" />
-                Volver
-              </Link>
-            </Button>
-          </div>
-
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -352,6 +383,98 @@ export function UserDetailPage() {
               )}
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="size-5" />
+                Historial de Estadísticas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {weightStats.length === 0 ? (
+                <div className="text-center py-8">
+                  <Activity className="size-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    Este usuario no tiene estadísticas registradas
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {weightStats.map((stat) => (
+                    <div
+                      key={stat.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
+                        <div>
+                          <div className="text-xs text-muted-foreground">
+                            Fecha
+                          </div>
+                          <div className="font-medium">
+                            {new Date(stat.recorded_at).toLocaleDateString(
+                              "es-ES"
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">
+                            Peso
+                          </div>
+                          <div className="font-medium">{stat.weight} kg</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">
+                            Grasa
+                          </div>
+                          <div className="font-medium">
+                            {stat.body_fat_percentage
+                              ? `${stat.body_fat_percentage}%`
+                              : "-"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">
+                            Músculo
+                          </div>
+                          <div className="font-medium">
+                            {stat.muscle_mass ? `${stat.muscle_mass} kg` : "-"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Dialog open={isAddStatOpen} onOpenChange={setIsAddStatOpen}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Añadir Nueva Medición</DialogTitle>
+                <DialogDescription>
+                  Registra métricas de composición corporal para el usuario.
+                  Solo el peso es obligatorio.
+                </DialogDescription>
+              </DialogHeader>
+              <AddMeasurementForm
+                userId={user.id}
+                onSuccess={() => {
+                  setIsAddStatOpen(false);
+                  fetchByUserId(user.id, true);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+
+          <BiometricsSetupModal
+            open={isConfigureOpen}
+            onOpenChange={setIsConfigureOpen}
+            user={user}
+            onComplete={() => {
+              // Optionally refresh user data if biometrics are displayed in detail
+            }}
+          />
         </>
       )}
     </StandardPage>

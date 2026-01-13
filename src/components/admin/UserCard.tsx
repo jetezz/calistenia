@@ -312,7 +312,7 @@ export function UserCard({
                 Eliminar
               </Button>
               <Button asChild size="sm" className="h-9">
-                <Link to={`/admin/users/${user.id}`}>
+                <Link to={`/app/admin/users/${user.id}`}>
                   <UserCheck className="size-3.5 mr-1.5" />
                   Ver detalle
                 </Link>

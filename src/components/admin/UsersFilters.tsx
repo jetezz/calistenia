@@ -44,7 +44,7 @@ export function UsersFilters({
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-muted-foreground">
-          Estado de aprobación
+          Estado
         </label>
         <Select
           value={approvalStatusFilter}

@@ -16,11 +16,22 @@ import { toast } from "sonner";
 interface AddMeasurementFormProps {
   onSuccess?: () => void;
   className?: string;
+  userId?: string;
 }
 
-export const AddMeasurementForm = ({ onSuccess, className }: AddMeasurementFormProps) => {
-  const { formData, errors, isSubmitting, updateField, handleSubmit, resetForm } =
-    useWeightStatsForm();
+export const AddMeasurementForm = ({
+  onSuccess,
+  className,
+  userId,
+}: AddMeasurementFormProps) => {
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    updateField,
+    handleSubmit,
+    resetForm,
+  } = useWeightStatsForm(userId);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +50,8 @@ export const AddMeasurementForm = ({ onSuccess, className }: AddMeasurementFormP
       <CardHeader>
         <CardTitle>Añadir Nueva Medición</CardTitle>
         <CardDescription>
-          Registra tus métricas de composición corporal. Solo el peso es obligatorio.
+          Registra tus métricas de composición corporal. Solo el peso es
+          obligatorio.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -91,11 +103,17 @@ export const AddMeasurementForm = ({ onSuccess, className }: AddMeasurementFormP
                 step="0.1"
                 placeholder="15.5"
                 value={formData.body_fat_percentage}
-                onChange={(e) => updateField("body_fat_percentage", e.target.value)}
-                className={errors.body_fat_percentage ? "border-destructive" : ""}
+                onChange={(e) =>
+                  updateField("body_fat_percentage", e.target.value)
+                }
+                className={
+                  errors.body_fat_percentage ? "border-destructive" : ""
+                }
               />
               {errors.body_fat_percentage && (
-                <p className="text-sm text-destructive">{errors.body_fat_percentage}</p>
+                <p className="text-sm text-destructive">
+                  {errors.body_fat_percentage}
+                </p>
               )}
             </div>
 
@@ -145,22 +163,32 @@ export const AddMeasurementForm = ({ onSuccess, className }: AddMeasurementFormP
                 onChange={(e) => updateField("bmi", e.target.value)}
                 className={errors.bmi ? "border-destructive" : ""}
               />
-              {errors.bmi && <p className="text-sm text-destructive">{errors.bmi}</p>}
+              {errors.bmi && (
+                <p className="text-sm text-destructive">{errors.bmi}</p>
+              )}
             </div>
 
             {/* Calorías Diarias */}
             <div className="space-y-2">
-              <Label htmlFor="daily_calorie_intake">Calorías Diarias (kcal)</Label>
+              <Label htmlFor="daily_calorie_intake">
+                Calorías Diarias (kcal)
+              </Label>
               <Input
                 id="daily_calorie_intake"
                 type="number"
                 placeholder="2000"
                 value={formData.daily_calorie_intake}
-                onChange={(e) => updateField("daily_calorie_intake", e.target.value)}
-                className={errors.daily_calorie_intake ? "border-destructive" : ""}
+                onChange={(e) =>
+                  updateField("daily_calorie_intake", e.target.value)
+                }
+                className={
+                  errors.daily_calorie_intake ? "border-destructive" : ""
+                }
               />
               {errors.daily_calorie_intake && (
-                <p className="text-sm text-destructive">{errors.daily_calorie_intake}</p>
+                <p className="text-sm text-destructive">
+                  {errors.daily_calorie_intake}
+                </p>
               )}
             </div>
 
@@ -176,13 +204,17 @@ export const AddMeasurementForm = ({ onSuccess, className }: AddMeasurementFormP
                 className={errors.metabolic_age ? "border-destructive" : ""}
               />
               {errors.metabolic_age && (
-                <p className="text-sm text-destructive">{errors.metabolic_age}</p>
+                <p className="text-sm text-destructive">
+                  {errors.metabolic_age}
+                </p>
               )}
             </div>
 
             {/* Agua Corporal */}
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="total_body_water_percentage">Agua Corporal (%)</Label>
+              <Label htmlFor="total_body_water_percentage">
+                Agua Corporal (%)
+              </Label>
               <Input
                 id="total_body_water_percentage"
                 type="number"
@@ -192,7 +224,9 @@ export const AddMeasurementForm = ({ onSuccess, className }: AddMeasurementFormP
                 onChange={(e) =>
                   updateField("total_body_water_percentage", e.target.value)
                 }
-                className={errors.total_body_water_percentage ? "border-destructive" : ""}
+                className={
+                  errors.total_body_water_percentage ? "border-destructive" : ""
+                }
               />
               {errors.total_body_water_percentage && (
                 <p className="text-sm text-destructive">
