@@ -12,6 +12,7 @@ import { XCircle, LogOut, RefreshCw } from "lucide-react";
 import { useProfile } from "@/features/auth/hooks/useProfile";
 import { PageLoadingState } from "@/components/common";
 import { Navigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 
 export function RejectedPage() {
   const { signOut } = useAuth();
@@ -33,12 +34,12 @@ export function RejectedPage() {
 
   // Si el usuario ya fue aprobado, redirigir a home
   if (isApproved || isAdmin) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to={ROUTES.APP.ROOT} replace />;
   }
 
   // Si el usuario fue puesto en pendiente de nuevo, redirigir a pending
   if (isPending) {
-    return <Navigate to="/pending-approval" replace />;
+    return <Navigate to={ROUTES.PENDING_APPROVAL} replace />;
   }
 
   return (

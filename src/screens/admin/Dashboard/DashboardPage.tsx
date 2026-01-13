@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
+import { getFullPath } from "@/lib/routeUtils";
 import {
   Calendar,
   Users,
@@ -37,7 +39,7 @@ export function DashboardPage() {
       gradient: "from-blue-500 to-cyan-500",
       iconBg: "bg-blue-500/10",
       iconColor: "text-blue-600",
-      href: "/app/admin/bookings",
+      href: getFullPath(ROUTES.ADMIN.BOOKINGS),
       highlight: newBookingsCount > 0,
     },
     {
@@ -48,7 +50,7 @@ export function DashboardPage() {
       gradient: "from-orange-500 to-amber-500",
       iconBg: "bg-orange-500/10",
       iconColor: "text-orange-600",
-      href: "/app/admin/payment-requests",
+      href: getFullPath(ROUTES.ADMIN.PAYMENT_REQUESTS),
       highlight: stats.pendingPaymentRequestsCount > 0,
     },
     {
@@ -59,7 +61,7 @@ export function DashboardPage() {
       gradient: "from-green-500 to-emerald-500",
       iconBg: "bg-green-500/10",
       iconColor: "text-green-600",
-      href: "/app/admin/users",
+      href: getFullPath(ROUTES.ADMIN.USERS),
       highlight: stats.pendingUsersCount > 0,
     },
     {
@@ -70,7 +72,7 @@ export function DashboardPage() {
       gradient: "from-purple-500 to-pink-500",
       iconBg: "bg-purple-500/10",
       iconColor: "text-purple-600",
-      href: "/app/admin/slots",
+      href: getFullPath(ROUTES.ADMIN.SLOTS),
     },
   ];
 
@@ -78,7 +80,7 @@ export function DashboardPage() {
     {
       title: "Horarios",
       description: "Gestionar franjas",
-      href: "/app/admin/slots",
+      href: getFullPath(ROUTES.ADMIN.SLOTS),
       icon: Clock,
       color: "text-purple-600",
       bg: "bg-purple-50",
@@ -86,7 +88,7 @@ export function DashboardPage() {
     {
       title: "Usuarios",
       description: "Ver clientes",
-      href: "/app/admin/users",
+      href: getFullPath(ROUTES.ADMIN.USERS),
       icon: Users,
       color: "text-green-600",
       bg: "bg-green-50",
@@ -94,7 +96,7 @@ export function DashboardPage() {
     {
       title: "Precios",
       description: "Paquetes",
-      href: "/app/admin/pricing",
+      href: getFullPath(ROUTES.ADMIN.PRICING),
       icon: DollarSign,
       color: "text-blue-600",
       bg: "bg-blue-50",
@@ -102,7 +104,7 @@ export function DashboardPage() {
     {
       title: "Pagos",
       description: "Métodos",
-      href: "/app/admin/payment-methods",
+      href: getFullPath(ROUTES.ADMIN.PAYMENT_METHODS),
       icon: Wallet,
       color: "text-cyan-600",
       bg: "bg-cyan-50",
@@ -110,7 +112,7 @@ export function DashboardPage() {
     {
       title: "Config",
       description: "Ajustes",
-      href: "/app/admin/settings",
+      href: getFullPath(ROUTES.ADMIN.SETTINGS),
       icon: Settings,
       color: "text-gray-600",
       bg: "bg-gray-50",
@@ -118,7 +120,7 @@ export function DashboardPage() {
     {
       title: "Reservas",
       description: "Historial",
-      href: "/app/admin/bookings",
+      href: getFullPath(ROUTES.ADMIN.BOOKINGS),
       icon: Calendar,
       color: "text-indigo-600",
       bg: "bg-indigo-50",
@@ -138,7 +140,7 @@ export function DashboardPage() {
       color: "text-blue-600",
       bg: "bg-blue-50",
       border: "border-blue-200",
-      href: "/app/admin/bookings",
+      href: getFullPath(ROUTES.ADMIN.BOOKINGS),
       badge: newBookingsCount,
       onClick: markAsSeen,
     });
@@ -155,7 +157,7 @@ export function DashboardPage() {
       color: "text-amber-600",
       bg: "bg-amber-50",
       border: "border-amber-200",
-      href: "/app/admin/users",
+      href: getFullPath(ROUTES.ADMIN.USERS),
       badge: stats.pendingUsersCount,
     });
   }
@@ -171,7 +173,7 @@ export function DashboardPage() {
       color: "text-orange-600",
       bg: "bg-orange-50",
       border: "border-orange-200",
-      href: "/app/admin/payment-requests",
+      href: getFullPath(ROUTES.ADMIN.PAYMENT_REQUESTS),
       badge: stats.pendingPaymentRequestsCount,
     });
   }
@@ -185,7 +187,7 @@ export function DashboardPage() {
       color: "text-red-600",
       bg: "bg-red-50",
       border: "border-red-200",
-      href: "/app/admin/slots",
+      href: getFullPath(ROUTES.ADMIN.SLOTS),
     });
   }
 

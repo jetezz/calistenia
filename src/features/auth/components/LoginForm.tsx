@@ -13,6 +13,7 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/common";
+import { ROUTES } from "@/constants/routes";
 
 type Mode = "login" | "register";
 
@@ -69,7 +70,7 @@ export function LoginForm() {
           toast.error(translateError(error.message));
         } else {
           toast.success("Bienvenido a Calistenia Emérita");
-          navigate("/app");
+          navigate(ROUTES.APP.ROOT);
         }
       } else {
         const { error } = await signUpWithEmail(email, password, fullName);

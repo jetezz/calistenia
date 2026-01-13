@@ -4,6 +4,8 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +28,7 @@ import type { Database } from "@/types/database";
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
 export function RequestCreditsPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { packages, methods, isLoading, isSubmitting, submitRequest, refresh } =
     useRequestCreditsLogic();
@@ -86,7 +89,7 @@ export function RequestCreditsPage() {
         notes: "",
       });
 
-      window.location.href = "/";
+      navigate(ROUTES.APP.ROOT);
     } catch (error) {
       console.error("Error submitting credit request:", error);
       toast.error("Error al enviar la solicitud. Inténtalo de nuevo.");

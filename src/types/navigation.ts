@@ -8,6 +8,8 @@ import {
   Settings,
   Wallet,
 } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
+import { getFullPath } from "@/lib/routeUtils";
 
 export interface NavAction {
   to: string;
@@ -30,42 +32,42 @@ export type IconName = keyof typeof ICONS;
 
 export const ADMIN_AVAILABLE_ACTIONS: NavAction[] = [
   {
-    to: "/app/admin",
+    to: getFullPath(ROUTES.ADMIN.ROOT),
     label: "Panel",
     icon: "LayoutDashboard",
   },
   {
-    to: "/app/admin/slots",
+    to: getFullPath(ROUTES.ADMIN.SLOTS),
     label: "Horarios",
     icon: "Clock",
   },
   {
-    to: "/app/admin/users",
+    to: getFullPath(ROUTES.ADMIN.USERS),
     label: "Usuarios",
     icon: "Users",
   },
   {
-    to: "/app/admin/bookings",
+    to: getFullPath(ROUTES.ADMIN.BOOKINGS),
     label: "Reservas",
     icon: "CalendarDays",
   },
   {
-    to: "/app/admin/pricing",
+    to: getFullPath(ROUTES.ADMIN.PRICING),
     label: "Precios",
     icon: "DollarSign",
   },
   {
-    to: "/app/admin/payment-requests",
+    to: getFullPath(ROUTES.ADMIN.PAYMENT_REQUESTS),
     label: "Pagos",
     icon: "CreditCard",
   },
   {
-    to: "/app/admin/payment-methods",
+    to: getFullPath(ROUTES.ADMIN.PAYMENT_METHODS),
     label: "Métodos Pago",
     icon: "Wallet",
   },
   {
-    to: "/app/admin/settings",
+    to: getFullPath(ROUTES.ADMIN.SETTINGS),
     label: "Configuración",
     icon: "Settings",
   },

@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { ROUTES } from "@/constants/routes";
+import { getFullPath } from "@/lib/routeUtils";
 
 export function Header() {
   const { signOut } = useAuth();
@@ -36,7 +38,7 @@ export function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate("/login", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
     } catch (error) {
       toast.error("Error al cerrar sesión");
       console.error("Error signing out:", error);
@@ -57,7 +59,7 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border safe-area-pt">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between min-h-[64px]">
         <Link
-          to={isAdmin ? "/app/admin" : "/app"}
+          to={isAdmin ? getFullPath(ROUTES.ADMIN.ROOT) : ROUTES.APP.ROOT}
           className="flex items-center gap-2 touch-none"
         >
           {/* Logo */}

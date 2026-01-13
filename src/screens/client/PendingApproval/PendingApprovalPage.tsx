@@ -12,6 +12,7 @@ import { Clock, LogOut, RefreshCw } from "lucide-react";
 import { useProfile } from "@/features/auth/hooks/useProfile";
 import { PageLoadingState } from "@/components/common";
 import { Navigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 
 export function PendingApprovalPage() {
   const { signOut } = useAuth();
@@ -39,12 +40,12 @@ export function PendingApprovalPage() {
 
   // Si el usuario ya fue aprobado, redirigir a home
   if (isApproved || isAdmin) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to={ROUTES.APP.ROOT} replace />;
   }
 
   // Si el usuario fue rechazado, redirigir a rejected
   if (isRejected) {
-    return <Navigate to="/rejected" replace />;
+    return <Navigate to={ROUTES.REJECTED} replace />;
   }
 
   return (

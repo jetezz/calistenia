@@ -21,33 +21,34 @@ import { RequestCreditsPage } from "@/screens/client/RequestCredits/RequestCredi
 import { PendingApprovalPage } from "@/screens/client/PendingApproval/PendingApprovalPage";
 import { RejectedPage } from "@/screens/client/Rejected/RejectedPage";
 import WeightStatsPage from "@/screens/client/WeightStatsPage";
+import { ROUTES } from "@/constants/routes";
 
 const LandingOrApp = () => {
   if (Capacitor.isNativePlatform()) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to={ROUTES.APP.ROOT} replace />;
   }
   return <LandingPage />;
 };
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: ROUTES.ROOT,
     element: <LandingOrApp />,
   },
   {
-    path: "/login",
+    path: ROUTES.LOGIN,
     element: <LoginPage />,
   },
   {
-    path: "/pending-approval",
+    path: ROUTES.PENDING_APPROVAL,
     element: <PendingApprovalPage />,
   },
   {
-    path: "/rejected",
+    path: ROUTES.REJECTED,
     element: <RejectedPage />,
   },
   {
-    path: "/app",
+    path: ROUTES.APP.ROOT,
     element: <RootLayout />,
     children: [
       {
@@ -55,59 +56,59 @@ export const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: "book",
+        path: ROUTES.APP.BOOK,
         element: <BookingPage />,
       },
       {
-        path: "my-bookings",
+        path: ROUTES.APP.MY_BOOKINGS,
         element: <MyBookingsPage />,
       },
       {
-        path: "request-credits",
+        path: ROUTES.APP.REQUEST_CREDITS,
         element: <RequestCreditsPage />,
       },
       {
-        path: "payment-info",
+        path: ROUTES.APP.PAYMENT_INFO,
         element: <PaymentInfoPage />,
       },
       {
-        path: "weight-stats",
+        path: ROUTES.APP.WEIGHT_STATS,
         element: <WeightStatsPage />,
       },
       {
-        path: "admin",
+        path: ROUTES.ADMIN.ROOT,
         element: <DashboardPage />,
       },
       {
-        path: "admin/slots",
+        path: ROUTES.ADMIN.SLOTS,
         element: <SlotsPage />,
       },
       {
-        path: "admin/users",
+        path: ROUTES.ADMIN.USERS,
         element: <UsersPage />,
       },
       {
-        path: "admin/users/:userId",
+        path: ROUTES.ADMIN.USER_DETAIL,
         element: <UserDetailPage />,
       },
       {
-        path: "admin/bookings",
+        path: ROUTES.ADMIN.BOOKINGS,
         element: <BookingsPage />,
       },
       {
-        path: "admin/payment-requests",
+        path: ROUTES.ADMIN.PAYMENT_REQUESTS,
         element: <PaymentRequestsPage />,
       },
       {
-        path: "admin/pricing",
+        path: ROUTES.ADMIN.PRICING,
         element: <PricingPage />,
       },
       {
-        path: "admin/payment-methods",
+        path: ROUTES.ADMIN.PAYMENT_METHODS,
         element: <PaymentMethodsPage />,
       },
       {
-        path: "admin/settings",
+        path: ROUTES.ADMIN.SETTINGS,
         element: <SettingsPage />,
       },
       {

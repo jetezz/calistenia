@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import { LoginForm } from "../components/LoginForm";
 import { useAuth } from "../hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +26,7 @@ export function LoginPage() {
   }
 
   if (user) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to={ROUTES.APP.ROOT} replace />;
   }
 
   return (

@@ -1,4 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
+import { getFullPath } from "@/lib/routeUtils";
 import {
   CalendarDays,
   CreditCard,
@@ -38,7 +40,7 @@ export function HomePage() {
   const [showAllRequests, setShowAllRequests] = useState(false);
 
   if (isAdmin && !authLoading) {
-    return <Navigate to="/app/admin" replace />;
+    return <Navigate to={getFullPath(ROUTES.ADMIN.ROOT)} replace />;
   }
 
   const getPaymentStatusBadge = () => {
@@ -94,7 +96,7 @@ export function HomePage() {
               <p className="text-sm">
                 No tienes créditos disponibles.
                 <Link
-                  to="/app/request-credits"
+                  to={getFullPath(ROUTES.APP.REQUEST_CREDITS)}
                   className="ml-1 text-primary hover:underline font-medium"
                 >
                   Recarga aquí
@@ -143,7 +145,9 @@ export function HomePage() {
               ))}
               {upcomingBookings.length >= 3 && (
                 <Button asChild variant="ghost" size="sm" className="w-full">
-                  <Link to="/app/my-bookings">Ver todas las reservas</Link>
+                  <Link to={getFullPath(ROUTES.APP.MY_BOOKINGS)}>
+                    Ver todas las reservas
+                  </Link>
                 </Button>
               )}
             </div>
@@ -251,14 +255,14 @@ export function HomePage() {
       {/* Action Buttons */}
       <div className="grid gap-4">
         <Button asChild size="lg" className="h-14 text-lg">
-          <Link to="/app/book">
+          <Link to={getFullPath(ROUTES.APP.BOOK)}>
             <CalendarDays className="mr-2 size-5" />
             Reservar clase
           </Link>
         </Button>
 
         <Button asChild variant="outline" size="lg" className="h-14 text-lg">
-          <Link to="/app/request-credits">
+          <Link to={getFullPath(ROUTES.APP.REQUEST_CREDITS)}>
             <CreditCard className="mr-2 size-5" />
             Recargar bonos
           </Link>
@@ -266,7 +270,7 @@ export function HomePage() {
 
         {upcomingBookings.length > 0 && (
           <Button asChild variant="ghost" size="lg" className="h-14">
-            <Link to="/app/my-bookings">
+            <Link to={getFullPath(ROUTES.APP.MY_BOOKINGS)}>
               <Calendar className="mr-2 size-5" />
               Mis reservas
             </Link>
@@ -274,14 +278,14 @@ export function HomePage() {
         )}
 
         <Button asChild variant="outline" size="lg" className="h-14 text-lg">
-          <Link to="/app/weight-stats">
+          <Link to={getFullPath(ROUTES.APP.WEIGHT_STATS)}>
             <LayoutDashboard className="mr-2 size-5" />
             Mis Estadísticas
           </Link>
         </Button>
 
         <Button asChild variant="ghost" size="lg" className="h-14">
-          <Link to="/app/payment-info">
+          <Link to={getFullPath(ROUTES.APP.PAYMENT_INFO)}>
             <Info className="mr-2 size-5" />
             Información de pago
           </Link>

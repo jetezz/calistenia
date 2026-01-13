@@ -134,13 +134,57 @@ const approve = async (
   processedBy: string,
   adminNotes?: string
 ) => {
+  // 1. Obtener la solicitud para saber cuántos créditos sumar
+  const request = await getById(id);
+  if (!request) throw new Error("Solicitud no encontrada");
+  if (request.status !== "pending")
+    throw new Error("La solicitud ya fue procesada");
+
+  // 2. Actualizar el estado de la solicitud
   const updates: PaymentRequestUpdate = {
     status: "approved",
     processed_by: processedBy,
     processed_at: new Date().toISOString(),
     admin_notes: adminNotes,
   };
-  return update(id, updates);
+
+  // Realizamos la actualización de la solicitud primero
+  const updatedRequest = await update(id, updates);
+
+  // 3. Sumar los créditos al usuario y actualizar estado de pago
+  if (request.user_id && request.credits_requested) {
+    // Obtenemos el perfil actual para sumar correctamente
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("credits")
+      .eq("id", request.user_id)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      // No lanzamos error aquí para no romper el flujo si la solicitud ya se marcó aprobada,
+      // pero idealmente deberíamos manejar esto mejor (transacción).
+    } else {
+      const currentCredits = profile?.credits || 0;
+      const newCredits = currentCredits + request.credits_requested;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          credits: newCredits,
+          payment_status: "paid", // Actualizamos status a pagado
+        })
+        .eq("id", request.user_id);
+
+      if (updateError) {
+        console.error("Error updating credits:", updateError);
+        // Aquí queda un estado inconsistente si falla.
+        // TODO: Mover a RPC para atomicidad.
+      }
+    }
+  }
+
+  return updatedRequest;
 };
 
 const reject = async (id: string, processedBy: string, adminNotes?: string) => {

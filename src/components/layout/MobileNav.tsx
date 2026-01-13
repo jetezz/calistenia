@@ -1,8 +1,16 @@
 import { NavLink } from "react-router-dom";
-import { Home, CalendarDays, CreditCard, Calendar, Activity } from "lucide-react";
+import {
+  Home,
+  CalendarDays,
+  CreditCard,
+  Calendar,
+  Activity,
+} from "lucide-react";
 import { useProfile } from "@/features/auth";
 import { cn } from "@/lib/utils";
 import { useAppSettingsStore } from "@/stores/appSettingsStore";
+import { ROUTES } from "@/constants/routes";
+import { getFullPath } from "@/lib/routeUtils";
 import { ADMIN_AVAILABLE_ACTIONS, ICONS } from "@/types/navigation";
 
 interface NavItem {
@@ -15,24 +23,24 @@ export function MobileNav() {
   const { isAdmin } = useProfile();
 
   const clientNavItems: NavItem[] = [
-    { to: "/app", icon: <Home className="size-5" />, label: "Inicio" },
+    { to: ROUTES.APP.ROOT, icon: <Home className="size-5" />, label: "Inicio" },
     {
-      to: "/app/book",
+      to: getFullPath(ROUTES.APP.BOOK),
       icon: <CalendarDays className="size-5" />,
       label: "Reservar",
     },
     {
-      to: "/app/my-bookings",
+      to: getFullPath(ROUTES.APP.MY_BOOKINGS),
       icon: <Calendar className="size-5" />,
       label: "Mis Clases",
     },
     {
-      to: "/app/weight-stats",
+      to: getFullPath(ROUTES.APP.WEIGHT_STATS),
       icon: <Activity className="size-5" />,
       label: "Estadísticas",
     },
     {
-      to: "/app/request-credits",
+      to: getFullPath(ROUTES.APP.REQUEST_CREDITS),
       icon: <CreditCard className="size-5" />,
       label: "Créditos",
     },
@@ -42,7 +50,7 @@ export function MobileNav() {
   const quickActionPaths = getQuickActions();
 
   // Ensure panel is always first and not duplicated
-  const panelPath = "/app/admin";
+  const panelPath = getFullPath(ROUTES.ADMIN.ROOT);
   const otherActions = quickActionPaths.filter((path) => path !== panelPath);
 
   const adminNavItems: NavItem[] = [
