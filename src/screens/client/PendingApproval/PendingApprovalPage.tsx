@@ -19,6 +19,7 @@ export function PendingApprovalPage() {
   const {
     profile,
     isLoading,
+    isRefreshing,
     isApproved,
     isRejected,
     isAdmin,
@@ -98,9 +99,14 @@ export function PendingApprovalPage() {
                 variant="outline"
                 className="w-full"
                 onClick={() => refreshProfile()}
+                disabled={isRefreshing}
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Verificar Estado Ahora
+                <RefreshCw
+                  className={`w-4 h-4 mr-2 ${
+                    isRefreshing ? "animate-spin" : ""
+                  }`}
+                />
+                {isRefreshing ? "Verificando..." : "Verificar Estado Ahora"}
               </Button>
               <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="w-4 h-4 mr-2" />

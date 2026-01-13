@@ -16,8 +16,15 @@ import { ROUTES } from "@/constants/routes";
 
 export function RejectedPage() {
   const { signOut } = useAuth();
-  const { profile, isLoading, isApproved, isPending, isAdmin, refreshProfile } =
-    useProfile();
+  const {
+    profile,
+    isLoading,
+    isRefreshing,
+    isApproved,
+    isPending,
+    isAdmin,
+    refreshProfile,
+  } = useProfile();
 
   // Refrescar el perfil cada 5 segundos para detectar cambios
   useEffect(() => {
@@ -85,9 +92,14 @@ export function RejectedPage() {
                 variant="outline"
                 className="w-full"
                 onClick={() => refreshProfile()}
+                disabled={isRefreshing}
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Verificar Estado Ahora
+                <RefreshCw
+                  className={`w-4 h-4 mr-2 ${
+                    isRefreshing ? "animate-spin" : ""
+                  }`}
+                />
+                {isRefreshing ? "Verificando..." : "Verificar Estado Ahora"}
               </Button>
               <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="w-4 h-4 mr-2" />

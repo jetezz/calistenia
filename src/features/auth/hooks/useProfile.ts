@@ -51,7 +51,9 @@ export function useProfile() {
 
           // Si el error es PGRST116, significa que el perfil no existe (usuario eliminado)
           if (error.code === "PGRST116") {
-            console.warn("Profile not found. User may have been deleted. Signing out...");
+            console.warn(
+              "Profile not found. User may have been deleted. Signing out..."
+            );
             setCurrentProfile(null);
             setIsLoading(false);
             // Cerrar sesión y limpiar todo
@@ -76,12 +78,12 @@ export function useProfile() {
     return () => {
       // No cleanup needed
     };
-  }, [user, setCurrentProfile, setIsLoading]);
+  }, [user, setCurrentProfile, setIsLoading, signOut]);
 
   const refreshProfile = async () => {
     if (!user) return;
 
-    setIsLoading(true);
+    store.setRefreshing(true);
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -94,9 +96,11 @@ export function useProfile() {
 
         // Si el error es PGRST116, significa que el perfil no existe (usuario eliminado)
         if (error.code === "PGRST116") {
-          console.warn("Profile not found during refresh. User may have been deleted. Signing out...");
+          console.warn(
+            "Profile not found during refresh. User may have been deleted. Signing out..."
+          );
           setCurrentProfile(null);
-          setIsLoading(false);
+          store.setRefreshing(false);
           // Cerrar sesión y limpiar todo
           await signOut();
           return;
@@ -107,13 +111,14 @@ export function useProfile() {
     } catch (error) {
       console.error("Profile refresh failed:", error);
     } finally {
-      setIsLoading(false);
+      store.setRefreshing(false);
     }
   };
 
   return {
     profile, // Devolvemos 'profile' para mantener contrato con componentes consumidores
     isLoading,
+    isRefreshing: store.isRefreshing,
     isAdmin: profile?.role === "admin",
     isApproved: profile?.approval_status === "approved",
     isPending: profile?.approval_status === "pending",

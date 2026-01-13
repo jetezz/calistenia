@@ -9,6 +9,10 @@ type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 interface ProfileStore
   extends BaseStoreState<Profile, ProfileInsert, ProfileUpdate> {
+  // Estado para recargas en segundo plano
+  isRefreshing: boolean;
+  setRefreshing: (isRefreshing: boolean) => void;
+
   // Métodos extra específicos de usuarios
   updateCredits: (id: string, credits: number) => Promise<void>;
   updatePaymentStatus: (id: string, status: string) => Promise<void>;
@@ -33,6 +37,10 @@ export const useProfileStore = create<ProfileStore>((set, get, store) => {
 
   return {
     ...baseStore,
+
+    // Estado y método para recargas en segundo plano
+    isRefreshing: false,
+    setRefreshing: (isRefreshing: boolean) => set({ isRefreshing }),
 
     updateCredits: async (id: string, credits: number) => {
       // Optimistic Update

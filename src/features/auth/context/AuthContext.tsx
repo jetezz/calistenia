@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AuthContext, type AuthContextType } from "./AuthContextValue";
 import { useProfileStore } from "@/stores/profileStore";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -79,14 +81,93 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return { error: error as Error | null };
   };
 
+  useEffect(() => {
+    // Listen for deep links (Native only)
+    if (Capacitor.isNativePlatform()) {
+      import("@capacitor/app").then(({ App }) => {
+        App.addListener("appUrlOpen", async (event) => {
+          console.log("[DEEP LINK] Url received:", event.url);
+
+          if (
+            event.url.includes("access_token") ||
+            event.url.includes("refresh_token")
+          ) {
+            // Extract params from fragment (hash)
+            const url = new URL(event.url);
+            const hash = url.hash.substring(1); // remove #
+            const params = new URLSearchParams(hash);
+            const accessToken = params.get("access_token");
+            const refreshToken = params.get("refresh_token");
+
+            if (accessToken && refreshToken) {
+              const { error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+
+              if (error) {
+                console.error("[DEEP LINK] Error setting session:", error);
+                toast.error("Error al iniciar sesión desde Google");
+              } else {
+                console.log("[DEEP LINK] Session set successfully");
+                toast.success("Sesión iniciada correctamente");
+                // Close browser if open
+                await Browser.close().catch(() => {});
+              }
+            }
+          }
+        });
+      });
+    }
+  }, []);
+
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/app`,
-      },
-    });
-    return { error: error as Error | null };
+    try {
+      console.log("[GOOGLE AUTH] Starting OAuth flow...");
+
+      const isNative = Capacitor.isNativePlatform();
+      // Use custom scheme for native, /app route for web
+      const redirectUrl = isNative
+        ? "com.calistenia.app://auth/callback"
+        : `${window.location.origin}/app`;
+
+      console.log("[GOOGLE AUTH] Redirect URL:", redirectUrl);
+      toast.info("Abriendo Google...", { duration: 2000 });
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: isNative,
+        },
+      });
+
+      if (error) {
+        console.error("[GOOGLE AUTH] OAuth error:", error);
+        toast.error(`❌ Error: ${error.message}`, { duration: 10000 });
+        return { error: error as Error };
+      }
+
+      if (isNative && data?.url) {
+        console.log("[GOOGLE AUTH] Opening browser with URL:", data.url);
+
+        // Open browser
+        await Browser.open({
+          url: data.url,
+          windowName: "_self",
+        });
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error("[GOOGLE AUTH] Catch block error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      toast.error(`❌ Error inesperado: ${errorMessage}`, {
+        duration: 15000,
+      });
+      return { error: error as Error };
+    }
   };
 
   const signOut = async () => {

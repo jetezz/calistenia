@@ -101,11 +101,9 @@ export function LoginForm() {
       toast.error("Error inesperado al intentar con Google");
       console.error(err);
     } finally {
-      // Keep loading state if redirecting, though usually state is lost on redirect.
-      // But if it fails, turn off loading.
-      // If successful, we redirect away, so setting false doesn't hurt.
-      // Actually, if we redirect, we might prefer to keep loading to avoid UI flash?
-      // But setIsLoading(false) is safer in case redirect doesn't happen immediately or fails.
+      // Always reset loading state. If redirect happens, state is lost anyway.
+      // If it fails, we need to reset the button to allow retry.
+      setIsLoading(false);
     }
   };
 
