@@ -37,7 +37,17 @@ export function SettingsPage() {
     getQuickActions,
     updateQuickActions,
     refresh: refreshAppSettings,
+    settings: appSettings,
+    updateSetting,
   } = useAdminSettingsLogic();
+
+  const bookingAutoConfirm =
+    (appSettings.find((s) => s.key === "booking_auto_confirm")
+      ?.value as boolean) ?? true;
+
+  const handleToggleAutoConfirm = async (checked: boolean) => {
+    await updateSetting("booking_auto_confirm", checked);
+  };
 
   const quickActions = getQuickActions();
 
@@ -140,6 +150,7 @@ export function SettingsPage() {
           <TabsTrigger value="schedule">Horarios</TabsTrigger>
           <TabsTrigger value="texts">Textos</TabsTrigger>
           <TabsTrigger value="testimonials">Testimonios</TabsTrigger>
+          <TabsTrigger value="bookings">Reservas</TabsTrigger>
           <TabsTrigger value="navigation">Navegación</TabsTrigger>
         </TabsList>
 
@@ -587,6 +598,26 @@ export function SettingsPage() {
           </Card>
         </TabsContent>
 
+        {/* Tab: Reservas */}
+        <TabsContent value="bookings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuración de Reservas</CardTitle>
+              <CardDescription>
+                Define cómo se comportan las reservas en la aplicación
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <VisibilityToggle
+                label="Confirmación Automática"
+                checked={bookingAutoConfirm}
+                onCheckedChange={handleToggleAutoConfirm}
+                description="Si está activo, las reservas se confirman automáticamente. Si está inactivo, requieren confirmación manual del admin."
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Tab: Navegación */}
         <TabsContent value="navigation" className="space-y-6">
           <Card>
@@ -651,7 +682,7 @@ export function SettingsPage() {
       </Tabs>
 
       {/* Sticky Action Buttons (Mobile Only) */}
-      <div className="fixed bottom-16 left-0 right-0 md:hidden px-4 pb-4 bg-gradient-to-t from-background via-background to-transparent pt-6">
+      <div className="fixed bottom-16 left-0 right-0 md:hidden px-4 pb-4 bg-linear-to-t from-background via-background to-transparent pt-6">
         <div className="flex gap-2 max-w-5xl mx-auto">
           <Button
             variant="outline"

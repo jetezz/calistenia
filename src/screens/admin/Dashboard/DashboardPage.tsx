@@ -146,6 +146,22 @@ export function DashboardPage() {
     });
   }
 
+  if (stats.pendingBookingsCount > 0) {
+    alerts.push({
+      type: "pending-bookings",
+      title: `${stats.pendingBookingsCount} solicitud${
+        stats.pendingBookingsCount > 1 ? "es" : ""
+      } pendiente${stats.pendingBookingsCount > 1 ? "s" : ""}`,
+      description: "Reservas por confirmar",
+      icon: AlertCircle,
+      color: "text-yellow-600",
+      bg: "bg-yellow-50",
+      border: "border-yellow-200",
+      href: getFullPath(ROUTES.ADMIN.BOOKINGS),
+      badge: stats.pendingBookingsCount,
+    });
+  }
+
   if (stats.pendingUsersCount > 0) {
     alerts.push({
       type: "pending-users",

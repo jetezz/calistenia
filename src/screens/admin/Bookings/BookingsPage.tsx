@@ -95,6 +95,15 @@ export function BookingsPage() {
             Completada
           </Badge>
         );
+      case "pending":
+        return (
+          <Badge
+            variant="outline"
+            className="border-yellow-500 text-yellow-700 bg-yellow-50 shrink-0"
+          >
+            Pendiente
+          </Badge>
+        );
       default:
         return (
           <Badge variant="secondary" className="shrink-0">
@@ -139,6 +148,44 @@ export function BookingsPage() {
           defaultValue={["today"]}
           className="space-y-4"
         >
+          {/* Solicitudes Pendientes */}
+          {bookings.filter((b) => b.status === "pending").length > 0 && (
+            <AccordionItem value="pending" className="border-none">
+              <AccordionTrigger className="hover:no-underline py-2 px-1">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="size-4 text-yellow-600" />
+                  <h2 className="font-semibold text-lg text-yellow-700">
+                    Solicitudes Pendientes
+                  </h2>
+                  <Badge className="text-xs bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border-yellow-200">
+                    {bookings.filter((b) => b.status === "pending").length}
+                  </Badge>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="space-y-3">
+                  {bookings
+                    .filter((b) => b.status === "pending")
+                    .map((booking) => (
+                      <BookingCard
+                        key={booking.id}
+                        booking={booking}
+                        formatDate={formatDate}
+                        formatTime={formatTime}
+                        getBookingStatusBadge={getBookingStatusBadge}
+                        DAYS_OF_WEEK={DAYS_OF_WEEK}
+                        convertDayOfWeekToDisplayIndex={
+                          convertDayOfWeekToDisplayIndex
+                        }
+                        handleUpdateStatus={handleUpdateStatus}
+                        onDeleteClick={() => setBookingToDelete(booking)}
+                      />
+                    ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
           {/* Reservas para hoy */}
           <AccordionItem value="today" className="border-none">
             <AccordionTrigger className="hover:no-underline py-2 px-1">
@@ -146,20 +193,29 @@ export function BookingsPage() {
                 <Calendar className="size-4 text-primary" />
                 <h2 className="font-semibold text-lg">Reservas para hoy</h2>
                 <Badge variant="secondary" className="text-xs">
-                  {bookings.filter((b) => b.booking_date === todayStr).length}
+                  {
+                    bookings.filter(
+                      (b) =>
+                        b.booking_date === todayStr && b.status !== "pending"
+                    ).length
+                  }
                 </Badge>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pt-2">
               <div className="space-y-3">
-                {bookings.filter((b) => b.booking_date === todayStr).length ===
-                0 ? (
+                {bookings.filter(
+                  (b) => b.booking_date === todayStr && b.status !== "pending"
+                ).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-lg">
                     No hay reservas para hoy
                   </p>
                 ) : (
                   bookings
-                    .filter((b) => b.booking_date === todayStr)
+                    .filter(
+                      (b) =>
+                        b.booking_date === todayStr && b.status !== "pending"
+                    )
                     .map((booking) => (
                       <BookingCard
                         key={booking.id}
@@ -228,7 +284,10 @@ export function BookingsPage() {
 
           {/* Otras Reservas */}
           {bookings.filter(
-            (b) => b.booking_date !== todayStr && b.status !== "completed"
+            (b) =>
+              b.booking_date !== todayStr &&
+              b.status !== "completed" &&
+              b.status !== "pending"
           ).length > 0 && (
             <AccordionItem value="other" className="border-none">
               <AccordionTrigger className="hover:no-underline py-2 px-1">
@@ -242,7 +301,8 @@ export function BookingsPage() {
                       bookings.filter(
                         (b) =>
                           b.booking_date !== todayStr &&
-                          b.status !== "completed"
+                          b.status !== "completed" &&
+                          b.status !== "pending"
                       ).length
                     }
                   </Badge>
@@ -253,7 +313,9 @@ export function BookingsPage() {
                   {bookings
                     .filter(
                       (b) =>
-                        b.booking_date !== todayStr && b.status !== "completed"
+                        b.booking_date !== todayStr &&
+                        b.status !== "completed" &&
+                        b.status !== "pending"
                     )
                     .map((booking) => (
                       <BookingCard
@@ -427,6 +489,27 @@ function BookingCard({
                 <CheckCircle className="size-3" />
                 Reserva Finalizada
               </div>
+            )}
+
+            {booking.status === "pending" && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-8 text-xs font-semibold border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+                  onClick={() => handleUpdateStatus(booking.id, "confirmed")}
+                >
+                  Confirmar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-8 text-xs font-semibold border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => handleUpdateStatus(booking.id, "cancelled")}
+                >
+                  Rechazar
+                </Button>
+              </>
             )}
           </div>
 

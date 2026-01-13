@@ -155,7 +155,6 @@ export const useBookingLogic = (userId?: string) => {
           user_id: userId,
           time_slot_id: timeSlotId,
           booking_date: bookingDate,
-          status: "confirmed",
         };
 
         const booking = await createBookingInStore(newBooking);

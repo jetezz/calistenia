@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createBaseStore, type BaseStoreState } from "./BaseStore";
 import { bookingService } from "@/services/bookingService";
+import { useAppSettingsStore } from "./appSettingsStore";
 import type { Database } from "@/types/database";
 
 // Tipos derivados de la base de datos
@@ -31,6 +32,19 @@ export const useBookingStore = create<BookingStore>((set, get, store) => {
 
   return {
     ...baseStore,
+
+    create: async (data: BookingInsert) => {
+      const settingsStore = useAppSettingsStore.getState();
+      if (!settingsStore.isInitialized) {
+        await settingsStore.fetchAll();
+      }
+
+      const autoConfirm = useAppSettingsStore
+        .getState()
+        .getSettingValue("booking_auto_confirm", true);
+      const status = autoConfirm ? "confirmed" : "pending";
+      await baseStore.create({ ...data, status });
+    },
 
     // Extensión con métodos específicos
     fetchByDateRange: async (startDate: string, endDate: string) => {

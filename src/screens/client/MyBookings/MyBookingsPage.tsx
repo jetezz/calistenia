@@ -28,6 +28,8 @@ export function MyBookingsPage() {
         return <Badge variant="destructive">Cancelada</Badge>;
       case "completed":
         return <Badge className="bg-blue-500 text-white">Completada</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-500 text-white">Pendiente</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -91,7 +93,7 @@ export function MyBookingsPage() {
                   className="p-3 rounded-lg border bg-card space-y-3"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-green-100 rounded-md flex-shrink-0">
+                    <div className="p-2 bg-green-100 rounded-md shrink-0">
                       <Calendar className="size-4 text-green-600" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -109,7 +111,7 @@ export function MyBookingsPage() {
                         Reservada el {formatDateLong(booking.created_at)}
                       </div>
                     </div>
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       {getStatusBadge(booking.status)}
                     </div>
                   </div>
@@ -194,7 +196,7 @@ export function MyBookingsPage() {
                         Reservada el {formatDateLong(booking.created_at)}
                       </div>
                     </div>
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       {getStatusBadge(booking.status)}
                     </div>
                   </div>

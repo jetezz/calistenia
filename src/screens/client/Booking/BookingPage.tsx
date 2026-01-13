@@ -117,17 +117,8 @@ export function BookingPage() {
     const dateStr = formatDate(date);
     return userBookings.some(
       (booking) =>
-        booking.booking_date === dateStr && booking.status === "confirmed"
-    );
-  };
-
-  const isSlotBooked = (timeSlotId: string, date: Date) => {
-    const dateStr = formatDate(date);
-    return userBookings.some(
-      (booking) =>
-        booking.time_slot_id === timeSlotId &&
         booking.booking_date === dateStr &&
-        booking.status === "confirmed"
+        (booking.status === "confirmed" || booking.status === "pending")
     );
   };
 
@@ -309,19 +300,25 @@ export function BookingPage() {
                       );
                       const isAvailable =
                         availability && availability.available > 0;
-                      const slotBooked = isSlotBooked(slot.id, selectedDate);
+                      const userBooking = userBookings.find(
+                        (b) =>
+                          b.time_slot_id === slot.id &&
+                          b.booking_date === formatDate(selectedDate) &&
+                          (b.status === "confirmed" || b.status === "pending")
+                      );
+                      const isBooked = !!userBooking;
                       const canBook =
                         !isPastDate(selectedDate) &&
                         isAvailable &&
                         (userProfile?.credits ?? 0) > 0 &&
                         !isBooking &&
-                        !slotBooked;
+                        !isBooked;
 
                       return (
                         <div
                           key={slot.id}
                           className={`p-3 rounded-lg border ${
-                            slotBooked
+                            isBooked
                               ? "border-blue-200 bg-blue-50"
                               : isAvailable
                               ? "border-green-200 bg-green-50"
@@ -349,22 +346,26 @@ export function BookingPage() {
                               </div>
                               <Badge
                                 variant={
-                                  slotBooked
+                                  isBooked
                                     ? "default"
                                     : isAvailable
                                     ? "default"
                                     : "secondary"
                                 }
                                 className={`text-xs ${
-                                  slotBooked
-                                    ? "bg-blue-500 text-white"
+                                  isBooked
+                                    ? userBooking?.status === "pending"
+                                      ? "bg-yellow-500 text-white"
+                                      : "bg-blue-500 text-white"
                                     : isAvailable
                                     ? "bg-green-500 text-white"
                                     : ""
                                 }`}
                               >
-                                {slotBooked
-                                  ? "Reservado"
+                                {isBooked
+                                  ? userBooking?.status === "pending"
+                                    ? "Pendiente"
+                                    : "Reservado"
                                   : availability && availability.available > 0
                                   ? "Disponible"
                                   : "Completo"}
@@ -378,8 +379,10 @@ export function BookingPage() {
                                 handleBooking(slot.id, formatDate(selectedDate))
                               }
                             >
-                              {slotBooked
-                                ? "Ya tienes reserva"
+                              {isBooked
+                                ? userBooking?.status === "pending"
+                                  ? "Pendiente de aprobación"
+                                  : "Ya tienes reserva"
                                 : (userProfile?.credits ?? 0) <= 0
                                 ? "Sin créditos"
                                 : isBooking

@@ -3,7 +3,7 @@ import { useBookingStore } from "@/stores/bookingStore";
 import { useProfileStore } from "@/stores/profileStore";
 import { usePaymentRequestStore } from "@/stores/paymentRequestStore";
 import type { NotificationItem } from "../types";
-import { User, CreditCard, Calendar } from "lucide-react";
+import { User, CreditCard, Calendar, AlertTriangle } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { getFullPath } from "@/lib/routeUtils";
 
@@ -50,6 +50,21 @@ export const useAggregatedNotifications = (isAdmin: boolean) => {
         actionLabel: "Ver solicitud",
       });
     });
+
+    // 3. Pending Bookings (New)
+    const pendingBookings = bookings.filter((b) => b.status === "pending");
+    if (pendingBookings.length > 0) {
+      items.push({
+        id: `bookings-pending`,
+        title: "Reservas pendientes",
+        description: `${pendingBookings.length} reservas requieren confirmación`,
+        type: "warning",
+        timestamp: new Date().toISOString(),
+        link: getFullPath(ROUTES.ADMIN.BOOKINGS),
+        icon: AlertTriangle,
+        actionLabel: "Revisar",
+      });
+    }
 
     // 3. Today's Bookings (Info)
     const today = new Date().toISOString().split("T")[0];

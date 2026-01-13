@@ -63,6 +63,8 @@ export const useDashboardLogic = () => {
       activeTimeSlotsCount: activeSlots.length,
       pendingUsersCount: profiles.filter((p) => p.approval_status === "pending")
         .length,
+      pendingBookingsCount: bookings.filter((b) => b.status === "pending")
+        .length,
     };
   }, [bookings, paymentRequests, profiles, activeSlots]);
 

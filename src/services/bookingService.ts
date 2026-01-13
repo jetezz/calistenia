@@ -146,7 +146,7 @@ const getUpcomingByUserId = async (userId: string, limit: number = 10) => {
     `
     )
     .eq("user_id", userId)
-    .eq("status", "confirmed")
+    .in("status", ["confirmed", "pending"])
     .gte("booking_date", today)
     .order("booking_date", { ascending: true })
     .order("created_at", { ascending: true })
