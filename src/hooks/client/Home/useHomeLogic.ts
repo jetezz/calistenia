@@ -19,10 +19,18 @@ export const useHomeLogic = () => {
     fetchAll: fetchPayments,
   } = usePaymentRequestStore();
 
+  const refreshDashboard = useCallback(async () => {
+    await Promise.all([
+      fetchBookings(true),
+      fetchPayments(true),
+      refreshProfile(),
+    ]);
+  }, [fetchBookings, fetchPayments, refreshProfile]);
+
   useEffect(() => {
-    fetchBookings();
-    fetchPayments();
-  }, [fetchBookings, fetchPayments]);
+    // Force refresh on mount
+    refreshDashboard();
+  }, [refreshDashboard]);
 
   const upcomingBookings = useMemo(() => {
     if (!userId) return [];
@@ -60,14 +68,6 @@ export const useHomeLogic = () => {
   }, [allPaymentRequests]);
 
   const isLoading = isBookingsLoading || isPaymentsLoading;
-
-  const refreshDashboard = useCallback(async () => {
-    await Promise.all([
-      fetchBookings(true),
-      fetchPayments(true),
-      refreshProfile(),
-    ]);
-  }, [fetchBookings, fetchPayments, refreshProfile]);
 
   return {
     upcomingBookings,

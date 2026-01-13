@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { useBookingStore } from "@/stores/bookingStore";
 import { useProfileStore } from "@/stores/profileStore";
 import { usePaymentRequestStore } from "@/stores/paymentRequestStore";
@@ -38,15 +38,20 @@ export const useDashboardLogic = () => {
     isPaymentsLoading ||
     isSlotsLoading;
 
-  // Initial Fetch
-  useEffect(() => {
-    // Only fetch if empty? Or always refresh on dashboard mount?
-    // For dashboard, freshness is good. We can optimize later to check if already populated.
-    fetchBookings();
-    fetchProfiles();
-    fetchPayments();
-    fetchActiveSlots();
+  // Actions
+  const refresh = useCallback(async () => {
+    await Promise.all([
+      fetchBookings(true),
+      fetchProfiles(true),
+      fetchPayments(true),
+      fetchActiveSlots(true),
+    ]);
   }, [fetchBookings, fetchProfiles, fetchPayments, fetchActiveSlots]);
+
+  // Initial Fetch - Force refresh on mount
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   // Computed Stats
   const stats = useMemo(() => {
@@ -73,15 +78,6 @@ export const useDashboardLogic = () => {
     true,
     stats.todayBookingsCount
   );
-
-  const refresh = async () => {
-    await Promise.all([
-      fetchBookings(true),
-      fetchProfiles(true),
-      fetchPayments(true),
-      fetchActiveSlots(true),
-    ]);
-  };
 
   return {
     // Data
