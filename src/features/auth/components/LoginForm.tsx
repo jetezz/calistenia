@@ -78,7 +78,7 @@ export function LoginForm() {
           toast.error(translateError(error.message));
         } else {
           toast.success(
-            "Cuenta creada. Esperando confirmacion del administrador."
+            "Cuenta creada. Esperando confirmacion del administrador.",
           );
           setMode("login");
         }
@@ -224,7 +224,7 @@ export function LoginForm() {
                 fill="#34A853"
               />
               <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.-.19-.58z"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18c-.75 1.48-1.18 3.15-1.18 4.93 0 1.78.43 3.45 1.18 4.93l2.85-2.26c-.16-.48-.27-1-.27-1.54 0-.54.11-1.06.27-1.54z"
                 fill="#FBBC05"
               />
               <path
