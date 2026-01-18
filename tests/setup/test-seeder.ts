@@ -65,20 +65,33 @@ function getDayOfWeek(date: Date): number {
 }
 
 /**
- * Calcula la fecha de exactamente 7 días después
+ * Día de la semana para el slot RECURRENTE: Sábado (6)
+ * Siempre aparecerá en la siguiente semana porque la semana empieza el lunes
  */
-export function getNextWeekDate(): Date {
+export const RECURRING_DAY_OF_WEEK = 6; // Sábado
+
+/**
+ * Calcula el próximo domingo (siguiente semana)
+ * Este será el día para el slot ESPECÍFICO
+ */
+export function getNextSundayDate(): Date {
   const today = new Date();
-  return addDays(today, 7);
+  const currentDay = getDay(today); // 0=Domingo, 6=Sábado
+
+  // Si hoy es domingo (0), el próximo domingo es en 7 días
+  // Si hoy es lunes (1), el próximo domingo es en 6 días
+  // Si hoy es sábado (6), el próximo domingo es en 1 día
+  const daysUntilNextSunday = currentDay === 0 ? 7 : 7 - currentDay;
+
+  return addDays(today, daysUntilNextSunday);
 }
 
 /**
- * Calcula el día de la semana que tendrá la fecha de 7 días después
- * Esto nos permite crear un horario recurrente que siempre aparecerá en la próxima semana
+ * Calcula el día de la semana que tendrá la fecha del slot recurrente
+ * Ahora siempre devuelve Sábado (6)
  */
 export function getRecurringDayForNextWeek(): number {
-  const nextWeekDate = getNextWeekDate();
-  return getDayOfWeek(nextWeekDate);
+  return RECURRING_DAY_OF_WEEK;
 }
 
 /**
@@ -148,34 +161,39 @@ export async function cleanTestSlots(): Promise<void> {
 
 /**
  * Crea los slots de test necesarios
+ * - Slot RECURRENTE: Sábado (día 6)
+ * - Slot ESPECÍFICO: Próximo domingo (fecha específica)
  */
 export async function seedTestSlots(): Promise<{
   recurringSlotId: string;
   specificSlotId: string;
   specificDate: string;
   recurringDay: number;
+  specificDay: number;
 }> {
   console.log("🌱 Seeding test slots...");
 
   const adminId = await authenticateAsAdmin(supabase);
 
   // Calcular fechas
-  const nextWeekDate = getNextWeekDate();
-  const recurringDay = getDayOfWeek(nextWeekDate);
-  const specificDateStr = format(nextWeekDate, "yyyy-MM-dd");
+  const recurringDay = RECURRING_DAY_OF_WEEK; // Sábado (6)
+  const nextSunday = getNextSundayDate(); // Próximo domingo
+  const specificDateStr = format(nextSunday, "yyyy-MM-dd");
+  const specificDay = getDayOfWeek(nextSunday); // Siempre 0 (Domingo)
 
+  console.log(`📅 Recurring slot: Sábado (día ${recurringDay})`);
   console.log(
-    `📅 Next week date: ${specificDateStr} (day of week: ${recurringDay})`,
+    `📅 Specific slot: ${specificDateStr} (Domingo, día ${specificDay})`,
   );
 
-  // 1. Crear slot RECURRENTE
-  // Este slot será visible en el día de la semana correspondiente
+  // 1. Crear slot RECURRENTE para SÁBADO
+  // Este slot será visible en el sábado de cualquier semana
   const { data: recurringSlot, error: recurringError } = await supabase
     .from("time_slots")
     .upsert(
       {
         id: TEST_SLOT_IDS.RECURRING,
-        day_of_week: recurringDay,
+        day_of_week: recurringDay, // Sábado (6)
         start_time: TEST_SLOT_CONFIG.RECURRING.startTime,
         end_time: TEST_SLOT_CONFIG.RECURRING.endTime,
         capacity: TEST_SLOT_CONFIG.RECURRING.capacity,
@@ -196,21 +214,21 @@ export async function seedTestSlots(): Promise<{
   }
 
   console.log(
-    `✅ Created recurring slot for day ${recurringDay}: ${TEST_SLOT_CONFIG.RECURRING.startTime} - ${TEST_SLOT_CONFIG.RECURRING.endTime}`,
+    `✅ Created recurring slot for Sábado (día ${recurringDay}): ${TEST_SLOT_CONFIG.RECURRING.startTime} - ${TEST_SLOT_CONFIG.RECURRING.endTime}`,
   );
 
-  // 2. Crear slot ESPECÍFICO para 7 días después
+  // 2. Crear slot ESPECÍFICO para el próximo DOMINGO
   const { data: specificSlot, error: specificError } = await supabase
     .from("time_slots")
     .upsert(
       {
         id: TEST_SLOT_IDS.SPECIFIC,
-        day_of_week: recurringDay, // Mismo día pero con fecha específica
+        day_of_week: specificDay, // Domingo (0)
         start_time: TEST_SLOT_CONFIG.SPECIFIC.startTime,
         end_time: TEST_SLOT_CONFIG.SPECIFIC.endTime,
         capacity: TEST_SLOT_CONFIG.SPECIFIC.capacity,
         is_active: true,
-        slot_type: "specific_date", // Tipo correcto según el constraint
+        slot_type: "specific_date",
         specific_date: specificDateStr,
         created_by: adminId,
       },
@@ -224,7 +242,7 @@ export async function seedTestSlots(): Promise<{
   }
 
   console.log(
-    `✅ Created specific slot for ${specificDateStr}: ${TEST_SLOT_CONFIG.SPECIFIC.startTime} - ${TEST_SLOT_CONFIG.SPECIFIC.endTime}`,
+    `✅ Created specific slot for ${specificDateStr} (Domingo): ${TEST_SLOT_CONFIG.SPECIFIC.startTime} - ${TEST_SLOT_CONFIG.SPECIFIC.endTime}`,
   );
 
   await supabase.auth.signOut();
@@ -234,6 +252,7 @@ export async function seedTestSlots(): Promise<{
     specificSlotId: specificSlot.id,
     specificDate: specificDateStr,
     recurringDay,
+    specificDay,
   };
 }
 
@@ -245,6 +264,7 @@ export async function setupTestData(): Promise<{
   specificSlotId: string;
   specificDate: string;
   recurringDay: number;
+  specificDay: number;
 }> {
   console.log("\n🚀 Setting up test data...\n");
 
@@ -254,10 +274,10 @@ export async function setupTestData(): Promise<{
   console.log("\n✨ Test data setup complete!\n");
   console.log("📋 Summary:");
   console.log(
-    `   - Recurring slot: Day ${result.recurringDay} at ${TEST_SLOT_CONFIG.RECURRING.startTime}`,
+    `   - Recurring slot: Sábado (día ${result.recurringDay}) at ${TEST_SLOT_CONFIG.RECURRING.startTime}`,
   );
   console.log(
-    `   - Specific slot: ${result.specificDate} at ${TEST_SLOT_CONFIG.SPECIFIC.startTime}`,
+    `   - Specific slot: ${result.specificDate} (Domingo, día ${result.specificDay}) at ${TEST_SLOT_CONFIG.SPECIFIC.startTime}`,
   );
   console.log("");
 
