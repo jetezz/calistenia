@@ -15,6 +15,11 @@ tests/
 │   └── auth.fixtures.ts         # Fixtures reutilizables para autenticación
 ├── helpers/
 │   └── test-helpers.ts          # Funciones auxiliares para tests
+├── setup/                       # 🆕 Configuración y seeders para tests
+│   ├── global-setup.ts          # Setup global de Playwright
+│   ├── global-teardown.ts       # Teardown global de Playwright
+│   ├── test-seeder.ts           # Seeder para crear datos de test
+│   └── run-seeder.ts            # Script para ejecutar seeder manualmente
 ├── auth/
 │   ├── login.spec.ts            # Tests de login
 │   ├── logout.spec.ts           # Tests de logout
@@ -24,6 +29,7 @@ tests/
 │   ├── booking.spec.ts          # Tests de reserva de clases
 │   ├── my-bookings.spec.ts      # Tests de historial de reservas
 │   ├── request-credits.spec.ts  # Tests de solicitud de créditos
+│   ├── slots-visibility.spec.ts # 🆕 Tests de visibilidad de horarios
 │   └── weight-stats.spec.ts     # Tests de estadísticas de peso
 ├── admin/
 │   ├── dashboard.spec.ts        # Tests del dashboard admin
@@ -83,6 +89,47 @@ pnpm run test:debug
 
 ```bash
 pnpm run test:report
+```
+
+---
+
+## 🌱 Sistema de Seeders para Tests
+
+### ¿Por qué usamos seeders?
+
+Los tests de funcionalidades como **visibilidad de horarios** dependen del día de la semana actual, lo que causa que los tests fallen de forma inconsistente. Para resolver esto, implementamos un **sistema de seeders** que crea datos predecibles.
+
+### ¿Cómo funciona?
+
+1. **Global Setup**: Antes de ejecutar cualquier test, el `global-setup.ts` ejecuta el seeder.
+2. **Seeder**: El `test-seeder.ts` crea:
+   - Un **horario recurrente** para el día de la semana correspondiente a 7 días después.
+   - Un **horario específico** para exactamente 7 días después.
+3. **Tests**: Los tests navegan a la **siguiente semana** donde siempre encontrarán los slots.
+4. **Global Teardown**: Después de todos los tests, se limpian los datos de test.
+
+### Datos de test creados
+
+| Tipo       | ID (UUID)                              | Descripción                               |
+| ---------- | -------------------------------------- | ----------------------------------------- |
+| Recurrente | `00000000-0000-0000-0000-000000000001` | Slot de 10:00-11:00 para día de +7 días   |
+| Específico | `00000000-0000-0000-0000-000000000002` | Slot de 12:00-13:00 para fecha de +7 días |
+
+### Ejecutar seeder manualmente
+
+```bash
+pnpm run test:seed
+```
+
+### Configuración en `playwright.config.ts`
+
+```typescript
+export default defineConfig({
+  // ...
+  globalSetup: "./tests/setup/global-setup.ts",
+  globalTeardown: "./tests/setup/global-teardown.ts",
+  // ...
+});
 ```
 
 ---

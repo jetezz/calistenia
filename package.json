@@ -16,6 +16,7 @@
     "build:aab": "pnpm run build:web && pnpm run sync:android && node build-android.mjs aab",
     "backup": "npx supabase db dump --data-only -f supabase/dump.sql",
     "test": "playwright test",
+    "test:seed": "tsx tests/setup/run-seeder.ts",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",

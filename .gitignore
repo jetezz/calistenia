@@ -40,3 +40,6 @@ android/captures/
 # Uncomment the following lines if you have a way to regenerate these assets (e.g. capacitor-assets)
 # android/app/src/main/res/drawable-*/
 # android/app/src/main/res/mipmap-*/
+
+.env
+.env.test

@@ -81,11 +81,19 @@ export function BookingPage() {
     }
   };
 
-  const getSlotsForDay = useCallback(
-    (dayOfWeek: number) => {
-      return timeSlots.filter((slot) => slot.day_of_week === dayOfWeek);
+  const getSlotsForDate = useCallback(
+    (date: Date) => {
+      const dateString = formatDate(date);
+      const dayOfWeek = date.getDay();
+
+      return timeSlots.filter((slot) => {
+        if (slot.slot_type === "specific_date") {
+          return slot.specific_date === dateString;
+        }
+        return slot.day_of_week === dayOfWeek;
+      });
     },
-    [timeSlots]
+    [timeSlots, formatDate],
   );
 
   const isPastDate = (date: Date) => {
@@ -104,8 +112,7 @@ export function BookingPage() {
   };
 
   const hasAvailableSlots = (date: Date) => {
-    const dayOfWeek = date.getDay();
-    const slots = getSlotsForDay(dayOfWeek);
+    const slots = getSlotsForDate(date);
 
     return slots.some((slot) => {
       const availability = getAvailability(slot.id, formatDate(date));
@@ -118,7 +125,7 @@ export function BookingPage() {
     return userBookings.some(
       (booking) =>
         booking.booking_date === dateStr &&
-        (booking.status === "confirmed" || booking.status === "pending")
+        (booking.status === "confirmed" || booking.status === "pending"),
     );
   };
 
@@ -126,8 +133,7 @@ export function BookingPage() {
   useEffect(() => {
     const loadAvailability = async () => {
       for (const date of weekDates) {
-        const dayOfWeek = date.getDay();
-        const slots = getSlotsForDay(dayOfWeek);
+        const slots = getSlotsForDate(date);
 
         for (const slot of slots) {
           await fetchAvailability(slot.id, formatDate(date));
@@ -138,7 +144,7 @@ export function BookingPage() {
     if (timeSlots.length > 0) {
       loadAvailability();
     }
-  }, [weekDates, timeSlots, formatDate, getSlotsForDay, fetchAvailability]);
+  }, [weekDates, timeSlots, formatDate, getSlotsForDate, fetchAvailability]);
 
   return (
     <StandardPage
@@ -219,12 +225,12 @@ export function BookingPage() {
                         isPastDate(date)
                           ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
                           : isSelectedDate(date)
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                          : isBooked
-                          ? "border-blue-400 bg-blue-50"
-                          : isTodayDate
-                          ? "border-primary bg-primary/5"
-                          : "hover:bg-muted border-border"
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : isBooked
+                              ? "border-blue-400 bg-blue-50"
+                              : isTodayDate
+                                ? "border-primary bg-primary/5"
+                                : "hover:bg-muted border-border"
                       }`}
                     >
                       <div
@@ -232,8 +238,8 @@ export function BookingPage() {
                           isBooked && !isSelectedDate(date)
                             ? "text-blue-600 font-medium"
                             : isTodayDate && !isSelectedDate(date)
-                            ? "text-primary font-medium"
-                            : "text-muted-foreground"
+                              ? "text-primary font-medium"
+                              : "text-muted-foreground"
                         }`}
                       >
                         {DAYS_SHORT[date.getDay()]}
@@ -273,8 +279,7 @@ export function BookingPage() {
             </div>
 
             {(() => {
-              const dayOfWeek = selectedDate.getDay();
-              const daySlots = getSlotsForDay(dayOfWeek);
+              const daySlots = getSlotsForDate(selectedDate);
 
               if (daySlots.length === 0) {
                 return (
@@ -296,7 +301,7 @@ export function BookingPage() {
                     .map((slot) => {
                       const availability = getAvailability(
                         slot.id,
-                        formatDate(selectedDate)
+                        formatDate(selectedDate),
                       );
                       const isAvailable =
                         availability && availability.available > 0;
@@ -304,7 +309,7 @@ export function BookingPage() {
                         (b) =>
                           b.time_slot_id === slot.id &&
                           b.booking_date === formatDate(selectedDate) &&
-                          (b.status === "confirmed" || b.status === "pending")
+                          (b.status === "confirmed" || b.status === "pending"),
                       );
                       const isBooked = !!userBooking;
                       const canBook =
@@ -321,8 +326,8 @@ export function BookingPage() {
                             isBooked
                               ? "border-blue-200 bg-blue-50"
                               : isAvailable
-                              ? "border-green-200 bg-green-50"
-                              : "border-gray-200 bg-gray-50"
+                                ? "border-green-200 bg-green-50"
+                                : "border-gray-200 bg-gray-50"
                           }`}
                         >
                           <div className="space-y-3">
@@ -349,8 +354,8 @@ export function BookingPage() {
                                   isBooked
                                     ? "default"
                                     : isAvailable
-                                    ? "default"
-                                    : "secondary"
+                                      ? "default"
+                                      : "secondary"
                                 }
                                 className={`text-xs ${
                                   isBooked
@@ -358,8 +363,8 @@ export function BookingPage() {
                                       ? "bg-yellow-500 text-white"
                                       : "bg-blue-500 text-white"
                                     : isAvailable
-                                    ? "bg-green-500 text-white"
-                                    : ""
+                                      ? "bg-green-500 text-white"
+                                      : ""
                                 }`}
                               >
                                 {isBooked
@@ -367,8 +372,8 @@ export function BookingPage() {
                                     ? "Pendiente"
                                     : "Reservado"
                                   : availability && availability.available > 0
-                                  ? "Disponible"
-                                  : "Completo"}
+                                    ? "Disponible"
+                                    : "Completo"}
                               </Badge>
                             </div>
 
@@ -384,10 +389,10 @@ export function BookingPage() {
                                   ? "Pendiente de aprobación"
                                   : "Ya tienes reserva"
                                 : (userProfile?.credits ?? 0) <= 0
-                                ? "Sin créditos"
-                                : isBooking
-                                ? "Reservando..."
-                                : "Reservar (1 crédito)"}
+                                  ? "Sin créditos"
+                                  : isBooking
+                                    ? "Reservando..."
+                                    : "Reservar (1 crédito)"}
                             </Button>
                           </div>
                         </div>
