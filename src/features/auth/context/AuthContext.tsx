@@ -65,7 +65,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signUpWithEmail = async (
     email: string,
     password: string,
-    fullName: string
+    fullName: string,
   ) => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -219,10 +219,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       // 5. Redirigir siempre
-      window.location.href = "/login";
+      // window.location.href = "/login"; // Comentado para evitar recarga forzada
     } catch (error) {
       console.error("[AUTH] Unexpected error during signOut:", error);
-      window.location.href = "/login";
+      // window.location.href = "/login"; // Comentado para evitar recarga forzada
     }
   };
 

@@ -15,7 +15,7 @@ import { Navigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 
 export function RejectedPage() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const {
     profile,
     isLoading,
@@ -34,6 +34,10 @@ export function RejectedPage() {
 
     return () => clearInterval(interval);
   }, [refreshProfile]);
+
+  if (!user && !isLoading) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
 
   if (isLoading) {
     return <PageLoadingState message="Cargando..." />;

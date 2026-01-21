@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "./useAuth";
 import { useProfileStore } from "@/stores/profileStore";
+import { toast } from "sonner";
 
 export function useProfile() {
   const { user, signOut } = useAuth();
@@ -54,7 +55,10 @@ export function useProfile() {
           // Si el error es PGRST116, significa que el perfil no existe (usuario eliminado)
           if (error.code === "PGRST116") {
             console.warn(
-              "Profile not found. User may have been deleted. Signing out..."
+              "Profile not found. User may have been deleted. Signing out...",
+            );
+            toast.error(
+              "Error crítico: No se encontró el perfil de usuario. La cuenta puede estar incompleta.",
             );
             setCurrentProfile(null);
             setIsLoading(false);
@@ -99,7 +103,7 @@ export function useProfile() {
         // Si el error es PGRST116, significa que el perfil no existe (usuario eliminado)
         if (error.code === "PGRST116") {
           console.warn(
-            "Profile not found during refresh. User may have been deleted. Signing out..."
+            "Profile not found during refresh. User may have been deleted. Signing out...",
           );
           setCurrentProfile(null);
           setRefreshing(false);

@@ -102,16 +102,24 @@ export function Header() {
             </Button>
           )}
           <NotificationCenter isAdmin={isAdmin} />
-          <div className="flex items-center gap-2">
-            <Avatar className="size-9">
-              <AvatarFallback className="text-sm font-medium">
-                {getInitials(profile?.full_name ?? null)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="hidden sm:inline text-sm font-medium max-w-32 truncate">
-              {profile?.full_name || profile?.email}
-            </span>
-          </div>
+          {import.meta.env.VITE_APP_ENV === "test" ? (
+            <div className="flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-3 py-1.5 rounded-full border border-yellow-200 dark:border-yellow-800 animate-pulse">
+              <span className="text-xs font-bold whitespace-nowrap">
+                ⚠️ MODO TEST
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Avatar className="size-9">
+                <AvatarFallback className="text-sm font-medium">
+                  {getInitials(profile?.full_name ?? null)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="hidden sm:inline text-sm font-medium max-w-32 truncate">
+                {profile?.full_name || profile?.email}
+              </span>
+            </div>
+          )}
           <Button
             variant="ghost"
             size="icon"

@@ -78,12 +78,14 @@ export function getNextSundayDate(): Date {
   const today = new Date();
   const currentDay = getDay(today); // 0=Domingo, 6=Sábado
 
-  // Si hoy es domingo (0), el próximo domingo es en 7 días
-  // Si hoy es lunes (1), el próximo domingo es en 6 días
-  // Si hoy es sábado (6), el próximo domingo es en 1 día
-  const daysUntilNextSunday = currentDay === 0 ? 7 : 7 - currentDay;
+  // Queremos el domingo de la SIGUIENTE semana.
+  // Primero encontramos cuantos días faltan para el domingo de ESTA semana.
+  // Si hoy es domingo (0), faltan 0 días para el domingo de esta semana.
+  // Si hoy es lunes (1), faltan 6 días.
+  const daysUntilCurrentSunday = (7 - currentDay) % 7;
 
-  return addDays(today, daysUntilNextSunday);
+  // Sumamos 7 días adicionales para ir al domingo de la semana siguiente
+  return addDays(today, daysUntilCurrentSunday + 7);
 }
 
 /**

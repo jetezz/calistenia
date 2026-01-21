@@ -54,7 +54,7 @@ export async function loginAs(page: Page, role: UserRole): Promise<void> {
 export async function logout(page: Page): Promise<void> {
   // Buscar el menú de usuario o botón de logout
   const logoutButton = page.locator(
-    'button:has-text("Cerrar"), button:has-text("Logout"), [data-testid="logout-button"]',
+    'button:has-text("Cerrar"), button:has-text("Logout"), [data-testid="logout-button"], button[aria-label="Cerrar sesión"]',
   );
 
   if (await logoutButton.isVisible()) {
