@@ -77,10 +77,12 @@
       <h3>👨‍💼 Panel de Admin</h3>
       <ul align="left">
         <li>👥 Gestión de usuarios y perfiles</li>
-        <li>🕐 Configuración de horarios semanales</li>
-        <li>📋 Vista de reservas y capacidad</li>
-        <li>💵 Aprobación de solicitudes de pago</li>
-        <li>⚙️ Configuración de precios y métodos de pago</li>
+        <li>🕐 Configuración de horarios semanales y clases únicas</li>
+        <li>📋 Vista de reservas, capacidad y confirmación auto/manual</li>
+        <li>💵 Aprobación de solicitudes de pago con notas</li>
+        <li>⚙️ Configuración de precios, paquetes y métodos de pago</li>
+        <li>🎨 Personalización completa de branding (Textos, Imágenes, Testimonios)</li>
+        <li>📱 Gestión dinámica del menú inferior de la app</li>
         <li>📈 Dashboard con estadísticas en tiempo real</li>
       </ul>
     </td>
@@ -378,9 +380,9 @@ El sistema utiliza **PostgreSQL** con **Supabase** como backend.
   │   time_slots   │                    │ payment_methods │
   │  • day_of_week │                    │ • name, type    │
   │  • start/end   │                    │ • contact_phone │
-  │  • capacity    │                    └─────────────────┘
-  │  • slot_type   │
-  │  • created_by  │
+  │  • capacity    │                    │ • bank_account  │
+  │  • slot_type   │                    │ • instructions  │
+  │  • created_by  │                    └─────────────────┘
   └────────────────┘
                     ┌──────────────────┐
   ┌──────────────┐  │ pricing_packages │
@@ -403,35 +405,35 @@ El sistema utiliza **PostgreSQL** con **Supabase** como backend.
 
 #### **`profiles`** - Usuarios del Sistema
 
-| Campo                | Tipo        | Descripción                          |
-| -------------------- | ----------- | ------------------------------------ |
-| `id`                 | UUID (PK)   | FK → `auth.users.id`                 |
-| `email`              | TEXT        | Email del usuario                    |
-| `full_name`          | TEXT        | Nombre completo                      |
-| `phone`              | TEXT        | Teléfono                             |
-| `role`               | TEXT        | `admin` o `user`                     |
-| `credits`            | INTEGER     | Créditos disponibles (default: 0)    |
-| `payment_status`     | TEXT        | `paid`, `pending`, `unpaid`, `none`  |
-| `approval_status`    | TEXT        | Estado de aprobación                 |
-| `birth_date`         | DATE        | Fecha de nacimiento                  |
-| `gender`             | TEXT        | Género                               |
-| `height`             | NUMERIC     | Altura en cm                         |
-| `physical_objective` | TEXT        | Objetivo físico                      |
-| `created_at`         | TIMESTAMPTZ | Fecha de creación                    |
-| `updated_at`         | TIMESTAMPTZ | Última actualización                 |
+| Campo                | Tipo        | Descripción                         |
+| -------------------- | ----------- | ----------------------------------- |
+| `id`                 | UUID (PK)   | FK → `auth.users.id`                |
+| `email`              | TEXT        | Email del usuario                   |
+| `full_name`          | TEXT        | Nombre completo                     |
+| `phone`              | TEXT        | Teléfono                            |
+| `role`               | TEXT        | `admin` o `user`                    |
+| `credits`            | INTEGER     | Créditos disponibles (default: 0)   |
+| `payment_status`     | TEXT        | `paid`, `pending`, `unpaid`, `none` |
+| `approval_status`    | TEXT        | Estado de aprobación                |
+| `birth_date`         | DATE        | Fecha de nacimiento                 |
+| `gender`             | TEXT        | Género                              |
+| `height`             | NUMERIC     | Altura en cm                        |
+| `physical_objective` | TEXT        | Objetivo físico                     |
+| `created_at`         | TIMESTAMPTZ | Fecha de creación                   |
+| `updated_at`         | TIMESTAMPTZ | Última actualización                |
 
 #### **`bookings`** - Reservas de Clases
 
-| Campo          | Tipo        | Descripción                       |
-| -------------- | ----------- | --------------------------------- |
-| `id`           | UUID (PK)   | ID de la reserva                  |
-| `user_id`      | UUID (FK)   | Usuario → `profiles.id`           |
-| `time_slot_id` | UUID (FK)   | Slot → `time_slots.id`            |
-| `booking_date` | DATE        | Fecha de la clase                 |
+| Campo          | Tipo        | Descripción                           |
+| -------------- | ----------- | ------------------------------------- |
+| `id`           | UUID (PK)   | ID de la reserva                      |
+| `user_id`      | UUID (FK)   | Usuario → `profiles.id`               |
+| `time_slot_id` | UUID (FK)   | Slot → `time_slots.id`                |
+| `booking_date` | DATE        | Fecha de la clase                     |
 | `status`       | TEXT        | `confirmed`, `cancelled`, `completed` |
-| `created_by`   | UUID (FK)   | Admin (null=auto-reserva)         |
-| `created_at`   | TIMESTAMPTZ | Fecha de creación                 |
-| `updated_at`   | TIMESTAMPTZ | Última actualización              |
+| `created_by`   | UUID (FK)   | Admin (null=auto-reserva)             |
+| `created_at`   | TIMESTAMPTZ | Fecha de creación                     |
+| `updated_at`   | TIMESTAMPTZ | Última actualización                  |
 
 **Constraint**: `UNIQUE(user_id, time_slot_id, booking_date)`
 
@@ -453,104 +455,104 @@ El sistema utiliza **PostgreSQL** con **Supabase** como backend.
 
 #### **`weight_stats`** - Estadísticas de Composición Corporal
 
-| Campo                          | Tipo        | Descripción              |
-| ------------------------------ | ----------- | ------------------------ |
-| `id`                           | UUID (PK)   | ID de la estadística     |
-| `user_id`                      | UUID (FK)   | Usuario → `profiles.id`  |
-| `weight`                       | NUMERIC     | Peso en kg               |
-| `bmi`                          | NUMERIC     | Índice de masa corporal  |
-| `body_fat_percentage`          | NUMERIC     | % grasa corporal         |
-| `muscle_mass`                  | NUMERIC     | Masa muscular            |
-| `bone_mass`                    | NUMERIC     | Masa ósea                |
-| `total_body_water_percentage`  | NUMERIC     | % agua corporal          |
-| `metabolic_age`                | INTEGER     | Edad metabólica          |
-| `daily_calorie_intake`         | INTEGER     | Calorías diarias         |
-| `notes`                        | TEXT        | Notas                    |
-| `recorded_at`                  | TIMESTAMPTZ | Fecha de medición        |
-| `created_at`                   | TIMESTAMPTZ | Fecha de creación        |
-| `updated_at`                   | TIMESTAMPTZ | Última actualización     |
+| Campo                         | Tipo        | Descripción             |
+| ----------------------------- | ----------- | ----------------------- |
+| `id`                          | UUID (PK)   | ID de la estadística    |
+| `user_id`                     | UUID (FK)   | Usuario → `profiles.id` |
+| `weight`                      | NUMERIC     | Peso en kg              |
+| `bmi`                         | NUMERIC     | Índice de masa corporal |
+| `body_fat_percentage`         | NUMERIC     | % grasa corporal        |
+| `muscle_mass`                 | NUMERIC     | Masa muscular           |
+| `bone_mass`                   | NUMERIC     | Masa ósea               |
+| `total_body_water_percentage` | NUMERIC     | % agua corporal         |
+| `metabolic_age`               | INTEGER     | Edad metabólica         |
+| `daily_calorie_intake`        | INTEGER     | Calorías diarias        |
+| `notes`                       | TEXT        | Notas                   |
+| `recorded_at`                 | TIMESTAMPTZ | Fecha de medición       |
+| `created_at`                  | TIMESTAMPTZ | Fecha de creación       |
+| `updated_at`                  | TIMESTAMPTZ | Última actualización    |
 
 #### **`payment_requests`** - Solicitudes de Créditos
 
-| Campo               | Tipo        | Descripción                    |
-| ------------------- | ----------- | ------------------------------ |
-| `id`                | UUID (PK)   | ID de la solicitud             |
-| `user_id`           | UUID (FK)   | Usuario → `profiles.id`        |
-| `credits_requested` | INTEGER     | Créditos solicitados           |
+| Campo               | Tipo        | Descripción                       |
+| ------------------- | ----------- | --------------------------------- |
+| `id`                | UUID (PK)   | ID de la solicitud                |
+| `user_id`           | UUID (FK)   | Usuario → `profiles.id`           |
+| `credits_requested` | INTEGER     | Créditos solicitados              |
 | `status`            | TEXT        | `pending`, `approved`, `rejected` |
-| `payment_method_id` | UUID (FK)   | Método → `payment_methods.id`  |
-| `admin_notes`       | TEXT        | Notas del admin                |
-| `processed_by`      | UUID (FK)   | Admin → `profiles.id`          |
-| `processed_at`      | TIMESTAMPTZ | Fecha de procesamiento         |
-| `created_at`        | TIMESTAMPTZ | Fecha de creación              |
-| `updated_at`        | TIMESTAMPTZ | Última actualización           |
+| `payment_method_id` | UUID (FK)   | Método → `payment_methods.id`     |
+| `admin_notes`       | TEXT        | Notas del admin                   |
+| `processed_by`      | UUID (FK)   | Admin → `profiles.id`             |
+| `processed_at`      | TIMESTAMPTZ | Fecha de procesamiento            |
+| `created_at`        | TIMESTAMPTZ | Fecha de creación                 |
+| `updated_at`        | TIMESTAMPTZ | Última actualización              |
 
 #### **`pricing_packages`** - Paquetes de Precios
 
-| Campo           | Tipo        | Descripción                 |
-| --------------- | ----------- | --------------------------- |
-| `id`            | UUID (PK)   | ID del paquete              |
-| `name`          | TEXT        | Nombre descriptivo          |
-| `package_name`  | TEXT        | Nombre comercial            |
-| `credits`       | INTEGER     | Número de clases            |
-| `price`         | NUMERIC     | Precio en EUR               |
-| `is_active`     | BOOLEAN     | Si está disponible          |
-| `display_order` | INTEGER     | Orden de visualización      |
-| `created_at`    | TIMESTAMPTZ | Fecha de creación           |
-| `updated_at`    | TIMESTAMPTZ | Última actualización        |
+| Campo           | Tipo        | Descripción            |
+| --------------- | ----------- | ---------------------- |
+| `id`            | UUID (PK)   | ID del paquete         |
+| `name`          | TEXT        | Nombre descriptivo     |
+| `package_name`  | TEXT        | Nombre comercial       |
+| `credits`       | INTEGER     | Número de clases       |
+| `price`         | NUMERIC     | Precio en EUR          |
+| `is_active`     | BOOLEAN     | Si está disponible     |
+| `display_order` | INTEGER     | Orden de visualización |
+| `created_at`    | TIMESTAMPTZ | Fecha de creación      |
+| `updated_at`    | TIMESTAMPTZ | Última actualización   |
 
 #### **`payment_methods`** - Métodos de Pago
 
-| Campo           | Tipo        | Descripción                              |
-| --------------- | ----------- | ---------------------------------------- |
-| `id`            | UUID (PK)   | ID del método                            |
-| `name`          | TEXT        | Nombre ("Bizum", "PayPal")               |
+| Campo           | Tipo        | Descripción                                |
+| --------------- | ----------- | ------------------------------------------ |
+| `id`            | UUID (PK)   | ID del método                              |
+| `name`          | TEXT        | Nombre ("Bizum", "PayPal")                 |
 | `type`          | TEXT        | `bizum`, `paypal`, `bank_transfer`, `cash` |
-| `contact_phone` | TEXT        | Teléfono (Bizum)                         |
-| `contact_email` | TEXT        | Email (PayPal)                           |
-| `bank_account`  | TEXT        | IBAN                                     |
-| `instructions`  | TEXT        | Instrucciones                            |
-| `is_active`     | BOOLEAN     | Si está disponible                       |
-| `display_order` | INTEGER     | Orden de visualización                   |
-| `created_at`    | TIMESTAMPTZ | Fecha de creación                        |
-| `updated_at`    | TIMESTAMPTZ | Última actualización                     |
+| `contact_phone` | TEXT        | Teléfono (Bizum)                           |
+| `contact_email` | TEXT        | Email (PayPal)                             |
+| `bank_account`  | TEXT        | IBAN                                       |
+| `instructions`  | TEXT        | Instrucciones                              |
+| `is_active`     | BOOLEAN     | Si está disponible                         |
+| `display_order` | INTEGER     | Orden de visualización                     |
+| `created_at`    | TIMESTAMPTZ | Fecha de creación                          |
+| `updated_at`    | TIMESTAMPTZ | Última actualización                       |
 
 #### **`app_settings`** - Configuración Global
 
-| Campo         | Tipo        | Descripción              |
-| ------------- | ----------- | ------------------------ |
-| `id`          | UUID (PK)   | ID de configuración      |
-| `key`         | TEXT        | Clave única              |
-| `value`       | JSON        | Valor flexible           |
-| `description` | TEXT        | Descripción              |
-| `updated_by`  | UUID (FK)   | Admin → `profiles.id`    |
-| `created_at`  | TIMESTAMPTZ | Fecha de creación        |
-| `updated_at`  | TIMESTAMPTZ | Última actualización     |
+| Campo         | Tipo        | Descripción           |
+| ------------- | ----------- | --------------------- |
+| `id`          | UUID (PK)   | ID de configuración   |
+| `key`         | TEXT        | Clave única           |
+| `value`       | JSON        | Valor flexible        |
+| `description` | TEXT        | Descripción           |
+| `updated_by`  | UUID (FK)   | Admin → `profiles.id` |
+| `created_at`  | TIMESTAMPTZ | Fecha de creación     |
+| `updated_at`  | TIMESTAMPTZ | Última actualización  |
 
 #### **`branding_settings`** - Configuración de Landing Page
 
-| Campo (resumido)         | Tipo        | Descripción                       |
-| ------------------------ | ----------- | --------------------------------- |
-| `id`                     | UUID (PK)   | ID                                |
-| `business_name`          | TEXT        | Nombre del negocio                |
-| `hero_title/subtitle`    | TEXT        | Textos del hero                   |
-| `*_image_url`            | TEXT        | URLs de imágenes                  |
-| `phone/email/whatsapp`   | TEXT        | Datos de contacto                 |
-| `address/city/region`    | TEXT        | Ubicación                         |
-| `latitude/longitude`     | NUMERIC     | Coordenadas mapa                  |
-| `schedule_*`             | TEXT        | Horarios                          |
-| `testimonials`           | JSON        | Array de testimonios              |
-| `show_*`                 | BOOLEAN     | Flags de visibilidad              |
+| Campo (resumido)       | Tipo      | Descripción          |
+| ---------------------- | --------- | -------------------- |
+| `id`                   | UUID (PK) | ID                   |
+| `business_name`        | TEXT      | Nombre del negocio   |
+| `hero_title/subtitle`  | TEXT      | Textos del hero      |
+| `*_image_url`          | TEXT      | URLs de imágenes     |
+| `phone/email/whatsapp` | TEXT      | Datos de contacto    |
+| `address/city/region`  | TEXT      | Ubicación            |
+| `latitude/longitude`   | NUMERIC   | Coordenadas mapa     |
+| `schedule_*`           | TEXT      | Horarios             |
+| `testimonials`         | JSON      | Array de testimonios |
+| `show_*`               | BOOLEAN   | Flags de visibilidad |
 
 **Nota**: Esta tabla tiene +30 campos para personalizar completamente la landing page.
 
 #### **`health_check`** - Health Check del Sistema
 
-| Campo        | Tipo        | Descripción   |
-| ------------ | ----------- | ------------- |
-| `id`         | UUID (PK)   | ID            |
-| `status`     | TEXT        | Estado        |
-| `created_at` | TIMESTAMPTZ | Fecha check   |
+| Campo        | Tipo        | Descripción |
+| ------------ | ----------- | ----------- |
+| `id`         | UUID (PK)   | ID          |
+| `status`     | TEXT        | Estado      |
+| `created_at` | TIMESTAMPTZ | Fecha check |
 
 </details>
 
@@ -641,10 +643,12 @@ El sistema incluye **10+ funciones** para lógica de negocio:
 - [x] Panel de admin con gestión completa
 - [x] Sistema de notificaciones en tiempo real
 - [x] Gestión dinámica de precios y métodos de pago
-- [x] Configuración de políticas de cancelación
+- [x] Configuración de políticas de cancelación y confirmación automática
 - [x] Build Android APK/AAB
 - [x] Deploy en Vercel
-- [x] Sistema de estadísticas de peso y composición corporal
+- [x] Sistema de estadísticas de peso y composición corporal (Avanzado)
+- [x] Tema oscuro completo y diseño premium con Tailwind 4
+- [x] Personalización dinámica de branding y navegación app
 
 ---
 

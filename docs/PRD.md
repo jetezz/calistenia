@@ -179,8 +179,8 @@
 │ E3. CREDITS    │ Sistema de créditos virtuales y pagos         │
 │ E4. SCHEDULE   │ Configuración de horarios y capacidad         │
 │ E5. STATS      │ Estadísticas de peso y composición corporal   │
-│ E6. ADMIN      │ Panel de administración completo              │
-│ E7. LANDING    │ Página de marketing configurable              │
+│ E6. ADMIN      │ Panel de gestión, configuración y branding    │
+│ E7. LANDING    │ Página de marketing autogestionable           │
 └────────────────┴───────────────────────────────────────────────┘
 ```
 
@@ -239,12 +239,12 @@
 
 #### E6. Administración (ADMIN)
 
-| ID     | User Story                                             | Criterios de Aceptación                      | Prioridad   |
-| ------ | ------------------------------------------------------ | -------------------------------------------- | ----------- |
-| US-6.1 | Como admin, quiero ver un dashboard con métricas clave | Reservas hoy, créditos pendientes, ocupación | Must Have   |
-| US-6.2 | Como admin, quiero gestionar perfiles de usuarios      | Editar, aprobar, añadir créditos             | Must Have   |
-| US-6.3 | Como admin, quiero configurar políticas de cancelación | Horas antes permitidas, penalización         | Should Have |
-| US-6.4 | Como admin, quiero ver reportes de ingresos            | Filtros temporales, exportación              | Could Have  |
+| US-6.1 | Como admin, quiero ver un dashboard con métricas clave | Reservas hoy, créditos pendientes, ocupación | Must Have |
+| US-6.2 | Como admin, quiero gestionar perfiles de usuarios | Editar, aprobar, añadir créditos | Must Have |
+| US-6.3 | Como admin, quiero configurar políticas de cancelación | Horas antes permitidas, penalización | Should Have |
+| US-6.4 | Como admin, quiero configurar la confirmación automática| Toggle auto-confirm vs manual | Must Have |
+| US-6.5 | Como admin, quiero personalizar el menú de la app | Seleccionar 4 acciones rápidas | Should Have |
+| US-6.6 | Como admin, quiero ver reportes de ingresos | Filtros temporales, exportación | Could Have |
 
 #### E7. Landing Page (LANDING)
 
@@ -432,13 +432,15 @@ UI Event → Event Handler → Business → State → DB Call → Response
   ┌────────────────┐                    ┌─────────────────┐
   │   time_slots   │                    │ payment_methods │
   │  • day_of_week │                    │ • name, type    │
-  │  • start/end   │                    │ • contact_info  │
-  │  • capacity    │                    └─────────────────┘
+  │  • start/end   │                    │ • contact_phone │
+  │  • capacity    │                    │ • bank_account  │
+  │  • slot_type   │                    │ • instructions  │
+  │  • specific_dt │                    └─────────────────┘
   └────────────────┘
                     ┌──────────────────┐
   ┌──────────────┐  │ pricing_packages │
   │ app_settings │  │ • name, credits  │
-  │ • key, value │  │ • price          │
+  │ • key, value │  │ • price, pkg_name│
   └──────────────┘  └──────────────────┘
 
   ┌──────────────────┐
@@ -451,16 +453,16 @@ UI Event → Event Handler → Business → State → DB Call → Response
 
 ### 8.2 Entidades Principales
 
-| Entidad               | Descripción              | Campos Clave                                |
-| --------------------- | ------------------------ | ------------------------------------------- |
-| **profiles**          | Usuarios del sistema     | id, email, role, credits, approval_status   |
-| **bookings**          | Reservas de clases       | user_id, time_slot_id, booking_date, status |
-| **time_slots**        | Horarios disponibles     | day_of_week, start_time, end_time, capacity |
-| **payment_requests**  | Solicitudes de créditos  | user_id, credits_requested, status          |
-| **pricing_packages**  | Paquetes de precios      | name, credits, price                        |
-| **payment_methods**   | Métodos de pago          | name, type, contact_info                    |
-| **weight_stats**      | Estadísticas corporales  | user_id, weight, bmi, body_fat              |
-| **branding_settings** | Configuración de landing | business_name, images, contact              |
+| Entidad               | Descripción              | Campos Clave                                                                  |
+| --------------------- | ------------------------ | ----------------------------------------------------------------------------- |
+| **profiles**          | Usuarios del sistema     | id, email, role, credits, approval_status, physical_objective, payment_status |
+| **bookings**          | Reservas de clases       | user_id, time_slot_id, booking_date, status, created_by                       |
+| **time_slots**        | Horarios disponibles     | day_of_week, start_time, end_time, capacity, slot_type, specific_date         |
+| **payment_requests**  | Solicitudes de créditos  | user_id, credits_requested, status, payment_method_id, admin_notes            |
+| **pricing_packages**  | Paquetes de precios      | name, package_name, credits, price, display_order                             |
+| **payment_methods**   | Métodos de pago          | name, type, contact_info, bank_account, instructions                          |
+| **weight_stats**      | Estadísticas corporales  | user*id, weight, bmi, body_fat*%, muscle_mass, bone_mass, metabolic_age       |
+| **branding_settings** | Configuración de landing | business_name, hero_title, images, contact, testimonials, schedule_info       |
 
 ---
 
@@ -606,7 +608,7 @@ UI Event → Event Handler → Business → State → DB Call → Response
 │ • Recordatorios de clase (24h antes)                               │
 │ • Widget de calendario para iOS/Android                            │
 │ • Modo offline básico                                              │
-│ • Tema oscuro completo                                             │
+│ ✅ Tema oscuro completo (Completado)                               │
 └────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────┐
@@ -657,9 +659,10 @@ UI Event → Event Handler → Business → State → DB Call → Response
 
 ## 📝 Historial de Cambios
 
-| Versión | Fecha      | Cambios                 | Autor  |
-| ------- | ---------- | ----------------------- | ------ |
-| 1.0     | 18/01/2026 | Versión inicial del PRD | Jetezz |
+| Versión | Fecha      | Cambios                                                   | Autor  |
+| ------- | ---------- | --------------------------------------------------------- | ------ |
+| 1.0     | 18/01/2026 | Versión inicial del PRD                                   | Jetezz |
+| 1.1     | 21/01/2026 | Actualización de schema y nuevas funcionalidades de admin | Jetezz |
 
 ---
 

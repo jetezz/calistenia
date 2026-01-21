@@ -43,3 +43,9 @@ android/captures/
 
 .env
 .env.test
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+blob-report/
