@@ -52,7 +52,7 @@ export function PageLoadingState({ message = 'Cargando...' }: { message?: string
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4">
       <div className="text-center space-y-2">
-        <div className="text-2xl font-bold text-primary">Calistenia Emérita</div>
+        <div className="text-2xl font-bold text-primary">Calistenia Emérita v2</div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <LoadingSpinner size="sm" />
           <span className="text-sm">{message}</span>

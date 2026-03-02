@@ -75,7 +75,7 @@ export function LandingPage() {
   }, [isScrolled]); // Depend on isScrolled to allow the closure to see the latest one, or use functional update
 
   if (isLoading || !settings) {
-    return <PageLoadingState message="Cargando experiencia..." />;
+    return <PageLoadingState message="Cargando experiencia...." />;
   }
 
   const whatsappUrl = settings.whatsapp
