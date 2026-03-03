@@ -9,7 +9,7 @@ import path from "path";
 import type { Browser } from "@playwright/test";
 
 // Tipos de usuario
-export type UserRole = "admin" | "client";
+export type UserRole = "admin" | "client" | "client2";
 
 // Credenciales desde variables de entorno
 const getCredentials = (role: UserRole) => {
@@ -17,6 +17,12 @@ const getCredentials = (role: UserRole) => {
     return {
       email: process.env.ADMIN_EMAIL!,
       password: process.env.ADMIN_PASSWORD!,
+    };
+  }
+  if (role === "client2") {
+    return {
+      email: process.env.CLIENT2_EMAIL || "client2.e2e.test@example.com",
+      password: process.env.CLIENT2_PASSWORD || "Password123!",
     };
   }
   return {
@@ -147,6 +153,7 @@ export async function logout(page: Page): Promise<void> {
 export const test = base.extend<{
   authenticatedClient: Page;
   authenticatedAdmin: Page;
+  authenticatedClient2: Page;
 }>({
   authenticatedClient: async ({ browser }, use) => {
     const { page, cleanup } = await createAuthenticatedPage(browser, "client");
@@ -156,6 +163,12 @@ export const test = base.extend<{
 
   authenticatedAdmin: async ({ browser }, use) => {
     const { page, cleanup } = await createAuthenticatedPage(browser, "admin");
+    await use(page);
+    await cleanup();
+  },
+
+  authenticatedClient2: async ({ browser }, use) => {
+    const { page, cleanup } = await createAuthenticatedPage(browser, "client2");
     await use(page);
     await cleanup();
   },

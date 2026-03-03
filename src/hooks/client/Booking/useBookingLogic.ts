@@ -3,6 +3,7 @@ import { useTimeSlotStore } from "@/stores/timeSlotStore";
 import { useBookingStore } from "@/stores/bookingStore";
 import { useProfile } from "@/features/auth";
 import { useToast } from "@/hooks/useToast";
+import { supabase } from "@/lib/supabase";
 import type { Database } from "@/types/database";
 
 interface BookingAvailability {
@@ -59,27 +60,35 @@ export const useBookingLogic = (userId?: string) => {
   }, [fetchActiveTimeSlots, fetchAllBookings, refreshProfile]);
 
   // Fetch availability for a specific time slot and date
+  // Uses the SECURITY DEFINER RPC to bypass RLS and count ALL users' confirmed bookings
   const fetchAvailability = useCallback(
     async (timeSlotId: string, bookingDate: string) => {
       try {
         const key = `${timeSlotId}-${bookingDate}`;
 
-        // Count bookings for this slot and date
-        const bookedCount = allBookings.filter(
-          (b) =>
-            b.time_slot_id === timeSlotId &&
-            b.booking_date === bookingDate &&
-            b.status === "confirmed"
-        ).length;
-
         // Get the time slot to know total capacity
         const timeSlot = timeSlots.find((ts) => ts.id === timeSlotId);
         const totalSpots = timeSlot?.capacity || 0;
 
+        // Use the SECURITY DEFINER RPC function that bypasses RLS
+        // Returns available spots (capacity - confirmed_bookings) for ALL users
+        const { data: availableSpots, error } = await supabase.rpc(
+          "get_available_spots",
+          { slot_id: timeSlotId, target_date: bookingDate }
+        );
+
+        if (error) {
+          console.error("Error calling get_available_spots RPC:", error);
+          return null;
+        }
+
+        const available = availableSpots ?? totalSpots;
+        const booked = totalSpots - available;
+
         const formattedAvailability = {
           capacity: totalSpots,
-          booked: bookedCount,
-          available: totalSpots - bookedCount,
+          booked,
+          available,
         };
 
         setBookingAvailability((prev) => ({
@@ -92,7 +101,7 @@ export const useBookingLogic = (userId?: string) => {
         return null;
       }
     },
-    [allBookings, timeSlots]
+    [timeSlots] // Only depends on timeSlots for capacity lookup
   );
 
   // Get availability from cache

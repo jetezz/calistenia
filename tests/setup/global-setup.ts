@@ -6,6 +6,8 @@
  */
 
 import { setupTestData } from "./test-seeder";
+import fs from "fs";
+import path from "path";
 
 async function globalSetup() {
   console.log("\n" + "=".repeat(60));
@@ -13,6 +15,12 @@ async function globalSetup() {
   console.log("=".repeat(60) + "\n");
 
   try {
+    // Limpiar auth state de client2 (puede quedar obsoleto entre runs si el usuario es recreado)
+    const client2AuthPath = path.resolve(process.cwd(), "playwright/.auth/client2.json");
+    if (fs.existsSync(client2AuthPath)) {
+      fs.unlinkSync(client2AuthPath);
+    }
+
     // Ejecutar el seeder para crear los datos de test
     const testData = await setupTestData();
 
@@ -22,9 +30,12 @@ async function globalSetup() {
     process.env.TEST_SPECIFIC_DATE = testData.specificDate;
     process.env.TEST_RECURRING_SLOT_ID = testData.recurringSlotId;
     process.env.TEST_SPECIFIC_SLOT_ID = testData.specificSlotId;
+    process.env.TEST_BOOK10_SLOT_ID = testData.book10SlotId;
     process.env.TEST_PENDING_USER_EMAIL = testData.pendingUserEmail;
     process.env.TEST_PENDING_USER_PASSWORD = testData.pendingUserPassword;
     process.env.TEST_PENDING_USER_FULL_NAME = testData.pendingUserFullName;
+    process.env.CLIENT2_EMAIL = testData.client2Email;
+    process.env.CLIENT2_PASSWORD = testData.client2Password;
 
     console.log("✅ Global setup completed successfully");
     console.log("=".repeat(60) + "\n");

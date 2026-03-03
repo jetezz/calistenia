@@ -102,6 +102,14 @@ export function BookingPage() {
     return date < today;
   };
 
+  const isPastSlot = (date: Date, startTime: string) => {
+    const today = new Date();
+    const [hours, minutes] = startTime.split(":").map(Number);
+    const slotDate = new Date(date);
+    slotDate.setHours(hours, minutes, 0, 0);
+    return slotDate < today;
+  };
+
   const isToday = (date: Date) => {
     const today = new Date();
     return formatDate(date) === formatDate(today);
@@ -312,8 +320,10 @@ export function BookingPage() {
                           (b.status === "confirmed" || b.status === "pending"),
                       );
                       const isBooked = !!userBooking;
+                      const isSlotInPast = isPastSlot(selectedDate, slot.start_time);
                       const canBook =
                         !isPastDate(selectedDate) &&
+                        !isSlotInPast &&
                         isAvailable &&
                         (userProfile?.credits ?? 0) > 0 &&
                         !isBooking &&
@@ -322,12 +332,15 @@ export function BookingPage() {
                       return (
                         <div
                           key={slot.id}
+                          data-slot-id={slot.id}
                           className={`p-3 rounded-lg border ${
-                            isBooked
-                              ? "border-blue-200 bg-blue-50"
-                              : isAvailable
-                                ? "border-green-200 bg-green-50"
-                                : "border-gray-200 bg-gray-50"
+                            isSlotInPast
+                              ? "border-gray-200 bg-gray-50 opacity-60"
+                              : isBooked
+                                ? "border-blue-200 bg-blue-50"
+                                : isAvailable
+                                  ? "border-green-200 bg-green-50"
+                                  : "border-gray-200 bg-gray-50"
                           }`}
                         >
                           <div className="space-y-3">
@@ -379,20 +392,22 @@ export function BookingPage() {
 
                             <Button
                               className="w-full h-9 text-sm"
-                              disabled={!canBook}
+                              disabled={!canBook || isSlotInPast}
                               onClick={() =>
                                 handleBooking(slot.id, formatDate(selectedDate))
                               }
                             >
-                              {isBooked
-                                ? userBooking?.status === "pending"
-                                  ? "Pendiente de aprobación"
-                                  : "Ya tienes reserva"
-                                : (userProfile?.credits ?? 0) <= 0
-                                  ? "Sin créditos"
-                                  : isBooking
-                                    ? "Reservando..."
-                                    : "Reservar (1 crédito)"}
+                              {isSlotInPast
+                                ? "Horario pasado"
+                                : isBooked
+                                  ? userBooking?.status === "pending"
+                                    ? "Pendiente de aprobación"
+                                    : "Ya tienes reserva"
+                                  : (userProfile?.credits ?? 0) <= 0
+                                    ? "Sin créditos"
+                                    : isBooking
+                                      ? "Reservando..."
+                                      : "Reservar (1 crédito)"}
                             </Button>
                           </div>
                         </div>
