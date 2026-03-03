@@ -2,7 +2,11 @@
 title: solucionar problema en /app/book
 status: completed
 created: "2026-03-03T17:00:21.569Z"
+<<<<<<< HEAD
 updated: 2026-03-03T17:14:54Z
+=======
+updated: 2026-03-03T17:11:01Z
+>>>>>>> a933659a8856b770e646a2901d396fe34346d809
 source_branch: "develop"
 target_branch: "develop"
 branch_name: feature/2026-03-03-solucionar-problema-en-app-book
@@ -41,13 +45,23 @@ Actualmente, el sistema permite a los usuarios reservar clases en horarios que y
 
 ## Criterios de Aceptación
 
+<<<<<<< HEAD
 - [ ] Los usuarios no pueden reservar slots cuyo horario de inicio ya pasó en el día actual.
 - [ ] Los slots pasados se muestran visualmente deshabilitados en la interfaz (ej. opacidad reducida, texto "Horario pasado").
 - [ ] Los tests E2E de Playwright (`BOOK-09`) validan correctamente que no se pueden seleccionar turnos pasados del día actual.
+=======
+- [x] Los usuarios no pueden reservar slots cuyo horario de inicio ya pasó en el día actual.
+- [x] Los slots pasados se muestran visualmente deshabilitados en la interfaz (ej. opacidad reducida, texto "Horario pasado").
+- [x] Los tests E2E de Playwright (`BOOK-09`) validan correctamente que no se pueden seleccionar turnos pasados del día actual.
+>>>>>>> a933659a8856b770e646a2901d396fe34346d809
 
 ## Riesgos y Notas
 
 - **Riesgos**: 
   - La zona horaria del cliente frente a la del servidor puede causar discrepancias si `new Date()` se evalúa solo en cliente. Hay que asegurar que la comparación considere la zona horaria correctamente de manera consistente con el resto de la app.
 - **Notas de Paralelización**: 
+<<<<<<< HEAD
   - Las modificaciones en `BookingPage.tsx` y `booking.spec.ts` se pueden realizar en paralelo si se acuerdan los selectores (ej. `button:disabled:has-text("Horario pasado")`).
+=======
+  - Las modificaciones en `BookingPage.tsx` y `booking.spec.ts` se pueden realizar en paralelo si se acuerdan los selectores (ej. `button:disabled:has-text("Horario pasado")`).
+>>>>>>> a933659a8856b770e646a2901d396fe34346d809
