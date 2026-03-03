@@ -184,6 +184,18 @@ test.describe("Reserva de Clases - Cliente", () => {
   }) => {
     await waitForLoadingComplete(page);
 
+    // Buscar si hay botones indicando horarios pasados
+    const pastSlotButtons = page.locator('button:has-text("Horario pasado")');
+
+    if (await pastSlotButtons.first().isVisible().catch(() => false)) {
+      const count = await pastSlotButtons.count();
+      for (let i = 0; i < count; i++) {
+        const button = pastSlotButtons.nth(i);
+        await expect(button).toBeDisabled();
+        await expect(button).toHaveText("Horario pasado");
+      }
+    }
+
     // Verificar que la página carga correctamente
     await expect(page.locator("main")).toBeVisible();
   });

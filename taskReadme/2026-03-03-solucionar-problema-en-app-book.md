@@ -1,12 +1,12 @@
 ---
 title: solucionar problema en /app/book
-status: phase2_branching
+status: phase4_pushing
 created: "2026-03-03T17:00:21.569Z"
-updated: 2026-03-03T17:05:34Z
+updated: 2026-03-03T17:11:01Z
 source_branch: "develop"
 target_branch: "develop"
-branch_name: ""
-pr_url: ""
+branch_name: feature/2026-03-03-solucionar-problema-en-app-book
+pr_url: https://github.com/jetezz/calistenia/pull/3
 error_message: ""
 ---
 
