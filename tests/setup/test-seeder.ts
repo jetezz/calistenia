@@ -57,6 +57,12 @@ export const TEST_SLOT_CONFIG = {
   },
 };
 
+export const TEST_PENDING_USER = {
+  email: process.env.TEST_PENDING_USER_EMAIL || "pending.e2e.user@example.com",
+  password: process.env.TEST_PENDING_USER_PASSWORD || "Password123!",
+  fullName: process.env.TEST_PENDING_USER_FULL_NAME || "Pending E2E User",
+};
+
 /**
  * Obtiene el día de la semana para una fecha dada (0=Domingo, 6=Sábado)
  */
@@ -114,6 +120,99 @@ async function authenticateAsAdmin(client: SupabaseClient): Promise<string> {
   }
 
   return data.user.id;
+}
+
+async function ensurePendingTestUser(): Promise<{
+  email: string;
+  password: string;
+  fullName: string;
+  userId: string;
+}> {
+  console.log("👤 Ensuring pending test user...");
+
+  await authenticateAsAdmin(supabase);
+
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", TEST_PENDING_USER.email)
+    .maybeSingle();
+
+  let userId = existingProfile?.id as string | undefined;
+
+  if (!userId) {
+    const { data: createdUserId, error: createError } = await supabase.rpc(
+      "admin_create_user",
+      {
+        p_email: TEST_PENDING_USER.email,
+        p_password: TEST_PENDING_USER.password,
+        p_full_name: TEST_PENDING_USER.fullName,
+      },
+    );
+
+    if (createError || !createdUserId) {
+      throw new Error(
+        `Failed to create pending test user: ${createError?.message || "unknown error"}`,
+      );
+    }
+
+    userId = createdUserId;
+  }
+
+  const { error: normalizeError } = await supabase
+    .from("profiles")
+    .update({
+      approval_status: "pending",
+      role: "user",
+      full_name: TEST_PENDING_USER.fullName,
+      credits: 0,
+      payment_status: "none",
+    })
+    .eq("id", userId);
+
+  if (normalizeError) {
+    throw new Error(
+      `Failed to normalize pending test user profile: ${normalizeError.message}`,
+    );
+  }
+
+  await supabase.auth.signOut();
+  console.log(`✅ Pending test user ready: ${TEST_PENDING_USER.email}`);
+
+  return {
+    email: TEST_PENDING_USER.email,
+    password: TEST_PENDING_USER.password,
+    fullName: TEST_PENDING_USER.fullName,
+    userId,
+  };
+}
+
+async function cleanupPendingTestUser(): Promise<void> {
+  console.log("🧹 Cleaning pending test user...");
+
+  await authenticateAsAdmin(supabase);
+
+  const { data: pendingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", TEST_PENDING_USER.email)
+    .maybeSingle();
+
+  if (pendingProfile?.id) {
+    const { error: deleteError } = await supabase.rpc("admin_delete_user", {
+      p_user_id: pendingProfile.id,
+    });
+
+    if (deleteError) {
+      console.warn(
+        "⚠️  Warning cleaning pending test user:",
+        deleteError.message,
+      );
+    }
+  }
+
+  await supabase.auth.signOut();
+  console.log("✅ Pending test user cleaned");
 }
 
 /**
@@ -267,10 +366,14 @@ export async function setupTestData(): Promise<{
   specificDate: string;
   recurringDay: number;
   specificDay: number;
+  pendingUserEmail: string;
+  pendingUserPassword: string;
+  pendingUserFullName: string;
 }> {
   console.log("\n🚀 Setting up test data...\n");
 
   await cleanTestSlots();
+  const pendingUser = await ensurePendingTestUser();
   const result = await seedTestSlots();
 
   console.log("\n✨ Test data setup complete!\n");
@@ -283,7 +386,12 @@ export async function setupTestData(): Promise<{
   );
   console.log("");
 
-  return result;
+  return {
+    ...result,
+    pendingUserEmail: pendingUser.email,
+    pendingUserPassword: pendingUser.password,
+    pendingUserFullName: pendingUser.fullName,
+  };
 }
 
 /**
@@ -292,6 +400,7 @@ export async function setupTestData(): Promise<{
 export async function teardownTestData(): Promise<void> {
   console.log("\n🧹 Tearing down test data...\n");
   await cleanTestSlots();
+  await cleanupPendingTestUser();
   console.log("✅ Teardown complete!\n");
 }
 

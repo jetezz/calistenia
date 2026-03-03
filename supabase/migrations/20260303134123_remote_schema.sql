@@ -1,5 +1,6 @@
 
 
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -563,7 +564,8 @@ CREATE OR REPLACE FUNCTION "public"."handle_booking_credit_deduction"() RETURNS 
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
 BEGIN
-    IF NEW.status = 'confirmed' AND (TG_OP = 'INSERT' OR OLD.status != 'confirmed') THEN
+    -- Check if it's a new confirmed booking OR an existing booking changing to confirmed
+    IF (NEW.status = 'confirmed' AND (TG_OP = 'INSERT' OR OLD.status != 'confirmed')) THEN
         UPDATE public.profiles
         SET credits = credits - 1
         WHERE id = NEW.user_id AND credits > 0;
@@ -736,7 +738,7 @@ CREATE TABLE IF NOT EXISTS "public"."bookings" (
     "created_by" "uuid",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "bookings_status_check" CHECK (("status" = ANY (ARRAY['confirmed'::"text", 'cancelled'::"text", 'completed'::"text"])))
+    CONSTRAINT "bookings_status_check" CHECK (("status" = ANY (ARRAY['confirmed'::"text", 'cancelled'::"text", 'completed'::"text", 'pending'::"text"])))
 );
 
 
@@ -1309,11 +1311,11 @@ CREATE OR REPLACE TRIGGER "app_settings_updated_at" BEFORE UPDATE ON "public"."a
 
 
 
-CREATE OR REPLACE TRIGGER "booking_deduct_credit" AFTER INSERT ON "public"."bookings" FOR EACH ROW EXECUTE FUNCTION "public"."handle_booking_credit_deduction"();
-
-
-
 CREATE OR REPLACE TRIGGER "booking_refund_credit" AFTER UPDATE ON "public"."bookings" FOR EACH ROW WHEN (("old"."status" IS DISTINCT FROM "new"."status")) EXECUTE FUNCTION "public"."handle_booking_cancellation_refund"();
+
+
+
+CREATE OR REPLACE TRIGGER "on_booking_credit_deduction" BEFORE INSERT OR UPDATE ON "public"."bookings" FOR EACH ROW EXECUTE FUNCTION "public"."handle_booking_credit_deduction"();
 
 
 
@@ -2088,6 +2090,62 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+
+
+
+drop extension if exists "pg_net";
+
+drop policy "Anyone can read branding settings" on "public"."branding_settings";
+
+
+  create policy "Anyone can read branding settings"
+  on "public"."branding_settings"
+  as permissive
+  for select
+  to anon, authenticated
+using (true);
+
+
+CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+
+  create policy "Admin can delete"
+  on "storage"."objects"
+  as permissive
+  for delete
+  to authenticated
+using (((bucket_id = 'branding'::text) AND (EXISTS ( SELECT 1
+   FROM public.profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))));
+
+
+
+  create policy "Admin can update"
+  on "storage"."objects"
+  as permissive
+  for update
+  to authenticated
+using (((bucket_id = 'branding'::text) AND (EXISTS ( SELECT 1
+   FROM public.profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))));
+
+
+
+  create policy "Authenticated users can upload"
+  on "storage"."objects"
+  as permissive
+  for insert
+  to authenticated
+with check ((bucket_id = 'branding'::text));
+
+
+
+  create policy "Public Access"
+  on "storage"."objects"
+  as permissive
+  for select
+  to public
+using ((bucket_id = 'branding'::text));
 
 
 

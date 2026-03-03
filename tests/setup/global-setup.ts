@@ -22,6 +22,9 @@ async function globalSetup() {
     process.env.TEST_SPECIFIC_DATE = testData.specificDate;
     process.env.TEST_RECURRING_SLOT_ID = testData.recurringSlotId;
     process.env.TEST_SPECIFIC_SLOT_ID = testData.specificSlotId;
+    process.env.TEST_PENDING_USER_EMAIL = testData.pendingUserEmail;
+    process.env.TEST_PENDING_USER_PASSWORD = testData.pendingUserPassword;
+    process.env.TEST_PENDING_USER_FULL_NAME = testData.pendingUserFullName;
 
     console.log("✅ Global setup completed successfully");
     console.log("=".repeat(60) + "\n");

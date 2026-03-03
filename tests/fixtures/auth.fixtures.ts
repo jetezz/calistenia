@@ -4,6 +4,9 @@
  */
 
 import { test as base, Page, expect } from "@playwright/test";
+import fs from "fs";
+import path from "path";
+import type { Browser } from "@playwright/test";
 
 // Tipos de usuario
 export type UserRole = "admin" | "client";
@@ -50,6 +53,71 @@ export async function loginAs(page: Page, role: UserRole): Promise<void> {
   await page.waitForTimeout(1000);
 }
 
+const AUTH_DIR = path.resolve(process.cwd(), "playwright/.auth");
+const storageStatePath = (role: UserRole) =>
+  path.join(AUTH_DIR, `${role}.json`);
+
+async function createStorageState(
+  browser: Browser,
+  role: UserRole,
+): Promise<string> {
+  fs.mkdirSync(AUTH_DIR, { recursive: true });
+
+  const authContext = await browser.newContext();
+  const authPage = await authContext.newPage();
+
+  await loginAs(authPage, role);
+
+  const filePath = storageStatePath(role);
+  await authContext.storageState({ path: filePath });
+  await authContext.close();
+
+  return filePath;
+}
+
+async function getOrCreateStorageState(
+  browser: Browser,
+  role: UserRole,
+): Promise<string> {
+  const filePath = storageStatePath(role);
+
+  if (fs.existsSync(filePath)) {
+    return filePath;
+  }
+
+  return createStorageState(browser, role);
+}
+
+async function createAuthenticatedPage(
+  browser: Browser,
+  role: UserRole,
+): Promise<{ page: Page; cleanup: () => Promise<void> }> {
+  let statePath = await getOrCreateStorageState(browser, role);
+
+  let context = await browser.newContext({ storageState: statePath });
+  let page = await context.newPage();
+
+  const targetPath = role === "admin" ? "/app/admin" : "/app";
+  await page.goto(targetPath);
+
+  if (page.url().includes("/login")) {
+    await context.close();
+    statePath = await createStorageState(browser, role);
+    context = await browser.newContext({ storageState: statePath });
+    page = await context.newPage();
+    await page.goto(targetPath);
+  }
+
+  await expect(page).toHaveURL(/\/app/, { timeout: 15000 });
+
+  return {
+    page,
+    cleanup: async () => {
+      await context.close();
+    },
+  };
+}
+
 // Función para hacer logout
 export async function logout(page: Page): Promise<void> {
   // Buscar el menú de usuario o botón de logout
@@ -80,14 +148,16 @@ export const test = base.extend<{
   authenticatedClient: Page;
   authenticatedAdmin: Page;
 }>({
-  authenticatedClient: async ({ page }, use) => {
-    await loginAs(page, "client");
+  authenticatedClient: async ({ browser }, use) => {
+    const { page, cleanup } = await createAuthenticatedPage(browser, "client");
     await use(page);
+    await cleanup();
   },
 
-  authenticatedAdmin: async ({ page }, use) => {
-    await loginAs(page, "admin");
+  authenticatedAdmin: async ({ browser }, use) => {
+    const { page, cleanup } = await createAuthenticatedPage(browser, "admin");
     await use(page);
+    await cleanup();
   },
 });
 

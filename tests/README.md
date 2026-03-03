@@ -57,6 +57,26 @@ Las credenciales se cargan desde el archivo `.env.test`:
 | Cliente | `CLIENT_EMAIL`    | Email del cliente       |
 | Cliente | `CLIENT_PASSWORD` | Contraseña del cliente  |
 
+### Usuario pending preprovisionado (registro sin signup)
+
+El `global-setup` crea automáticamente un usuario **pending** para
+`registration-flow.spec.ts`, evitando límites de email de Supabase y
+eliminando `skipped` por rate-limit.
+
+También puedes sobrescribir sus credenciales con variables de entorno:
+
+| Variable                      | Descripción                               |
+| ----------------------------- | ----------------------------------------- |
+| `TEST_PENDING_USER_EMAIL`     | Email del usuario pending preprovisionado |
+| `TEST_PENDING_USER_PASSWORD`  | Contraseña del usuario pending            |
+| `TEST_PENDING_USER_FULL_NAME` | (Opcional) Nombre del usuario pending     |
+| `CI_PENDING_USER_EMAIL`       | Fallback para CI si no se define `TEST_*` |
+| `CI_PENDING_USER_PASSWORD`    | Fallback para CI si no se define `TEST_*` |
+| `CI_PENDING_USER_FULL_NAME`   | Fallback para CI si no se define `TEST_*` |
+
+Si existen `TEST_PENDING_USER_EMAIL` y `TEST_PENDING_USER_PASSWORD`, el test
+de registro usa ese usuario directamente.
+
 ---
 
 ## 🚀 Ejecución de Tests
