@@ -4,6 +4,7 @@ export const ROUTES = {
   LOGIN: "/login",
   PENDING_APPROVAL: "/pending-approval",
   REJECTED: "/rejected",
+  UPDATE_APP: "/update-app",
 
   // App routes (Authenticated)
   APP: {

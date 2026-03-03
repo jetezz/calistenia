@@ -20,6 +20,7 @@ import { PaymentInfoPage } from "@/screens/client/PaymentInfo/PaymentInfoPage";
 import { RequestCreditsPage } from "@/screens/client/RequestCredits/RequestCreditsPage";
 import { PendingApprovalPage } from "@/screens/client/PendingApproval/PendingApprovalPage";
 import { RejectedPage } from "@/screens/client/Rejected/RejectedPage";
+import { UpdateAppPage } from "@/screens/shared/UpdateApp/UpdateAppPage";
 import WeightStatsPage from "@/screens/client/WeightStatsPage";
 import { ROUTES } from "@/constants/routes";
 
@@ -46,6 +47,10 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.REJECTED,
     element: <RejectedPage />,
+  },
+  {
+    path: ROUTES.UPDATE_APP,
+    element: <UpdateAppPage />,
   },
   {
     path: ROUTES.APP.ROOT,
