@@ -332,6 +332,7 @@ export function BookingPage() {
                       return (
                         <div
                           key={slot.id}
+                          data-slot-id={slot.id}
                           className={`p-3 rounded-lg border ${
                             isSlotInPast
                               ? "border-gray-200 bg-gray-50 opacity-60"
