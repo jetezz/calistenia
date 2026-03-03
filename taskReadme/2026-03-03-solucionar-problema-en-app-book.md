@@ -1,12 +1,12 @@
 ---
 title: solucionar problema en /app/book
-status: phase2_branching
+status: completed
 created: "2026-03-03T17:00:21.569Z"
-updated: 2026-03-03T17:05:34Z
+updated: 2026-03-03T17:11:01Z
 source_branch: "develop"
 target_branch: "develop"
-branch_name: ""
-pr_url: ""
+branch_name: feature/2026-03-03-solucionar-problema-en-app-book
+pr_url: https://github.com/jetezz/calistenia/pull/3
 error_message: ""
 ---
 
@@ -41,9 +41,9 @@ Actualmente, el sistema permite a los usuarios reservar clases en horarios que y
 
 ## Criterios de Aceptación
 
-- [ ] Los usuarios no pueden reservar slots cuyo horario de inicio ya pasó en el día actual.
-- [ ] Los slots pasados se muestran visualmente deshabilitados en la interfaz (ej. opacidad reducida, texto "Horario pasado").
-- [ ] Los tests E2E de Playwright (`BOOK-09`) validan correctamente que no se pueden seleccionar turnos pasados del día actual.
+- [x] Los usuarios no pueden reservar slots cuyo horario de inicio ya pasó en el día actual.
+- [x] Los slots pasados se muestran visualmente deshabilitados en la interfaz (ej. opacidad reducida, texto "Horario pasado").
+- [x] Los tests E2E de Playwright (`BOOK-09`) validan correctamente que no se pueden seleccionar turnos pasados del día actual.
 
 ## Riesgos y Notas
 
