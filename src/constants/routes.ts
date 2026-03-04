@@ -4,6 +4,7 @@ export const ROUTES = {
   LOGIN: "/login",
   PENDING_APPROVAL: "/pending-approval",
   REJECTED: "/rejected",
+  UPDATE_APP: "/update-app",
 
   // App routes (Authenticated)
   APP: {
@@ -13,6 +14,7 @@ export const ROUTES = {
     REQUEST_CREDITS: "request-credits",
     PAYMENT_INFO: "payment-info",
     WEIGHT_STATS: "weight-stats",
+    DOWNLOAD_APP: "download-app",
   },
 
   // Admin routes
