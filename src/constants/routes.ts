@@ -14,6 +14,7 @@ export const ROUTES = {
     REQUEST_CREDITS: "request-credits",
     PAYMENT_INFO: "payment-info",
     WEIGHT_STATS: "weight-stats",
+    DOWNLOAD_APP: "download-app",
   },
 
   // Admin routes

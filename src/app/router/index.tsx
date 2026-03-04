@@ -17,6 +17,7 @@ import { SettingsPage } from "@/screens/admin/Settings/SettingsPage";
 import { BookingPage } from "@/screens/client/Booking/BookingPage";
 import { MyBookingsPage } from "@/screens/client/MyBookings/MyBookingsPage";
 import { PaymentInfoPage } from "@/screens/client/PaymentInfo/PaymentInfoPage";
+import { DownloadAppPage } from "@/screens/client/DownloadApp/DownloadAppPage";
 import { RequestCreditsPage } from "@/screens/client/RequestCredits/RequestCreditsPage";
 import { PendingApprovalPage } from "@/screens/client/PendingApproval/PendingApprovalPage";
 import { RejectedPage } from "@/screens/client/Rejected/RejectedPage";
@@ -79,6 +80,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.APP.WEIGHT_STATS,
         element: <WeightStatsPage />,
+      },
+      {
+        path: ROUTES.APP.DOWNLOAD_APP,
+        element: <DownloadAppPage />,
       },
       {
         path: ROUTES.ADMIN.ROOT,

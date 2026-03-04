@@ -1,7 +1,8 @@
 import { useAppVersion } from "@/hooks/useAppVersion";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Browser } from "@capacitor/browser";
+import { ROUTES } from "@/constants/routes";
+import { openReleaseApkDownload } from "@/lib/apkDownload";
 import { Download } from "lucide-react";
 
 export function UpdateRequiredModal() {
@@ -9,14 +10,13 @@ export function UpdateRequiredModal() {
 
   const handleUpdate = async () => {
     try {
-      // Usar Capacitor Browser para abrir la ruta de descarga web
-      await Browser.open({ url: `${window.location.origin}/update-app` });
+      await openReleaseApkDownload();
     } catch (error) {
       console.error("Error al abrir el navegador", error);
     }
   };
 
-  if (!isUpdateRequired) {
+  if (!isUpdateRequired || window.location.pathname === ROUTES.UPDATE_APP) {
     return null;
   }
 

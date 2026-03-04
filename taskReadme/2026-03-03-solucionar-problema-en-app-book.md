@@ -60,13 +60,14 @@ Actualmente, el sistema permite a los usuarios reservar clases en horarios que y
 
 ### Pruebas realizadas
 
-| Criterio | Acción realizada | Resultado |
-|----------|-----------------|-----------|
-| Los usuarios no pueden reservar slots cuyo horario de inicio ya pasó en el día actual | Revisión del código: `isPastSlot` compara la hora del slot con `new Date()`. `canBook` incluye `!isSlotInPast`. Verificado en `BookingPage.tsx` línea 105 y 323. | ✅ Pasa |
-| Los slots pasados se muestran visualmente deshabilitados (opacidad reducida, texto "Horario pasado") | Revisión del código: Slots con `isSlotInPast=true` reciben clase `opacity-60`, el botón muestra "Horario pasado" y tiene `disabled={true}`. Validado en el browser: Lun 2 (ayer) aparece `[disabled]` en el calendario. Slots actuales (19:00, 20:00, 21:00) correctamente mostraron "Reservar (1 crédito)" a las 18:31 (aún futuros). | ✅ Pasa |
-| Los tests E2E de Playwright (BOOK-09) validan correctamente que no se pueden seleccionar turnos pasados del día actual | Ejecutado `pnpm exec playwright test tests/client/booking.spec.ts --grep "BOOK-09"` → 1 passed (15.5s). El test busca botones con texto "Horario pasado" y verifica que estén disabled. | ✅ Pasa |
+| Criterio                                                                                                               | Acción realizada                                                                                                                                                                                                                                                                                                                       | Resultado |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| Los usuarios no pueden reservar slots cuyo horario de inicio ya pasó en el día actual                                  | Revisión del código: `isPastSlot` compara la hora del slot con `new Date()`. `canBook` incluye `!isSlotInPast`. Verificado en `BookingPage.tsx` línea 105 y 323.                                                                                                                                                                       | ✅ Pasa   |
+| Los slots pasados se muestran visualmente deshabilitados (opacidad reducida, texto "Horario pasado")                   | Revisión del código: Slots con `isSlotInPast=true` reciben clase `opacity-60`, el botón muestra "Horario pasado" y tiene `disabled={true}`. Validado en el browser: Lun 2 (ayer) aparece `[disabled]` en el calendario. Slots actuales (19:00, 20:00, 21:00) correctamente mostraron "Reservar (1 crédito)" a las 18:31 (aún futuros). | ✅ Pasa   |
+| Los tests E2E de Playwright (BOOK-09) validan correctamente que no se pueden seleccionar turnos pasados del día actual | Ejecutado `pnpm exec playwright test tests/client/booking.spec.ts --grep "BOOK-09"` → 1 passed (15.5s). El test busca botones con texto "Horario pasado" y verifica que estén disabled.                                                                                                                                                | ✅ Pasa   |
 
 ### Notas
+
 - La configuración de horarios del entorno de test sólo tiene slots de tarde (19:00-22:00), por lo que a las 18:31 no había ningún slot pasado visible en el día actual. La validación de la lógica de `isPastSlot` se realizó mediante revisión de código y la ejecución exitosa del test BOOK-09.
 - El botón del día anterior (Lun 2) aparece correctamente `[disabled]` en el selector semanal, confirmando que `isPastDate` sigue funcionando.
 - El test BOOK-09 es robusto: si no hay slots pasados visibles, pasa igualmente verificando que la página carga correctamente.
@@ -90,6 +91,7 @@ Actualmente, el sistema permite a los usuarios reservar clases en horarios que y
 ### Resultados finales BOOK-10
 
 **MCP Browser (validación manual):**
+
 - Navegado a `/app/book` como cliente existente
 - Slot Jue 5 marzo 19:00-20:00 mostraba `6/6 plazas` antes de reservar ✅
 - Tras click "Reservar (1 crédito)": slot pasa a `5/6 plazas` inmediatamente ✅
@@ -97,31 +99,35 @@ Actualmente, el sistema permite a los usuarios reservar clases en horarios que y
 - Toast "¡Reserva realizada con éxito!" mostrado ✅
 
 **Playwright automatizado (10 tests):**
+
 ```
 tests/client/booking.spec.ts — 10 passed (28.9s) x 2 runs consecutivos
 ```
-- BOOK-01 al BOOK-09: sin regresiones ✅  
+
+- BOOK-01 al BOOK-09: sin regresiones ✅
 - BOOK-10 (flujo dos usuarios): `5/6` para Usuario 1 y `4/6` para Usuario 2 verificados ✅
 
 **Fix adicional infraestructura tests:**
+
 - `global-setup.ts`: elimina `playwright/.auth/client2.json` al inicio (evita sesiones obsoletas cuando el usuario es recreado entre runs)
 - `global-teardown.ts`: elimina `playwright/.auth/client2.json` tras teardown (tokens ya no válidos al borrar el usuario)
 
 ### BOOK-10: Test nuevo de flujo de reserva con dos usuarios
 
 **Plan de test:**
-1. Dos usuarios (`client@gmail.com` y `client2.e2e.test@example.com`) con créditos disponibles.  
-2. Usuario 1 navega a Jueves → slot 14:00-15:00 (slot BOOK10, capacity 6, `data-slot-id` específico).  
-3. Disponibilidad inicial: `6/6 plazas`. Usuario 1 reserva.  
-4. **Verificar:** carta muestra "Ya tienes reserva" + plazas bajan a `5/6`.  
-5. Usuario 2 navega al mismo día/hora.  
-6. **Verificar:** Usuario 2 ve `5/6 plazas` (datos frescos desde BD via RPC).  
-7. Usuario 2 reserva.  
+
+1. Dos usuarios (`client@gmail.com` y `client2.e2e.test@example.com`) con créditos disponibles.
+2. Usuario 1 navega a Jueves → slot 14:00-15:00 (slot BOOK10, capacity 6, `data-slot-id` específico).
+3. Disponibilidad inicial: `6/6 plazas`. Usuario 1 reserva.
+4. **Verificar:** carta muestra "Ya tienes reserva" + plazas bajan a `5/6`.
+5. Usuario 2 navega al mismo día/hora.
+6. **Verificar:** Usuario 2 ve `5/6 plazas` (datos frescos desde BD via RPC).
+7. Usuario 2 reserva.
 8. **Verificar:** carta muestra "Ya tienes reserva" + plazas bajan a `4/6`.
 
 **Cambios de infraestructura de tests:**
+
 - `test-seeder.ts`: Nuevo slot `BOOK10` (Jueves 19:00-20:00, capacity 6), nuevo usuario `client2.e2e.test@example.com` aprobado con 10 créditos.
 - `auth.fixtures.ts`: Nuevo fixture `authenticatedClient2`.
 - `.env.test`: `CLIENT2_EMAIL` y `CLIENT2_PASSWORD` añadidos.
 - `booking.spec.ts`: Nuevo `test.describe("BOOK-10: ...")` con su propio `beforeEach` que limpia bookings del slot BOOK10.
-
