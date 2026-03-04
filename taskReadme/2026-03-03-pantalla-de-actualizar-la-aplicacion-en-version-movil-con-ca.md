@@ -2,7 +2,7 @@
 title: Pantalla de actualizar la aplicacion en version movil con capacitor
 status: completed
 created: 2026-03-03T21:40:01Z
-updated: 2026-03-03T22:02:37Z
+updated: 2026-03-04T07:59:24Z
 source_branch: develop
 target_branch: develop
 branch_name: feature/2026-03-03-pantalla-de-actualizar-la-aplicacion-en-version-movil-con-ca
@@ -67,3 +67,21 @@ error_message: ""
   - **Permisos de Android (Install Unknown Apps):** El usuario final tendrá que conceder permisos para instalar apps desconocidas para poder actualizar por esta vía (Sideloading), ya que no es mediante Google Play.
 - **Notas:**
   - Para pruebas locales, el archivo APK deberá subirse manualmente a Supabase Storage a través del Dashboard local de Supabase.
+
+## Resultados de Pruebas E2E
+
+**Fecha:** 2026-03-04  
+**Rama:** feature/2026-03-03-pantalla-de-actualizar-la-aplicacion-en-version-movil-con-ca  
+**Resultado:** ✅ Criterios del ajuste solicitado verificados
+
+### Pruebas realizadas
+
+| Criterio | Acción realizada | Resultado |
+|----------|------------------|-----------|
+| En web también se puede mostrar la pantalla/modal de actualización para depuración mediante flag | Se arrancó `start:test` con `VITE_FORCE_UPDATE_REQUIRED_SCREEN=true` y se validó en browser MCP que aparece el dialog bloqueante "Actualización Necesaria" en `/` | ✅ Pasa |
+| Se mantiene el flujo de actualización desde el modal | En browser MCP se pulsó "Descargar Actualización" y se abrió una nueva pestaña en `/update-app` | ✅ Pasa |
+| Cobertura automatizada de la nueva funcionalidad | Se creó y ejecutó `tests/landing/update-required-modal.spec.ts` con Playwright (`1 passed`) validando visibilidad de modal y CTA en web forzado | ✅ Pasa |
+| La vista `/update-app` no debe bloquear depuración cuando faltan datos en Supabase | Se ajustó `UpdateAppPage` para fallback sin error fatal y se verificó por snapshot que renderiza "Nueva actualización disponible" + estado de APK no disponible | ✅ Pasa |
+
+### Notas
+- Consulta MCP Supabase (solo lectura): en el proyecto MCP actual no devolvió fila para `app_settings.key='app-version'` ni bucket `releases`; por eso se dejó fallback no bloqueante en la vista de actualización para facilitar debug web.

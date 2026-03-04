@@ -20,38 +20,39 @@ export function UpdateAppPage() {
           .eq("key", "app-version")
           .single();
 
-        if (versionError) throw versionError;
-
-        let remoteVersion = versionData.value as string;
-        if (typeof remoteVersion === 'string') {
-          remoteVersion = remoteVersion.replace(/"/g, '');
+        if (!versionError && versionData) {
+          let remoteVersion = versionData.value as string;
+          if (typeof remoteVersion === 'string') {
+            remoteVersion = remoteVersion.replace(/"/g, '');
+          }
+          setVersion(remoteVersion);
+        } else {
+          console.warn("App version not found in app_settings", versionError);
+          setVersion("más reciente");
         }
-        setVersion(remoteVersion);
 
         // 2. Find APK in releases bucket
         const { data: files, error: filesError } = await supabase
           .storage
           .from("releases")
           .list();
-          
-        if (filesError) throw filesError;
 
-        const apkFile = files?.find(f => f.name.endsWith('.apk'));
-        
-        if (apkFile) {
-          const { data: publicUrlData } = supabase
-            .storage
-            .from("releases")
-            .getPublicUrl(apkFile.name);
-            
-          setApkUrl(publicUrlData.publicUrl);
+        if (filesError) {
+          console.warn("Releases bucket is not available", filesError);
+          setApkUrl(null);
         } else {
-          // Si no hay archivo, usamos un nombre por defecto
-          const { data: publicUrlData } = supabase
-            .storage
-            .from("releases")
-            .getPublicUrl("app-release.apk");
-          setApkUrl(publicUrlData.publicUrl);
+          const apkFile = files?.find((file) => file.name.endsWith(".apk"));
+
+          if (apkFile) {
+            const { data: publicUrlData } = supabase
+              .storage
+              .from("releases")
+              .getPublicUrl(apkFile.name);
+
+            setApkUrl(publicUrlData.publicUrl);
+          } else {
+            setApkUrl(null);
+          }
         }
       } catch (err: any) {
         console.error("Error fetching update info", err);
