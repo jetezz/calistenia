@@ -6,6 +6,18 @@ import { supabase } from "@/lib/supabase/client";
 const isEnvTrue = (value: string | boolean | undefined) =>
   value === true || value === "true";
 
+const normalizeVersion = (value: string) => {
+  const cleaned = value.trim();
+  if (!cleaned) return cleaned;
+
+  const segments = cleaned.split(".");
+  while (segments.length > 1 && segments[segments.length - 1] === "0") {
+    segments.pop();
+  }
+
+  return segments.join(".");
+};
+
 export const useAppVersion = () => {
   const [isUpdateRequired, setIsUpdateRequired] = useState(false);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
@@ -59,7 +71,10 @@ export const useAppVersion = () => {
 
         setLatestVersion(remoteVersion);
 
-        if (localVersion !== remoteVersion) {
+        const normalizedLocalVersion = normalizeVersion(localVersion);
+        const normalizedRemoteVersion = normalizeVersion(remoteVersion);
+
+        if (normalizedLocalVersion !== normalizedRemoteVersion) {
           setIsUpdateRequired(true);
         }
       } catch (err) {
