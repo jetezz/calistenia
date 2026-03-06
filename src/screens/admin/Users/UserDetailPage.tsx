@@ -10,6 +10,7 @@ import {
   History,
   Settings2,
   Activity,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,13 +39,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 export function UserDetailPage() {
-  const { user, userBookings, isLoading, updateCredits, updatePaymentStatus } =
+  const { user, userBookings, isLoading, updateCredits, updatePaymentStatus, changePassword } =
     useAdminUserDetailLogic();
 
   const [creditsInput, setCreditsInput] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [isAddStatOpen, setIsAddStatOpen] = useState(false);
   const [isConfigureOpen, setIsConfigureOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const { success, error: showError } = useToast();
 
   const { items: weightStats, fetchByUserId } = useWeightStatsStore();
@@ -458,6 +462,19 @@ export function UserDetailPage() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardContent className="pt-6">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsChangePasswordOpen(true)}
+              >
+                <KeyRound className="size-4 mr-2" />
+                Cambiar contraseña
+              </Button>
+            </CardContent>
+          </Card>
+
           <Dialog open={isAddStatOpen} onOpenChange={setIsAddStatOpen}>
             <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
               <DialogHeader>
@@ -485,6 +502,80 @@ export function UserDetailPage() {
               // Optionally refresh user data if biometrics are displayed in detail
             }}
           />
+
+          <Dialog
+            open={isChangePasswordOpen}
+            onOpenChange={(open) => {
+              setIsChangePasswordOpen(open);
+              if (!open) setNewPassword("");
+            }}
+          >
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <KeyRound className="size-5" />
+                  Cambiar contraseña
+                </DialogTitle>
+                <DialogDescription>
+                  Establece una nueva contraseña para {user.full_name || user.email}.
+                  El usuario deberá usar esta contraseña en su próximo inicio de sesión.
+                </DialogDescription>
+              </DialogHeader>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!user || newPassword.length < 6) return;
+                  try {
+                    setIsChangingPassword(true);
+                    await changePassword(user.id, newPassword);
+                    success("Contraseña actualizada correctamente");
+                    setIsChangePasswordOpen(false);
+                    setNewPassword("");
+                  } catch (err) {
+                    console.error("Error changing password:", err);
+                    showError("Error al cambiar la contraseña");
+                  } finally {
+                    setIsChangingPassword(false);
+                  }
+                }}
+                className="space-y-4 pt-2"
+              >
+                <div>
+                  <Label htmlFor="new-password">Nueva contraseña</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                    required
+                    className="mt-1"
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsChangePasswordOpen(false);
+                      setNewPassword("");
+                    }}
+                    disabled={isChangingPassword}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isChangingPassword || newPassword.length < 6}
+                  >
+                    {isChangingPassword ? "Guardando..." : "Guardar contraseña"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </StandardPage>

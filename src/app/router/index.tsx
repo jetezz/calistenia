@@ -54,6 +54,10 @@ export const router = createBrowserRouter([
     element: <UpdateAppPage />,
   },
   {
+    path: `${ROUTES.APP.ROOT}/${ROUTES.APP.DOWNLOAD_APP}`,
+    element: <DownloadAppPage />,
+  },
+  {
     path: ROUTES.APP.ROOT,
     element: <RootLayout />,
     children: [
@@ -80,10 +84,6 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.APP.WEIGHT_STATS,
         element: <WeightStatsPage />,
-      },
-      {
-        path: ROUTES.APP.DOWNLOAD_APP,
-        element: <DownloadAppPage />,
       },
       {
         path: ROUTES.ADMIN.ROOT,
