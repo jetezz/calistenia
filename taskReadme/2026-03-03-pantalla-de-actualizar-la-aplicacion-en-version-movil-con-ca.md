@@ -13,12 +13,14 @@ error_message: ""
 ## Documentación Técnica
 
 **Estrategia de Actualización:**
+
 1. **Detección de Versión:** Usaremos el plugin `@capacitor/app` (`App.getInfo()`) para obtener la versión instalada en el dispositivo móvil y compararla con el valor almacenado en la tabla `app_settings` (clave: `app-version`) de Supabase.
 2. **Restricción de Acceso:** Si la versión del dispositivo no coincide con la de la DB, bloquearemos el acceso a la app con un modal a pantalla completa (no descartable) desde `RootLayout` o en un hook global (ej. `useAppVersion.ts`).
 3. **Descarga de APK:** El modal dirigirá al usuario a una ruta pública web (ej. `midominio.com/update-app`) abriéndola en el navegador del sistema con `@capacitor/browser` (`Browser.open(...)`). Esto garantiza que la descarga del APK funcione sin restricciones de la WebView.
 4. **Almacenamiento (Supabase Storage):** La APK se alojará en un bucket público en Supabase llamado `releases`. La vista web `/update-app` consultará Supabase para obtener la URL pública del archivo y la versión actual, mostrando un botón de descarga.
 
 **Uso del MCP de Supabase:**
+
 - **Lectura:** Se podrá utilizar el MCP de Supabase en modo SOLO LECTURA para explorar la estructura de la base de datos (por ejemplo, verificar el estado de la tabla `app_settings` y validar que el schema del bucket `releases` fue creado correctamente en desarrollo).
 - **Manual (Restricciones):** Las modificaciones (insertar un nuevo valor de `app-version` en producción o subir manualmente la APK al bucket) NO se harán por medio del MCP ni CLI. Estas acciones quedan reservadas para gestión manual a través de la UI de Supabase o scripts de despliegue específicos durante las pruebas finales.
 
@@ -76,12 +78,13 @@ error_message: ""
 
 ### Pruebas realizadas
 
-| Criterio | Acción realizada | Resultado |
-|----------|------------------|-----------|
-| En web también se puede mostrar la pantalla/modal de actualización para depuración mediante flag | Se arrancó `start:test` con `VITE_FORCE_UPDATE_REQUIRED_SCREEN=true` y se validó en browser MCP que aparece el dialog bloqueante "Actualización Necesaria" en `/` | ✅ Pasa |
-| Se mantiene el flujo de actualización desde el modal | En browser MCP se pulsó "Descargar Actualización" y se abrió una nueva pestaña en `/update-app` | ✅ Pasa |
-| Cobertura automatizada de la nueva funcionalidad | Se creó y ejecutó `tests/landing/update-required-modal.spec.ts` con Playwright (`1 passed`) validando visibilidad de modal y CTA en web forzado | ✅ Pasa |
-| La vista `/update-app` no debe bloquear depuración cuando faltan datos en Supabase | Se ajustó `UpdateAppPage` para fallback sin error fatal y se verificó por snapshot que renderiza "Nueva actualización disponible" + estado de APK no disponible | ✅ Pasa |
+| Criterio                                                                                         | Acción realizada                                                                                                                                                  | Resultado |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| En web también se puede mostrar la pantalla/modal de actualización para depuración mediante flag | Se arrancó `start:test` con `VITE_FORCE_UPDATE_REQUIRED_SCREEN=true` y se validó en browser MCP que aparece el dialog bloqueante "Actualización Necesaria" en `/` | ✅ Pasa   |
+| Se mantiene el flujo de actualización desde el modal                                             | En browser MCP se pulsó "Descargar Actualización" y se abrió una nueva pestaña en `/update-app`                                                                   | ✅ Pasa   |
+| Cobertura automatizada de la nueva funcionalidad                                                 | Se creó y ejecutó `tests/landing/update-required-modal.spec.ts` con Playwright (`1 passed`) validando visibilidad de modal y CTA en web forzado                   | ✅ Pasa   |
+| La vista `/update-app` no debe bloquear depuración cuando faltan datos en Supabase               | Se ajustó `UpdateAppPage` para fallback sin error fatal y se verificó por snapshot que renderiza "Nueva actualización disponible" + estado de APK no disponible   | ✅ Pasa   |
 
 ### Notas
+
 - Consulta MCP Supabase (solo lectura): en el proyecto MCP actual no devolvió fila para `app_settings.key='app-version'` ni bucket `releases`; por eso se dejó fallback no bloqueante en la vista de actualización para facilitar debug web.
