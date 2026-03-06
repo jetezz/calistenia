@@ -78,11 +78,18 @@ export function EnhancedTimeSlotDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload: any = { ...formData };
+
+      // Sanitizar capacidad en caso de que el input se haya dejado vacío
+      if (payload.capacity === "" || isNaN(Number(payload.capacity))) {
+        payload.capacity = 0;
+      }
+
       if (editingSlot) {
         // TODO: Implement updateSlot in useAdminSlotsLogic or use store
         toast.info("Actualización no implementada aún en el hook");
       } else {
-        await createSlot(formData as any);
+        await createSlot(payload);
         toast.success("Horario creado correctamente");
       }
       onSuccess();
@@ -184,11 +191,15 @@ export function EnhancedTimeSlotDialog({
             <Label>Capacidad (Plazas)</Label>
             <Input
               type="number"
-              value={formData.capacity || 10}
-              onChange={(e) =>
-                setFormData({ ...formData, capacity: parseInt(e.target.value) })
-              }
-              required
+              value={formData.capacity ?? 10}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFormData({
+                  ...formData,
+                  capacity: val === "" ? ("" as any) : parseInt(val, 10),
+                });
+              }}
+              min="0"
             />
           </div>
 

@@ -125,7 +125,7 @@ export function SlotsPage() {
 
       setSlotBookings(bookingsMap);
     },
-    []
+    [],
   );
 
   const handleCalendarDateClick = useCallback(
@@ -133,7 +133,7 @@ export function SlotsPage() {
       setSelectedDateSlots({ date, slots });
       // La carga se realiza automáticamente por el useEffect cuando cambia selectedDateSlots
     },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -143,7 +143,7 @@ export function SlotsPage() {
       if (selectedDateSlots && mounted) {
         await loadBookingsForSlots(
           selectedDateSlots.slots,
-          selectedDateSlots.date
+          selectedDateSlots.date,
         );
       }
     };
@@ -180,31 +180,37 @@ export function SlotsPage() {
 
   // Separate recurring and specific date slots
   const recurringSlots = timeSlots.filter(
-    (slot) => slot.slot_type === "recurring"
+    (slot) => slot.slot_type === "recurring",
   );
   const specificDateSlots = timeSlots.filter(
-    (slot) => slot.slot_type === "specific_date"
+    (slot) => slot.slot_type === "specific_date",
   );
 
   // Group recurring slots by day of week (converted to Monday-first display index)
-  const groupedRecurringSlots = recurringSlots.reduce((acc, slot) => {
-    const displayIndex = convertDayOfWeekToDisplayIndex(slot.day_of_week);
-    if (!acc[displayIndex]) {
-      acc[displayIndex] = [];
-    }
-    acc[displayIndex].push(slot);
-    return acc;
-  }, {} as Record<number, TimeSlot[]>);
+  const groupedRecurringSlots = recurringSlots.reduce(
+    (acc, slot) => {
+      const displayIndex = convertDayOfWeekToDisplayIndex(slot.day_of_week);
+      if (!acc[displayIndex]) {
+        acc[displayIndex] = [];
+      }
+      acc[displayIndex].push(slot);
+      return acc;
+    },
+    {} as Record<number, TimeSlot[]>,
+  );
 
   // Group specific date slots by date
-  const groupedSpecificSlots = specificDateSlots.reduce((acc, slot) => {
-    const date = slot.specific_date!;
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(slot);
-    return acc;
-  }, {} as Record<string, TimeSlot[]>);
+  const groupedSpecificSlots = specificDateSlots.reduce(
+    (acc, slot) => {
+      const date = slot.specific_date!;
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(slot);
+      return acc;
+    },
+    {} as Record<string, TimeSlot[]>,
+  );
 
   const TimeSlotCard = ({
     slot,
@@ -301,7 +307,7 @@ export function SlotsPage() {
                       slotId: slot.id,
                       bookingDate: selectedDateSlots.date,
                       slotTime: `${formatTime(slot.start_time)} - ${formatTime(
-                        slot.end_time
+                        slot.end_time,
                       )}`,
                     })
                   }
@@ -346,7 +352,11 @@ export function SlotsPage() {
       isLoading={isLoading}
       loadingMessage="Cargando horarios..."
       actionButton={
-        <Button onClick={handleCreate} size="sm">
+        <Button
+          onClick={handleCreate}
+          size="sm"
+          className="flex-1 sm:flex-none"
+        >
           <Plus className="size-4 mr-2" />
           Nuevo
         </Button>
@@ -489,7 +499,7 @@ export function SlotsPage() {
               <div className="space-y-3">
                 {Object.entries(groupedSpecificSlots)
                   .sort(
-                    ([a], [b]) => new Date(a).getTime() - new Date(b).getTime()
+                    ([a], [b]) => new Date(a).getTime() - new Date(b).getTime(),
                   )
                   .map(([date, slots]) => (
                     <div key={date} className="space-y-2">
@@ -522,7 +532,7 @@ export function SlotsPage() {
           if (selectedDateSlots) {
             loadBookingsForSlots(
               selectedDateSlots.slots,
-              selectedDateSlots.date
+              selectedDateSlots.date,
             );
           }
         }}
