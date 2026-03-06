@@ -81,16 +81,54 @@ async function createStorageState(
   return filePath;
 }
 
+/**
+ * Checks if a saved storageState has a valid (non-expired) Supabase access token.
+ * Returns true if the token is valid and has at least 5 minutes remaining.
+ */
+function isStorageStateValid(filePath: string): boolean {
+  try {
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const state = JSON.parse(raw);
+    for (const origin of state.origins ?? []) {
+      for (const item of origin.localStorage ?? []) {
+        if (
+          typeof item.name === "string" &&
+          item.name.endsWith("-auth-token")
+        ) {
+          const authData = JSON.parse(item.value ?? "{}");
+          const accessToken: string = authData.access_token ?? "";
+          if (!accessToken) return false;
+
+          // Decode JWT payload (base64url)
+          const parts = accessToken.split(".");
+          if (parts.length < 2) return false;
+          const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+          const decoded = JSON.parse(
+            Buffer.from(payload, "base64").toString("utf-8"),
+          );
+          const exp: number = decoded.exp ?? 0;
+          const nowWithMargin = Math.floor(Date.now() / 1000) + 5 * 60; // 5-minute buffer
+          return exp > nowWithMargin;
+        }
+      }
+    }
+  } catch {
+    // If we can't read/parse the file, treat it as invalid
+  }
+  return false;
+}
+
 async function getOrCreateStorageState(
   browser: Browser,
   role: UserRole,
 ): Promise<string> {
   const filePath = storageStatePath(role);
 
-  if (fs.existsSync(filePath)) {
+  if (fs.existsSync(filePath) && isStorageStateValid(filePath)) {
     return filePath;
   }
 
+  // Token expired or file missing — create a fresh session
   return createStorageState(browser, role);
 }
 

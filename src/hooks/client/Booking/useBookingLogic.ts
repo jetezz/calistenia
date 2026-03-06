@@ -49,7 +49,7 @@ export const useBookingLogic = (userId?: string) => {
   // Get user's bookings (memoized to prevent dependency issues)
   const userBookings = useMemo(
     () => (userId ? allBookings.filter((b) => b.user_id === userId) : []),
-    [userId, allBookings]
+    [userId, allBookings],
   );
 
   // Initial fetch
@@ -74,7 +74,7 @@ export const useBookingLogic = (userId?: string) => {
         // Returns available spots (capacity - confirmed_bookings) for ALL users
         const { data: availableSpots, error } = await supabase.rpc(
           "get_available_spots",
-          { slot_id: timeSlotId, target_date: bookingDate }
+          { slot_id: timeSlotId, target_date: bookingDate },
         );
 
         if (error) {
@@ -101,7 +101,68 @@ export const useBookingLogic = (userId?: string) => {
         return null;
       }
     },
-    [timeSlots] // Only depends on timeSlots for capacity lookup
+    [timeSlots], // Only depends on timeSlots for capacity lookup
+  );
+
+  // Fetch availability for a batch of dates
+  const fetchAvailabilityBatch = useCallback(
+    async (datesToFetch: { dateStr: string; slotIds: string[] }[]) => {
+      try {
+        if (datesToFetch.length === 0) return null;
+
+        // Find min and max dates
+        const allDateStrs = datesToFetch.map((d) => d.dateStr).sort();
+        const startDate = allDateStrs[0];
+        const endDate = allDateStrs[allDateStrs.length - 1];
+
+        // Call the batch RPC
+        const { data, error } = await supabase.rpc(
+          "get_available_spots_batch" as any,
+          { start_date: startDate, end_date: endDate },
+        );
+
+        if (error) {
+          console.error("Error calling get_available_spots_batch RPC:", error);
+          return null;
+        }
+
+        const bookedLookup: Record<string, number> = {};
+        if (data) {
+          data.forEach((row: any) => {
+            bookedLookup[`${row.time_slot_id}-${row.booking_date}`] =
+              row.booked || 0;
+          });
+        }
+
+        const newAvailability: Record<string, BookingAvailability> = {};
+
+        for (const dateItem of datesToFetch) {
+          for (const slotId of dateItem.slotIds) {
+            const timeSlot = timeSlots.find((ts) => ts.id === slotId);
+            const totalSpots = timeSlot?.capacity || 0;
+            const key = `${slotId}-${dateItem.dateStr}`;
+            const booked = bookedLookup[key] || 0;
+
+            newAvailability[key] = {
+              capacity: totalSpots,
+              booked,
+              available: totalSpots - booked,
+            };
+          }
+        }
+
+        setBookingAvailability((prev) => ({
+          ...prev,
+          ...newAvailability,
+        }));
+
+        return newAvailability;
+      } catch (error) {
+        console.error("Error fetching batch availability:", error);
+        return null;
+      }
+    },
+    [timeSlots],
   );
 
   // Get availability from cache
@@ -110,7 +171,7 @@ export const useBookingLogic = (userId?: string) => {
       const key = `${timeSlotId}-${bookingDate}`;
       return bookingAvailability[key] || null;
     },
-    [bookingAvailability]
+    [bookingAvailability],
   );
 
   // Check if user has a booking conflict
@@ -122,10 +183,10 @@ export const useBookingLogic = (userId?: string) => {
         (b) =>
           b.time_slot_id === timeSlotId &&
           b.booking_date === bookingDate &&
-          b.status === "confirmed"
+          b.status === "confirmed",
       );
     },
-    [userId, userBookings]
+    [userId, userBookings],
   );
 
   // Create a new booking
@@ -197,7 +258,7 @@ export const useBookingLogic = (userId?: string) => {
       showLoading,
       success,
       dismiss,
-    ]
+    ],
   );
 
   // Refresh all data
@@ -226,5 +287,6 @@ export const useBookingLogic = (userId?: string) => {
     createBooking,
     checkBookingConflict,
     refresh,
+    fetchAvailabilityBatch,
   };
 };

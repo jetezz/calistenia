@@ -44,6 +44,7 @@ export function BookingPage() {
     createBooking,
     fetchAvailability,
     getAvailability,
+    fetchAvailabilityBatch,
     refresh,
   } = useBookingLogic(user?.id);
 
@@ -139,20 +140,27 @@ export function BookingPage() {
 
   // Load availability for visible time slots when dates change
   useEffect(() => {
-    const loadAvailability = async () => {
-      for (const date of weekDates) {
-        const slots = getSlotsForDate(date);
+    if (timeSlots.length === 0 || weekDates.length === 0) return;
 
-        for (const slot of slots) {
-          await fetchAvailability(slot.id, formatDate(date));
-        }
-      }
-    };
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    if (timeSlots.length > 0) {
-      loadAvailability();
-    }
-  }, [weekDates, timeSlots, formatDate, getSlotsForDate, fetchAvailability]);
+    const datesToFetch = weekDates
+      .filter((date) => date >= today) // Optimization: skip past dates!
+      .map((date) => ({
+        dateStr: formatDate(date),
+        slotIds: getSlotsForDate(date).map((slot) => slot.id),
+      }))
+      .filter((item) => item.slotIds.length > 0);
+
+    fetchAvailabilityBatch(datesToFetch);
+  }, [
+    weekDates,
+    timeSlots,
+    formatDate,
+    getSlotsForDate,
+    fetchAvailabilityBatch,
+  ]);
 
   return (
     <StandardPage
@@ -270,6 +278,22 @@ export function BookingPage() {
                   );
                 })}
               </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4 mb-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-sm bg-primary border border-primary"></div>
+                  <span>Seleccionado</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-sm bg-blue-50 border border-blue-400"></div>
+                  <span>Tu reserva</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 mx-[3px]"></div>
+                  <span>Plazas libres</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -320,7 +344,10 @@ export function BookingPage() {
                           (b.status === "confirmed" || b.status === "pending"),
                       );
                       const isBooked = !!userBooking;
-                      const isSlotInPast = isPastSlot(selectedDate, slot.start_time);
+                      const isSlotInPast = isPastSlot(
+                        selectedDate,
+                        slot.start_time,
+                      );
                       const canBook =
                         !isPastDate(selectedDate) &&
                         !isSlotInPast &&
