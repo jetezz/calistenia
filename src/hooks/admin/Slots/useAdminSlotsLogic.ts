@@ -3,6 +3,7 @@ import { useTimeSlotStore } from "@/stores/timeSlotStore";
 import type { Database } from "@/types/database";
 
 type TimeSlotInsert = Database["public"]["Tables"]["time_slots"]["Insert"];
+type TimeSlotUpdate = Database["public"]["Tables"]["time_slots"]["Update"];
 
 export const useAdminSlotsLogic = () => {
   const {
@@ -11,6 +12,7 @@ export const useAdminSlotsLogic = () => {
     error,
     fetchAll,
     create: createSlot,
+    update: updateSlot,
     delete: deleteSlot,
     toggleActive,
   } = useTimeSlotStore();
@@ -21,6 +23,10 @@ export const useAdminSlotsLogic = () => {
 
   const handleCreateSlot = async (data: TimeSlotInsert) => {
     await createSlot(data);
+  };
+
+  const handleUpdateSlot = async (id: string, data: TimeSlotUpdate) => {
+    await updateSlot(id, data);
   };
 
   const handleDeleteSlot = async (id: string) => {
@@ -37,6 +43,7 @@ export const useAdminSlotsLogic = () => {
     error,
     refresh: () => fetchAll(true),
     createSlot: handleCreateSlot,
+    updateSlot: handleUpdateSlot,
     deleteSlot: handleDeleteSlot,
     toggleActive: handleToggleActive,
   };

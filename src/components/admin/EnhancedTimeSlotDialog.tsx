@@ -46,8 +46,7 @@ export function EnhancedTimeSlotDialog({
   onSuccess,
   editingSlot,
 }: EnhancedTimeSlotDialogProps) {
-  const { createSlot } = useAdminSlotsLogic(); // We'll need updateSlot in the hook later or use store directly
-  // Actually, useAdminSlotsLogic doesn't have updateSlot yet. I'll use store.
+  const { createSlot, updateSlot } = useAdminSlotsLogic();
 
   const [formData, setFormData] = useState<Partial<TimeSlot>>({
     day_of_week: 1,
@@ -86,8 +85,8 @@ export function EnhancedTimeSlotDialog({
       }
 
       if (editingSlot) {
-        // TODO: Implement updateSlot in useAdminSlotsLogic or use store
-        toast.info("Actualización no implementada aún en el hook");
+        await updateSlot(editingSlot.id, payload);
+        toast.success("Horario actualizado correctamente");
       } else {
         await createSlot(payload);
         toast.success("Horario creado correctamente");

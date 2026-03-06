@@ -193,4 +193,58 @@ test.describe("Gestión de Horarios - Admin", () => {
     const content = page.locator("main");
     await expect(content).toBeVisible();
   });
+  test("SLOT-06: Editar horario no recarga la página completa", async ({
+    authenticatedAdmin: page,
+  }) => {
+    await waitForLoadingComplete(page);
+
+    // Ir a la pestaña "Semanales" para ver los horarios más fácilmente en vez del calendario vacío
+    const semanalesTab = page.locator('button[role="tab"]', {
+      hasText: "Semanales",
+    });
+    if (await semanalesTab.isVisible().catch(() => false)) {
+      await semanalesTab.click();
+      await page.waitForTimeout(1000);
+    }
+
+    // Buscar el primer botón de editar
+    const editButton = page
+      .locator('button:has-text("Editar")')
+      .or(page.locator("button i.lucide-edit-2").locator(".."));
+
+    // Si hay botones de edición a mano, entra
+    if (
+      await editButton
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      await editButton.first().click();
+
+      // Debería abrirse el formulario de edición
+      const dialog = page.locator('[role="dialog"]');
+      await expect(dialog.first()).toBeVisible({ timeout: 5000 });
+
+      // Cambiamos un valor rápido (por ejemplo añadirle 1 a la capacidad o un numero fijo)
+      const capacityInput = dialog.locator('input[type="number"]');
+      await capacityInput.fill("5");
+
+      // Le damos a actualizar
+      const submitButton = dialog
+        .locator('button[type="submit"]', { hasText: "Actualizar" })
+        .or(dialog.locator('button[type="submit"]'));
+      await submitButton.click();
+
+      // 1. Verificar el toast de éxito
+      await expect(
+        page.locator("text=Horario actualizado correctamente").first(),
+      ).toBeVisible({ timeout: 5000 });
+
+      // 2. Comprobar CRÍTICAMENTE que no aparece el spinner global con el texto "Cargando horarios..."
+      await expect(page.locator("text=Cargando horarios...")).not.toBeVisible();
+
+      // 3. Confirmar que el form se cerró exitosamente y se ve la pantalla base intacta
+      await expect(dialog).not.toBeVisible();
+    }
+  });
 });

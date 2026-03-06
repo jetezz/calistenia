@@ -126,78 +126,34 @@ export const useWeightStatsCharts = (stats: WeightStats[]) => {
   const trends = useMemo(() => {
     if (stats.length < 2) return null;
 
-    const recent = stats[0];
-    const previous = stats[1];
+    const getTrend = (key: keyof WeightStats) => {
+      const validStats = stats.filter(
+        (s) => typeof s[key] === "number" && s[key] !== null,
+      );
+      if (validStats.length < 2) return null;
+
+      const current = validStats[0][key] as number;
+      const previous = validStats[validStats.length - 1][key] as number;
+      const change = current - previous;
+      const percentage = previous !== 0 ? (change / previous) * 100 : 0;
+
+      return {
+        current,
+        previous,
+        change,
+        percentage,
+      };
+    };
 
     return {
-      weight: {
-        current: recent.weight,
-        previous: previous.weight,
-        change: recent.weight - previous.weight,
-        percentage: ((recent.weight - previous.weight) / previous.weight) * 100,
-      },
-      bodyFat:
-        recent.body_fat_percentage && previous.body_fat_percentage
-          ? {
-              current: recent.body_fat_percentage,
-              previous: previous.body_fat_percentage,
-              change: recent.body_fat_percentage - previous.body_fat_percentage,
-              percentage: ((recent.body_fat_percentage - previous.body_fat_percentage) / previous.body_fat_percentage) * 100,
-            }
-          : null,
-      muscleMass:
-        recent.muscle_mass && previous.muscle_mass
-          ? {
-              current: recent.muscle_mass,
-              previous: previous.muscle_mass,
-              change: recent.muscle_mass - previous.muscle_mass,
-              percentage: ((recent.muscle_mass - previous.muscle_mass) / previous.muscle_mass) * 100,
-            }
-          : null,
-      boneMass:
-        recent.bone_mass && previous.bone_mass
-          ? {
-              current: recent.bone_mass,
-              previous: previous.bone_mass,
-              change: recent.bone_mass - previous.bone_mass,
-              percentage: ((recent.bone_mass - previous.bone_mass) / previous.bone_mass) * 100,
-            }
-          : null,
-      bmi:
-        recent.bmi && previous.bmi
-          ? {
-              current: recent.bmi,
-              previous: previous.bmi,
-              change: recent.bmi - previous.bmi,
-              percentage: ((recent.bmi - previous.bmi) / previous.bmi) * 100,
-            }
-          : null,
-      waterPercentage:
-        recent.total_body_water_percentage && previous.total_body_water_percentage
-          ? {
-              current: recent.total_body_water_percentage,
-              previous: previous.total_body_water_percentage,
-              change: recent.total_body_water_percentage - previous.total_body_water_percentage,
-              percentage: ((recent.total_body_water_percentage - previous.total_body_water_percentage) / previous.total_body_water_percentage) * 100,
-            }
-          : null,
-      calories:
-        recent.daily_calorie_intake && previous.daily_calorie_intake
-          ? {
-              current: recent.daily_calorie_intake,
-              previous: previous.daily_calorie_intake,
-              change: recent.daily_calorie_intake - previous.daily_calorie_intake,
-              percentage: ((recent.daily_calorie_intake - previous.daily_calorie_intake) / previous.daily_calorie_intake) * 100,
-            }
-          : null,
-      metabolicAge:
-        recent.metabolic_age && previous.metabolic_age
-          ? {
-              current: recent.metabolic_age,
-              previous: previous.metabolic_age,
-              change: recent.metabolic_age - previous.metabolic_age,
-            }
-          : null,
+      weight: getTrend("weight"),
+      bodyFat: getTrend("body_fat_percentage"),
+      muscleMass: getTrend("muscle_mass"),
+      boneMass: getTrend("bone_mass"),
+      bmi: getTrend("bmi"),
+      waterPercentage: getTrend("total_body_water_percentage"),
+      calories: getTrend("daily_calorie_intake"),
+      metabolicAge: getTrend("metabolic_age"),
     };
   }, [stats]);
 
@@ -219,7 +175,11 @@ export const useWeightStatsCharts = (stats: WeightStats[]) => {
     return stats
       .slice()
       .reverse()
-      .filter((stat) => stat.body_fat_percentage !== null || stat.total_body_water_percentage !== null)
+      .filter(
+        (stat) =>
+          stat.body_fat_percentage !== null ||
+          stat.total_body_water_percentage !== null,
+      )
       .map((stat) => ({
         date: stat.recorded_at,
         bodyFat: stat.body_fat_percentage,
@@ -244,7 +204,10 @@ export const useWeightStatsCharts = (stats: WeightStats[]) => {
     return stats
       .slice()
       .reverse()
-      .filter((stat) => stat.daily_calorie_intake !== null || stat.metabolic_age !== null)
+      .filter(
+        (stat) =>
+          stat.daily_calorie_intake !== null || stat.metabolic_age !== null,
+      )
       .map((stat) => ({
         date: stat.recorded_at,
         calories: stat.daily_calorie_intake,

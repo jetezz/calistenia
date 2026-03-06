@@ -198,7 +198,7 @@ export default function WeightStatsPage() {
         loadingMessage="Cargando tus estadísticas..."
         maxWidth="max-w-7xl"
       >
-        {hasData && latestMetrics && (
+        {hasData && stats.length > 0 && latestMetrics && (
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:grid-cols-2">
               <TabsTrigger value="overview">Resumen</TabsTrigger>
@@ -276,7 +276,7 @@ export default function WeightStatsPage() {
                             day: "numeric",
                             month: "long",
                             year: "numeric",
-                          }
+                          },
                         )}
                       </CardTitle>
                       <CardDescription>
@@ -373,6 +373,23 @@ export default function WeightStatsPage() {
               </div>
             </TabsContent>
           </Tabs>
+        )}
+
+        {hasData && stats.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Activity className="size-12 text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              Sin datos en este periodo
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-sm">
+              No hay mediciones registradas en el rango de tiempo seleccionado.
+              Prueba a cambiar el filtro de fecha.
+            </p>
+            <TimeRangeSelector
+              selected={selectedTimeRange}
+              onChange={handleTimeRangeChange}
+            />
+          </div>
         )}
       </StandardPage>
       <BiometricsSetupModal
