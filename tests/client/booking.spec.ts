@@ -24,9 +24,6 @@ test.describe("Reserva de Clases - Cliente", () => {
   }) => {
     await waitForLoadingComplete(page);
 
-    // Verificar que estamos en la página de reservas - puede mostrar calendario o mensaje vacío
-    // Si hay horarios: muestra días de la semana (Lun, Mar, etc.)
-    // Si no hay horarios: muestra "No hay horarios disponibles"
     const calendar = page
       .locator("text=Lun")
       .or(page.locator("text=Mar"))
@@ -44,7 +41,6 @@ test.describe("Reserva de Clases - Cliente", () => {
       .isVisible()
       .catch(() => false);
 
-    // Debe mostrar el calendario O el estado vacío
     expect(calendarVisible || emptyVisible).toBeTruthy();
   });
 
@@ -53,7 +49,6 @@ test.describe("Reserva de Clases - Cliente", () => {
   }) => {
     await waitForLoadingComplete(page);
 
-    // Buscar botón de siguiente semana (normalmente un chevron o flecha)
     const nextWeekButton = page
       .locator('button:has-text("›")')
       .or(page.locator('button:has-text(">")'))
@@ -69,7 +64,6 @@ test.describe("Reserva de Clases - Cliente", () => {
       await page.waitForTimeout(1000);
     }
 
-    // El calendario debería seguir visible
     await expect(page.locator("main")).toBeVisible();
   });
 
@@ -78,7 +72,6 @@ test.describe("Reserva de Clases - Cliente", () => {
   }) => {
     await waitForLoadingComplete(page);
 
-    // Primero ir a la siguiente semana
     const nextButton = page
       .locator('button:has-text("›")')
       .or(page.locator('button:has-text(">")'));
@@ -92,7 +85,6 @@ test.describe("Reserva de Clases - Cliente", () => {
       await page.waitForTimeout(500);
     }
 
-    // Ahora ir a la semana anterior
     const prevWeekButton = page
       .locator('button:has-text("‹")')
       .or(page.locator('button:has-text("<")'));
@@ -107,14 +99,12 @@ test.describe("Reserva de Clases - Cliente", () => {
       await page.waitForTimeout(1000);
     }
 
-    // El calendario debería seguir visible
     await expect(page.locator("main")).toBeVisible();
   });
 
   test("BOOK-04: Botón Hoy funciona", async ({ authenticatedClient: page }) => {
     await waitForLoadingComplete(page);
 
-    // Buscar botón "Hoy"
     const todayButton = page.locator('button:has-text("Hoy")');
 
     if (await todayButton.isVisible().catch(() => false)) {
@@ -122,7 +112,6 @@ test.describe("Reserva de Clases - Cliente", () => {
       await page.waitForTimeout(1000);
     }
 
-    // Verificar que el calendario sigue visible
     await expect(page.locator("main")).toBeVisible();
   });
 
@@ -131,7 +120,6 @@ test.describe("Reserva de Clases - Cliente", () => {
   }) => {
     await waitForLoadingComplete(page);
 
-    // Click en un día del calendario - buscar botones con números (días)
     const dayButton = page
       .locator("button")
       .filter({ hasText: /^[0-9]{1,2}$/ })
@@ -142,7 +130,6 @@ test.describe("Reserva de Clases - Cliente", () => {
       await page.waitForTimeout(1500);
     }
 
-    // Debería mostrar contenido
     await expect(page.locator("main")).toBeVisible();
   });
 
@@ -150,8 +137,6 @@ test.describe("Reserva de Clases - Cliente", () => {
     authenticatedClient: page,
   }) => {
     await waitForLoadingComplete(page);
-
-    // Verificar que la página carga correctamente
     await expect(page.locator("main")).toBeVisible();
   });
 
@@ -160,7 +145,6 @@ test.describe("Reserva de Clases - Cliente", () => {
   }) => {
     await waitForLoadingComplete(page);
 
-    // Buscar un slot disponible con botón de reservar
     const bookButton = page.locator('button:has-text("Reservar")');
 
     if (
@@ -169,7 +153,6 @@ test.describe("Reserva de Clases - Cliente", () => {
         .isVisible()
         .catch(() => false)
     ) {
-      // Verificar que el botón existe
       await expect(bookButton.first()).toBeVisible();
     }
     expect(true).toBeTruthy();
@@ -179,8 +162,6 @@ test.describe("Reserva de Clases - Cliente", () => {
     authenticatedClient: page,
   }) => {
     await waitForLoadingComplete(page);
-
-    // Verificar que la página carga correctamente
     await expect(page.locator("main")).toBeVisible();
   });
 
@@ -189,10 +170,14 @@ test.describe("Reserva de Clases - Cliente", () => {
   }) => {
     await waitForLoadingComplete(page);
 
-    // Buscar si hay botones indicando horarios pasados
     const pastSlotButtons = page.locator('button:has-text("Horario pasado")');
 
-    if (await pastSlotButtons.first().isVisible().catch(() => false)) {
+    if (
+      await pastSlotButtons
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       const count = await pastSlotButtons.count();
       for (let i = 0; i < count; i++) {
         const button = pastSlotButtons.nth(i);
@@ -201,14 +186,12 @@ test.describe("Reserva de Clases - Cliente", () => {
       }
     }
 
-    // Verificar que la página carga correctamente
     await expect(page.locator("main")).toBeVisible();
   });
 });
 
 test.describe("BOOK-10: Flujo de reserva con dos usuarios", () => {
   test.beforeEach(async () => {
-    // Limpiar reservas del slot BOOK10 para empezar desde cero en cada test
     await cleanBook10Bookings();
   });
 
@@ -219,105 +202,133 @@ test.describe("BOOK-10: Flujo de reserva con dos usuarios", () => {
     const slotId = TEST_SLOT_IDS.BOOK10;
     const capacity = TEST_SLOT_CONFIG.BOOK10.capacity; // 6
 
-    // Helper: locate the BOOK10 slot card by its data-slot-id attribute
     const getSlotCard = (page: typeof page1) =>
       page.locator(`[data-slot-id="${slotId}"]`);
 
-    // ── FASE 1: Usuario 1 navega hasta el slot del Jueves ──────────────────
-    await page1.goto("/app/book");
-    await waitForLoadingComplete(page1);
+    /**
+     * Navega a la página de reservas y selecciona el Jueves BOOK10:
+     * - Si el Jueves de la semana actual está deshabilitado (ya pasó),
+     *   avanza a la siguiente semana donde el slot recurrente existe.
+     * - Espera explícitamente a que la URL sea /app/book
+     * - Espera a que la disponibilidad del slot BOOK10 cargue completamente
+     */
+    const navigateToBook10Thursday = async (
+      page: typeof page1,
+    ): Promise<void> => {
+      await page.goto("/app/book");
+      // Esperar a que la URL sea /app/book (no /app tras redirect de auth)
+      await page.waitForURL("**/app/book", { timeout: 10000 });
+      await waitForLoadingComplete(page);
 
-    // Navegar al Jueves (day_of_week = 4) en la semana visible
-    const thursdayBtn1 = page1.locator("button").filter({ hasText: /^Jue/ }).first();
-    const thursdayExists = await thursdayBtn1.isVisible().catch(() => false);
+      // Comprobar si el Jueves actual está habilitado
+      const thursdayBtn = page
+        .locator("button")
+        .filter({ hasText: /^Jue/ })
+        .first();
+      const thursdayExists = await thursdayBtn
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
+      const thursdayDisabled = thursdayExists
+        ? await thursdayBtn.isDisabled().catch(() => false)
+        : true;
 
-    if (!thursdayExists) {
-      test.skip(true, "Jueves no visible en la semana actual — test omitido");
-      return;
-    }
+      if (!thursdayExists || thursdayDisabled) {
+        // Usar el tercer botón h-8 (último = ChevronRight / siguiente semana)
+        // Botones h-8 en orden: [Hoy, ChevronLeft, ChevronRight]
+        await page.locator("button.h-8").last().click();
+        await page.waitForTimeout(1000);
+      }
 
-    const thursdayDisabled = await thursdayBtn1.isDisabled().catch(() => false);
-    if (thursdayDisabled) {
-      test.skip(true, "Jueves ya pasó — test omitido");
-      return;
-    }
+      // Click en el Jueves
+      const thursBtnNow = page
+        .locator("button")
+        .filter({ hasText: /^Jue/ })
+        .first();
+      await expect(thursBtnNow).toBeVisible({ timeout: 10000 });
+      await expect(thursBtnNow).toBeEnabled({ timeout: 5000 });
+      await thursBtnNow.click();
 
-    await thursdayBtn1.click();
-    await page1.waitForTimeout(1500);
+      // Esperar que el slot BOOK10 sea visible y su disponibilidad esté cargada
+      const slotCard = getSlotCard(page);
+      await expect(slotCard).toBeVisible({ timeout: 15000 });
+      // Esperar que "Cargando..." desaparezca del span de plazas
+      await expect(
+        page.locator("span").filter({ hasText: /Cargando/ }),
+      ).toHaveCount(0, { timeout: 15000 });
+    };
 
-    // Verify BOOK10 slot card is visible
+    // ── FASE 1: Usuario 1 (authenticatedClient) ──────────────────────────────
+    await navigateToBook10Thursday(page1);
     const slotCard1 = getSlotCard(page1);
-    const slotExists = await slotCard1.isVisible().catch(() => false);
-    if (!slotExists) {
-      test.skip(true, `Slot BOOK10 no encontrado en Jueves (data-slot-id=${slotId})`);
-      return;
-    }
 
-    // ── VERIFICAR DISPONIBILIDAD INICIAL (capacity/capacity) ────────────────
-    const plazasSpan1 = slotCard1.locator("span").filter({ hasText: /plazas/ }).first();
+    // Verificar disponibilidad inicial: N/N plazas
+    const plazasSpan1 = slotCard1
+      .locator("span")
+      .filter({ hasText: /plazas/ })
+      .first();
+    await expect(plazasSpan1).toBeVisible({ timeout: 10000 });
     await expect(plazasSpan1).toContainText(`${capacity}/${capacity}`);
 
-    // ── USUARIO 1 RESERVA ───────────────────────────────────────────────────
-    const bookBtn1 = slotCard1.locator('button:has-text("Reservar")').first();
+    // Reservar (el botón puede decir "Reservar (1 crédito)")
+    const bookBtn1 = slotCard1
+      .locator("button")
+      .filter({ hasText: /Reservar/ })
+      .first();
     await expect(bookBtn1).toBeEnabled();
     await bookBtn1.click();
-
-    // Esperar a que la reserva se procese y la UI se actualice
     await page1.waitForTimeout(3000);
 
-    // ── VERIFICAR: Usuario 1 ve "Ya tienes reserva" y capacidad reducida ────
+    // Verificar post-reserva usuario 1
     const slotCard1After = getSlotCard(page1);
-
-    // Disponibilidad debe bajar a (capacity-1)/capacity
     await expect(
-      slotCard1After.locator("span").filter({ hasText: /plazas/ }).first()
+      slotCard1After
+        .locator("span")
+        .filter({ hasText: /plazas/ })
+        .first(),
     ).toContainText(`${capacity - 1}/${capacity}`, { timeout: 10000 });
-
-    // Botón debe mostrar "Ya tienes reserva" y estar deshabilitado
     await expect(
-      slotCard1After.locator('button:has-text("Ya tienes reserva")')
+      slotCard1After.locator("button").filter({ hasText: /Ya tienes reserva/ }),
     ).toBeVisible({ timeout: 10000 });
     await expect(
-      slotCard1After.locator('button:has-text("Ya tienes reserva")')
+      slotCard1After.locator("button").filter({ hasText: /Ya tienes reserva/ }),
     ).toBeDisabled();
 
-    // ── FASE 2: Usuario 2 navega al mismo día y slot ─────────────────────────
-    await page2.goto("/app/book");
-    await waitForLoadingComplete(page2);
-
-    const thursdayBtn2 = page2.locator("button").filter({ hasText: /^Jue/ }).first();
-    await expect(thursdayBtn2).toBeVisible({ timeout: 10000 });
-    await thursdayBtn2.click();
-    await page2.waitForTimeout(1500);
-
+    // ── FASE 2: Usuario 2 (authenticatedClient2) ─────────────────────────────
+    await navigateToBook10Thursday(page2);
     const slotCard2 = getSlotCard(page2);
-    await expect(slotCard2).toBeVisible({ timeout: 10000 });
 
-    // ── VERIFICAR: Usuario 2 ve la disponibilidad reducida por Usuario 1 ────
-    await expect(
-      slotCard2.locator("span").filter({ hasText: /plazas/ }).first()
-    ).toContainText(`${capacity - 1}/${capacity}`, { timeout: 10000 });
+    // Usuario 2 debe ver capacidad reducida
+    const plazasSpan2 = slotCard2
+      .locator("span")
+      .filter({ hasText: /plazas/ })
+      .first();
+    await expect(plazasSpan2).toBeVisible({ timeout: 10000 });
+    await expect(plazasSpan2).toContainText(`${capacity - 1}/${capacity}`, {
+      timeout: 10000,
+    });
 
-    // ── USUARIO 2 RESERVA ───────────────────────────────────────────────────
-    const bookBtn2 = slotCard2.locator('button:has-text("Reservar")').first();
+    // Usuario 2 reserva
+    const bookBtn2 = slotCard2
+      .locator("button")
+      .filter({ hasText: /Reservar/ })
+      .first();
     await expect(bookBtn2).toBeEnabled();
     await bookBtn2.click();
-
     await page2.waitForTimeout(3000);
 
-    // ── VERIFICAR: Usuario 2 ve "Ya tienes reserva" y capacidad reducida ────
+    // Verificar post-reserva usuario 2
     const slotCard2After = getSlotCard(page2);
-
-    // Disponibilidad debe bajar a (capacity-2)/capacity
     await expect(
-      slotCard2After.locator("span").filter({ hasText: /plazas/ }).first()
+      slotCard2After
+        .locator("span")
+        .filter({ hasText: /plazas/ })
+        .first(),
     ).toContainText(`${capacity - 2}/${capacity}`, { timeout: 10000 });
-
     await expect(
-      slotCard2After.locator('button:has-text("Ya tienes reserva")')
+      slotCard2After.locator("button").filter({ hasText: /Ya tienes reserva/ }),
     ).toBeVisible({ timeout: 10000 });
     await expect(
-      slotCard2After.locator('button:has-text("Ya tienes reserva")')
+      slotCard2After.locator("button").filter({ hasText: /Ya tienes reserva/ }),
     ).toBeDisabled();
   });
 });

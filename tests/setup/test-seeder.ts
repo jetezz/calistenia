@@ -503,6 +503,32 @@ export async function seedTestSlots(): Promise<{
 }
 
 /**
+ * Garantiza que el cliente principal de test (CLIENT_EMAIL) tiene créditos
+ * suficientes para poder completar reservas en el test BOOK-10.
+ */
+async function ensureClientHasCredits(): Promise<void> {
+  const clientEmail = process.env.CLIENT_EMAIL || process.env.VITE_CLIENT_EMAIL;
+  if (!clientEmail) return;
+
+  console.log("💳 Ensuring main client has credits...");
+  await authenticateAsAdmin(supabase);
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ credits: 10 })
+    .eq("email", clientEmail)
+    .lt("credits", 5); // Solo actualizar si tiene menos de 5 créditos
+
+  if (error) {
+    console.warn("⚠️  Warning ensuring client credits:", error.message);
+  } else {
+    console.log(`✅ Main client credits ensured for: ${clientEmail}`);
+  }
+
+  await supabase.auth.signOut();
+}
+
+/**
  * Setup completo: limpia y crea los slots de test
  */
 export async function setupTestData(): Promise<{
@@ -523,6 +549,7 @@ export async function setupTestData(): Promise<{
   await cleanTestSlots();
   const pendingUser = await ensurePendingTestUser();
   const client2User = await ensureClient2User();
+  await ensureClientHasCredits();
   const result = await seedTestSlots();
 
   console.log("\n✨ Test data setup complete!\n");
@@ -567,7 +594,8 @@ export async function cleanBook10Bookings(): Promise<void> {
 /**
  * Teardown: limpia los datos de test
  */
-export async function teardownTestData(): Promise<void> {  console.log("\n🧹 Tearing down test data...\n");
+export async function teardownTestData(): Promise<void> {
+  console.log("\n🧹 Tearing down test data...\n");
   await cleanTestSlots();
   await cleanupPendingTestUser();
   await cleanupClient2User();
