@@ -10,7 +10,9 @@ export const getReleaseApkPublicUrl = () => {
     .from("releases")
     .getPublicUrl(getReleaseApkFilename());
 
-  return data.publicUrl;
+  // Cache-busting: Supabase CDN caches by URL, so replacing a file with the
+  // same name returns stale content until the cache expires.
+  return `${data.publicUrl}?t=${Date.now()}`;
 };
 
 export const openReleaseApkDownload = async () => {

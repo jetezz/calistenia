@@ -18,6 +18,12 @@ const normalizeVersion = (value: string) => {
   return segments.join(".");
 };
 
+/** Returns "MAJOR.MINOR" from a semver string, ignoring the patch digit. */
+const majorMinor = (version: string) => {
+  const parts = version.trim().split(".");
+  return `${parts[0] ?? "0"}.${parts[1] ?? "0"}`;
+};
+
 export const useAppVersion = () => {
   const [isUpdateRequired, setIsUpdateRequired] = useState(false);
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
@@ -74,7 +80,9 @@ export const useAppVersion = () => {
         const normalizedLocalVersion = normalizeVersion(localVersion);
         const normalizedRemoteVersion = normalizeVersion(remoteVersion);
 
-        if (normalizedLocalVersion !== normalizedRemoteVersion) {
+        // Only force update when major or minor version changes.
+        // A patch-only bump (third digit) is considered optional.
+        if (majorMinor(normalizedLocalVersion) !== majorMinor(normalizedRemoteVersion)) {
           setIsUpdateRequired(true);
         }
       } catch (err) {

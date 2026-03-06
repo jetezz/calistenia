@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.calistenia.app",
-  appName: "calistenia",
+  appName: "Calistenia Emerita",
   webDir: "dist",
   server: {
     url: undefined,
