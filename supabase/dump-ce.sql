@@ -807,8 +807,7 @@ INSERT INTO "public"."weight_stats" ("id", "user_id", "weight", "body_fat_percen
 --
 
 INSERT INTO "storage"."buckets" ("id", "name", "owner", "created_at", "updated_at", "public", "avif_autodetection", "file_size_limit", "allowed_mime_types", "owner_id", "type") VALUES
-	('branding', 'branding', NULL, '2026-01-10 17:56:37.490765+00', '2026-01-10 17:56:37.490765+00', true, false, NULL, NULL, NULL, 'STANDARD')
-ON CONFLICT (id) DO NOTHING;
+	('branding', 'branding', NULL, '2026-01-10 17:56:37.490765+00', '2026-01-10 17:56:37.490765+00', true, false, NULL, NULL, NULL, 'STANDARD');
 
 
 --
@@ -829,8 +828,7 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO "storage"."objects" ("id", "bucket_id", "name", "owner", "created_at", "updated_at", "last_accessed_at", "metadata", "version", "owner_id", "user_metadata") VALUES
 	('650c9163-0750-4e55-a797-efba6ff48537', 'branding', '.emptyFolderPlaceholder', NULL, '2026-01-10 17:58:41.622123+00', '2026-01-10 17:58:41.622123+00', '2026-01-10 17:58:41.622123+00', '{"eTag": "\"d41d8cd98f00b204e9800998ecf8427e\"", "size": 0, "mimetype": "application/octet-stream", "cacheControl": "max-age=3600", "lastModified": "2026-01-10T17:58:41.621Z", "contentLength": 0, "httpStatusCode": 200}', '13a3f301-81cc-4801-9839-2e757c059deb', NULL, '{}'),
-	('acecdac6-c06e-4ec9-a4f8-9948e9eb6417', 'branding', 'logo-1768069636275.png', 'b5e0e7c6-f0e7-4b5f-a415-ebe23590444c', '2026-01-10 18:27:17.22673+00', '2026-01-10 18:27:17.22673+00', '2026-01-10 18:27:17.22673+00', '{"eTag": "\"fc4b5b05751c069db3f15050dd1fdb6f\"", "size": 1146680, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-01-10T18:27:18.000Z", "contentLength": 1146680, "httpStatusCode": 200}', '422813aa-13df-4e78-bf07-4957ffdd7253', 'b5e0e7c6-f0e7-4b5f-a415-ebe23590444c', '{}')
-ON CONFLICT (id) DO NOTHING;
+	('acecdac6-c06e-4ec9-a4f8-9948e9eb6417', 'branding', 'logo-1768069636275.png', 'b5e0e7c6-f0e7-4b5f-a415-ebe23590444c', '2026-01-10 18:27:17.22673+00', '2026-01-10 18:27:17.22673+00', '2026-01-10 18:27:17.22673+00', '{"eTag": "\"fc4b5b05751c069db3f15050dd1fdb6f\"", "size": 1146680, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-01-10T18:27:18.000Z", "contentLength": 1146680, "httpStatusCode": 200}', '422813aa-13df-4e78-bf07-4957ffdd7253', 'b5e0e7c6-f0e7-4b5f-a415-ebe23590444c', '{}');
 
 
 --
