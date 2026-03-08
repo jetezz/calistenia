@@ -6,6 +6,8 @@
  */
 
 import { teardownTestData } from "./test-seeder";
+import fs from "fs";
+import path from "path";
 
 async function globalTeardown() {
   console.log("\n" + "=".repeat(60));
@@ -15,6 +17,12 @@ async function globalTeardown() {
   try {
     // Limpiar los datos de test
     await teardownTestData();
+
+    // Eliminar auth state de client2 (usuario eliminado, tokens ya no válidos)
+    const client2AuthPath = path.resolve(process.cwd(), "playwright/.auth/client2.json");
+    if (fs.existsSync(client2AuthPath)) {
+      fs.unlinkSync(client2AuthPath);
+    }
 
     console.log("✅ Global teardown completed successfully");
     console.log("=".repeat(60) + "\n");

@@ -44,6 +44,7 @@ export function BookingPage() {
     createBooking,
     fetchAvailability,
     getAvailability,
+    fetchAvailabilityBatch,
     refresh,
   } = useBookingLogic(user?.id);
 
@@ -102,6 +103,14 @@ export function BookingPage() {
     return date < today;
   };
 
+  const isPastSlot = (date: Date, startTime: string) => {
+    const today = new Date();
+    const [hours, minutes] = startTime.split(":").map(Number);
+    const slotDate = new Date(date);
+    slotDate.setHours(hours, minutes, 0, 0);
+    return slotDate < today;
+  };
+
   const isToday = (date: Date) => {
     const today = new Date();
     return formatDate(date) === formatDate(today);
@@ -131,20 +140,27 @@ export function BookingPage() {
 
   // Load availability for visible time slots when dates change
   useEffect(() => {
-    const loadAvailability = async () => {
-      for (const date of weekDates) {
-        const slots = getSlotsForDate(date);
+    if (timeSlots.length === 0 || weekDates.length === 0) return;
 
-        for (const slot of slots) {
-          await fetchAvailability(slot.id, formatDate(date));
-        }
-      }
-    };
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    if (timeSlots.length > 0) {
-      loadAvailability();
-    }
-  }, [weekDates, timeSlots, formatDate, getSlotsForDate, fetchAvailability]);
+    const datesToFetch = weekDates
+      .filter((date) => date >= today) // Optimization: skip past dates!
+      .map((date) => ({
+        dateStr: formatDate(date),
+        slotIds: getSlotsForDate(date).map((slot) => slot.id),
+      }))
+      .filter((item) => item.slotIds.length > 0);
+
+    fetchAvailabilityBatch(datesToFetch);
+  }, [
+    weekDates,
+    timeSlots,
+    formatDate,
+    getSlotsForDate,
+    fetchAvailabilityBatch,
+  ]);
 
   return (
     <StandardPage
@@ -262,6 +278,22 @@ export function BookingPage() {
                   );
                 })}
               </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4 mb-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-sm bg-primary border border-primary"></div>
+                  <span>Seleccionado</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-sm bg-blue-50 border border-blue-400"></div>
+                  <span>Tu reserva</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 mx-[3px]"></div>
+                  <span>Plazas libres</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -312,8 +344,13 @@ export function BookingPage() {
                           (b.status === "confirmed" || b.status === "pending"),
                       );
                       const isBooked = !!userBooking;
+                      const isSlotInPast = isPastSlot(
+                        selectedDate,
+                        slot.start_time,
+                      );
                       const canBook =
                         !isPastDate(selectedDate) &&
+                        !isSlotInPast &&
                         isAvailable &&
                         (userProfile?.credits ?? 0) > 0 &&
                         !isBooking &&
@@ -322,12 +359,15 @@ export function BookingPage() {
                       return (
                         <div
                           key={slot.id}
+                          data-slot-id={slot.id}
                           className={`p-3 rounded-lg border ${
-                            isBooked
-                              ? "border-blue-200 bg-blue-50"
-                              : isAvailable
-                                ? "border-green-200 bg-green-50"
-                                : "border-gray-200 bg-gray-50"
+                            isSlotInPast
+                              ? "border-gray-200 bg-gray-50 opacity-60"
+                              : isBooked
+                                ? "border-blue-200 bg-blue-50"
+                                : isAvailable
+                                  ? "border-green-200 bg-green-50"
+                                  : "border-gray-200 bg-gray-50"
                           }`}
                         >
                           <div className="space-y-3">
@@ -379,20 +419,22 @@ export function BookingPage() {
 
                             <Button
                               className="w-full h-9 text-sm"
-                              disabled={!canBook}
+                              disabled={!canBook || isSlotInPast}
                               onClick={() =>
                                 handleBooking(slot.id, formatDate(selectedDate))
                               }
                             >
-                              {isBooked
-                                ? userBooking?.status === "pending"
-                                  ? "Pendiente de aprobación"
-                                  : "Ya tienes reserva"
-                                : (userProfile?.credits ?? 0) <= 0
-                                  ? "Sin créditos"
-                                  : isBooking
-                                    ? "Reservando..."
-                                    : "Reservar (1 crédito)"}
+                              {isSlotInPast
+                                ? "Horario pasado"
+                                : isBooked
+                                  ? userBooking?.status === "pending"
+                                    ? "Pendiente de aprobación"
+                                    : "Ya tienes reserva"
+                                  : (userProfile?.credits ?? 0) <= 0
+                                    ? "Sin créditos"
+                                    : isBooking
+                                      ? "Reservando..."
+                                      : "Reservar (1 crédito)"}
                             </Button>
                           </div>
                         </div>

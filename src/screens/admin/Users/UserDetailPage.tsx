@@ -10,6 +10,7 @@ import {
   History,
   Settings2,
   Activity,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,13 +39,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 export function UserDetailPage() {
-  const { user, userBookings, isLoading, updateCredits, updatePaymentStatus } =
-    useAdminUserDetailLogic();
+  const {
+    user,
+    userBookings,
+    isLoading,
+    updateCredits,
+    updatePaymentStatus,
+    changePassword,
+  } = useAdminUserDetailLogic();
 
   const [creditsInput, setCreditsInput] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [isAddStatOpen, setIsAddStatOpen] = useState(false);
   const [isConfigureOpen, setIsConfigureOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const { success, error: showError } = useToast();
 
   const { items: weightStats, fetchByUserId } = useWeightStatsStore();
@@ -172,87 +182,89 @@ export function UserDetailPage() {
       loadingMessage="Cargando datos del usuario..."
       maxWidth="max-w-4xl"
       topActions={
-        <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link to="/app/admin/users">
-              <ArrowLeft className="size-4 mr-2" />
-              Volver
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsConfigureOpen(true)}
-          >
-            <Settings2 className="size-4 mr-2" />
-            Configurar
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsConfigureOpen(true)}
+          className="h-9 w-9 p-0 shadow-sm hover:shadow transition-shadow shrink-0 !flex-none"
+        >
+          <Settings2 className="size-4" />
+        </Button>
       }
       bottomActions={
-        <Button size="sm" onClick={() => setIsAddStatOpen(true)}>
-          <Plus className="size-4 mr-2" />
-          Añadir Estadística
-        </Button>
+        <div className="w-full flex">
+          <Button
+            size="sm"
+            onClick={() => setIsAddStatOpen(true)}
+            className="shrink-0 w-full sm:w-auto"
+          >
+            <Plus className="size-4 mr-2" />
+            <span>Añadir Estadística</span>
+          </Button>
+        </div>
       }
     >
       {user && (
         <>
           <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="size-5" />
+            <Card className="overflow-hidden border-2 shadow-sm">
+              <CardHeader className="bg-muted/30 border-b pb-4">
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <User className="size-4 text-primary" />
                   Información Personal
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <Avatar className="size-16">
-                    <AvatarFallback className="text-xl">
+              <CardContent className="p-0">
+                <div className="p-4 sm:p-6 flex items-center gap-4 bg-background border-b">
+                  <Avatar className="size-14 sm:size-16 border-2 border-primary/10 shadow-sm shrink-0">
+                    <AvatarFallback className="text-lg sm:text-xl font-medium bg-primary/5 text-primary">
                       {getInitials(user.full_name)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-xl font-medium">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <h3 className="text-lg sm:text-xl font-semibold truncate text-foreground">
                         {user.full_name || "Sin nombre"}
                       </h3>
                       {user.role === "admin" && (
                         <Badge
-                          variant="outline"
-                          className="border-primary text-primary bg-primary/5"
+                          variant="secondary"
+                          className="bg-primary/10 text-primary border-primary/20 text-[10px] sm:text-xs shrink-0"
                         >
                           Administrador
                         </Badge>
                       )}
                     </div>
-                    <p className="text-muted-foreground">{user.email}</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {user.email}
+                    </p>
                     {user.phone && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground mt-0.5 truncate">
                         {user.phone}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="grid gap-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Usuario desde:
-                    </span>
-                    <span className="text-sm">
-                      {formatDate(user.created_at)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Última actualización:
-                    </span>
-                    <span className="text-sm">
-                      {formatDate(user.updated_at)}
-                    </span>
-                  </div>
+                <div className="bg-muted/10 p-4 sm:p-6">
+                  <dl className="grid gap-4 sm:gap-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                      <dt className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1.5 shrink-0">
+                        <Calendar className="size-3.5" /> Usuario desde
+                      </dt>
+                      <dd className="text-sm font-medium text-foreground text-balance sm:text-right">
+                        {formatDate(user.created_at)}
+                      </dd>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                      <dt className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1.5 shrink-0">
+                        <History className="size-3.5" /> Última actualización
+                      </dt>
+                      <dd className="text-sm font-medium text-foreground text-balance sm:text-right">
+                        {formatDate(user.updated_at)}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
               </CardContent>
             </Card>
@@ -376,7 +388,7 @@ export function UserDetailPage() {
                         <div className="text-sm text-muted-foreground">
                           {booking.time_slot
                             ? `${formatTime(
-                                booking.time_slot.start_time
+                                booking.time_slot.start_time,
                               )} - ${formatTime(booking.time_slot.end_time)}`
                             : "Horario eliminado"}
                         </div>
@@ -422,7 +434,7 @@ export function UserDetailPage() {
                           </div>
                           <div className="font-medium">
                             {new Date(stat.recorded_at).toLocaleDateString(
-                              "es-ES"
+                              "es-ES",
                             )}
                           </div>
                         </div>
@@ -458,6 +470,19 @@ export function UserDetailPage() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardContent className="pt-6">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsChangePasswordOpen(true)}
+              >
+                <KeyRound className="size-4 mr-2" />
+                Cambiar contraseña
+              </Button>
+            </CardContent>
+          </Card>
+
           <Dialog open={isAddStatOpen} onOpenChange={setIsAddStatOpen}>
             <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
               <DialogHeader>
@@ -485,6 +510,81 @@ export function UserDetailPage() {
               // Optionally refresh user data if biometrics are displayed in detail
             }}
           />
+
+          <Dialog
+            open={isChangePasswordOpen}
+            onOpenChange={(open) => {
+              setIsChangePasswordOpen(open);
+              if (!open) setNewPassword("");
+            }}
+          >
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <KeyRound className="size-5" />
+                  Cambiar contraseña
+                </DialogTitle>
+                <DialogDescription>
+                  Establece una nueva contraseña para{" "}
+                  {user.full_name || user.email}. El usuario deberá usar esta
+                  contraseña en su próximo inicio de sesión.
+                </DialogDescription>
+              </DialogHeader>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!user || newPassword.length < 6) return;
+                  try {
+                    setIsChangingPassword(true);
+                    await changePassword(user.id, newPassword);
+                    success("Contraseña actualizada correctamente");
+                    setIsChangePasswordOpen(false);
+                    setNewPassword("");
+                  } catch (err) {
+                    console.error("Error changing password:", err);
+                    showError("Error al cambiar la contraseña");
+                  } finally {
+                    setIsChangingPassword(false);
+                  }
+                }}
+                className="space-y-4 pt-2"
+              >
+                <div>
+                  <Label htmlFor="new-password">Nueva contraseña</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                    required
+                    className="mt-1"
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsChangePasswordOpen(false);
+                      setNewPassword("");
+                    }}
+                    disabled={isChangingPassword}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isChangingPassword || newPassword.length < 6}
+                  >
+                    {isChangingPassword ? "Guardando..." : "Guardar contraseña"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </StandardPage>

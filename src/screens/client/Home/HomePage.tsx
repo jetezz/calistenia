@@ -1,4 +1,5 @@
 import { Link, Navigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { ROUTES } from "@/constants/routes";
 import { getFullPath } from "@/lib/routeUtils";
 import {
@@ -11,6 +12,7 @@ import {
   RefreshCw,
   ChevronDown,
   LayoutDashboard,
+  Download,
 } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/dateUtils";
 import { useProfile } from "@/features/auth";
@@ -38,6 +40,9 @@ export function HomePage() {
   } = useHomeLogic();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAllRequests, setShowAllRequests] = useState(false);
+
+  const appPlatform = (import.meta.env.VITE_APP_PLATFORM || "web").toLowerCase();
+  const isWebMode = !Capacitor.isNativePlatform() && appPlatform !== "mobile";
 
   if (isAdmin && !authLoading && viewMode !== "client") {
     return <Navigate to={getFullPath(ROUTES.ADMIN.ROOT)} replace />;
@@ -290,6 +295,15 @@ export function HomePage() {
             Información de pago
           </Link>
         </Button>
+
+        {isWebMode && (
+          <Button asChild variant="ghost" size="lg" className="h-14">
+            <Link to={getFullPath(ROUTES.APP.DOWNLOAD_APP)}>
+              <Download className="mr-2 size-5" />
+              Descargar app Android
+            </Link>
+          </Button>
+        )}
       </div>
     </StandardPage>
   );

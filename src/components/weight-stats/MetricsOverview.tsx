@@ -40,7 +40,7 @@ interface Trends {
   bmi: { change: number; percentage: number } | null;
   waterPercentage: { change: number; percentage: number } | null;
   calories: { change: number; percentage: number } | null;
-  metabolicAge: { change: number } | null;
+  metabolicAge: { change: number; percentage?: number } | null;
 }
 
 interface MetricsOverviewProps {
@@ -53,7 +53,7 @@ interface MetricsOverviewProps {
 // Helper para formatear tendencia
 const formatTrend = (
   change: number | undefined,
-  percentage?: number
+  percentage?: number,
 ): TrendData | undefined => {
   if (change === undefined || change === null) return undefined;
 
@@ -78,7 +78,7 @@ export const MetricsOverview = ({
   const getStatus = (
     val: number,
     min: number,
-    max: number
+    max: number,
   ): "good" | "warning" | "alert" => {
     if (val >= min && val <= max) return "good";
     if (val < min * 0.9 || val > max * 1.1) return "alert";
@@ -105,7 +105,7 @@ export const MetricsOverview = ({
           icon={<Scale className="size-4" />}
           trend={formatTrend(
             trends?.weight?.change,
-            trends?.weight?.percentage
+            trends?.weight?.percentage,
           )}
           recommendation={
             recommendations
@@ -115,7 +115,7 @@ export const MetricsOverview = ({
                   status: getStatus(
                     metrics.weight,
                     recommendations.weight.min,
-                    recommendations.weight.max
+                    recommendations.weight.max,
                   ),
                 }
               : undefined
@@ -132,7 +132,7 @@ export const MetricsOverview = ({
             icon={<Activity className="size-4" />}
             trend={formatTrend(
               trends?.bodyFat?.change,
-              trends?.bodyFat?.percentage
+              trends?.bodyFat?.percentage,
             )}
             recommendation={
               recommendations
@@ -142,7 +142,7 @@ export const MetricsOverview = ({
                     status: getStatus(
                       metrics.bodyFat,
                       recommendations.bodyFat.min,
-                      recommendations.bodyFat.max
+                      recommendations.bodyFat.max,
                     ),
                   }
                 : undefined
@@ -160,7 +160,7 @@ export const MetricsOverview = ({
             icon={<Activity className="size-4" />}
             trend={formatTrend(
               trends?.muscleMass?.change,
-              trends?.muscleMass?.percentage
+              trends?.muscleMass?.percentage,
             )}
             recommendation={
               recommendations
@@ -170,7 +170,7 @@ export const MetricsOverview = ({
                     status: getStatus(
                       metrics.muscleMass,
                       recommendations.muscleMass.min,
-                      recommendations.muscleMass.max
+                      recommendations.muscleMass.max,
                     ),
                   }
                 : undefined
@@ -188,7 +188,7 @@ export const MetricsOverview = ({
             icon={<Bone className="size-4" />}
             trend={formatTrend(
               trends?.boneMass?.change,
-              trends?.boneMass?.percentage
+              trends?.boneMass?.percentage,
             )}
           />
         )}
@@ -209,7 +209,7 @@ export const MetricsOverview = ({
                     status: getStatus(
                       metrics.bmi,
                       recommendations.bmi.min,
-                      recommendations.bmi.max
+                      recommendations.bmi.max,
                     ),
                   }
                 : undefined
@@ -227,7 +227,7 @@ export const MetricsOverview = ({
             icon={<Droplets className="size-4" />}
             trend={formatTrend(
               trends?.waterPercentage?.change,
-              trends?.waterPercentage?.percentage
+              trends?.waterPercentage?.percentage,
             )}
           />
         )}
@@ -241,7 +241,7 @@ export const MetricsOverview = ({
             icon={<Flame className="size-4" />}
             trend={formatTrend(
               trends?.calories?.change,
-              trends?.calories?.percentage
+              trends?.calories?.percentage,
             )}
           />
         )}

@@ -4,9 +4,12 @@
  */
 
 import { test as base, Page, expect } from "@playwright/test";
+import fs from "fs";
+import path from "path";
+import type { Browser } from "@playwright/test";
 
 // Tipos de usuario
-export type UserRole = "admin" | "client";
+export type UserRole = "admin" | "client" | "client2";
 
 // Credenciales desde variables de entorno
 const getCredentials = (role: UserRole) => {
@@ -14,6 +17,12 @@ const getCredentials = (role: UserRole) => {
     return {
       email: process.env.ADMIN_EMAIL!,
       password: process.env.ADMIN_PASSWORD!,
+    };
+  }
+  if (role === "client2") {
+    return {
+      email: process.env.CLIENT2_EMAIL || "client2.e2e.test@example.com",
+      password: process.env.CLIENT2_PASSWORD || "Password123!",
     };
   }
   return {
@@ -50,6 +59,109 @@ export async function loginAs(page: Page, role: UserRole): Promise<void> {
   await page.waitForTimeout(1000);
 }
 
+const AUTH_DIR = path.resolve(process.cwd(), "playwright/.auth");
+const storageStatePath = (role: UserRole) =>
+  path.join(AUTH_DIR, `${role}.json`);
+
+async function createStorageState(
+  browser: Browser,
+  role: UserRole,
+): Promise<string> {
+  fs.mkdirSync(AUTH_DIR, { recursive: true });
+
+  const authContext = await browser.newContext();
+  const authPage = await authContext.newPage();
+
+  await loginAs(authPage, role);
+
+  const filePath = storageStatePath(role);
+  await authContext.storageState({ path: filePath });
+  await authContext.close();
+
+  return filePath;
+}
+
+/**
+ * Checks if a saved storageState has a valid (non-expired) Supabase access token.
+ * Returns true if the token is valid and has at least 5 minutes remaining.
+ */
+function isStorageStateValid(filePath: string): boolean {
+  try {
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const state = JSON.parse(raw);
+    for (const origin of state.origins ?? []) {
+      for (const item of origin.localStorage ?? []) {
+        if (
+          typeof item.name === "string" &&
+          item.name.endsWith("-auth-token")
+        ) {
+          const authData = JSON.parse(item.value ?? "{}");
+          const accessToken: string = authData.access_token ?? "";
+          if (!accessToken) return false;
+
+          // Decode JWT payload (base64url)
+          const parts = accessToken.split(".");
+          if (parts.length < 2) return false;
+          const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+          const decoded = JSON.parse(
+            Buffer.from(payload, "base64").toString("utf-8"),
+          );
+          const exp: number = decoded.exp ?? 0;
+          const nowWithMargin = Math.floor(Date.now() / 1000) + 5 * 60; // 5-minute buffer
+          return exp > nowWithMargin;
+        }
+      }
+    }
+  } catch {
+    // If we can't read/parse the file, treat it as invalid
+  }
+  return false;
+}
+
+async function getOrCreateStorageState(
+  browser: Browser,
+  role: UserRole,
+): Promise<string> {
+  const filePath = storageStatePath(role);
+
+  if (fs.existsSync(filePath) && isStorageStateValid(filePath)) {
+    return filePath;
+  }
+
+  // Token expired or file missing — create a fresh session
+  return createStorageState(browser, role);
+}
+
+async function createAuthenticatedPage(
+  browser: Browser,
+  role: UserRole,
+): Promise<{ page: Page; cleanup: () => Promise<void> }> {
+  let statePath = await getOrCreateStorageState(browser, role);
+
+  let context = await browser.newContext({ storageState: statePath });
+  let page = await context.newPage();
+
+  const targetPath = role === "admin" ? "/app/admin" : "/app";
+  await page.goto(targetPath);
+
+  if (page.url().includes("/login")) {
+    await context.close();
+    statePath = await createStorageState(browser, role);
+    context = await browser.newContext({ storageState: statePath });
+    page = await context.newPage();
+    await page.goto(targetPath);
+  }
+
+  await expect(page).toHaveURL(/\/app/, { timeout: 15000 });
+
+  return {
+    page,
+    cleanup: async () => {
+      await context.close();
+    },
+  };
+}
+
 // Función para hacer logout
 export async function logout(page: Page): Promise<void> {
   // Buscar el menú de usuario o botón de logout
@@ -79,15 +191,24 @@ export async function logout(page: Page): Promise<void> {
 export const test = base.extend<{
   authenticatedClient: Page;
   authenticatedAdmin: Page;
+  authenticatedClient2: Page;
 }>({
-  authenticatedClient: async ({ page }, use) => {
-    await loginAs(page, "client");
+  authenticatedClient: async ({ browser }, use) => {
+    const { page, cleanup } = await createAuthenticatedPage(browser, "client");
     await use(page);
+    await cleanup();
   },
 
-  authenticatedAdmin: async ({ page }, use) => {
-    await loginAs(page, "admin");
+  authenticatedAdmin: async ({ browser }, use) => {
+    const { page, cleanup } = await createAuthenticatedPage(browser, "admin");
     await use(page);
+    await cleanup();
+  },
+
+  authenticatedClient2: async ({ browser }, use) => {
+    const { page, cleanup } = await createAuthenticatedPage(browser, "client2");
+    await use(page);
+    await cleanup();
   },
 });
 

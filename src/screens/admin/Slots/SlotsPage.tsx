@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
   Edit2,
@@ -52,10 +52,7 @@ export function SlotsPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null);
-  const [selectedDateSlots, setSelectedDateSlots] = useState<{
-    date: string;
-    slots: TimeSlot[];
-  } | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [slotBookings, setSlotBookings] = useState<
     Record<string, BookingWithUser[]>
   >({});
@@ -125,26 +122,36 @@ export function SlotsPage() {
 
       setSlotBookings(bookingsMap);
     },
-    []
+    [],
   );
 
-  const handleCalendarDateClick = useCallback(
-    (date: string, slots: TimeSlot[]) => {
-      setSelectedDateSlots({ date, slots });
-      // La carga se realiza automáticamente por el useEffect cuando cambia selectedDateSlots
-    },
-    []
-  );
+  const handleCalendarDateClick = useCallback((date: string) => {
+    setSelectedDate(date);
+  }, []);
+
+  const currentDateSlots = useMemo(() => {
+    if (!selectedDate) return [];
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const dayOfWeek = new Date(year, month - 1, day).getDay();
+
+    return timeSlots.filter((slot) => {
+      if (slot.slot_type === "specific_date") {
+        return slot.specific_date === selectedDate && slot.is_active;
+      }
+      return (
+        slot.slot_type === "recurring" &&
+        slot.day_of_week === dayOfWeek &&
+        slot.is_active
+      );
+    });
+  }, [selectedDate, timeSlots]);
 
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
-      if (selectedDateSlots && mounted) {
-        await loadBookingsForSlots(
-          selectedDateSlots.slots,
-          selectedDateSlots.date
-        );
+      if (selectedDate && currentDateSlots.length > 0 && mounted) {
+        await loadBookingsForSlots(currentDateSlots, selectedDate);
       }
     };
 
@@ -153,8 +160,7 @@ export function SlotsPage() {
     return () => {
       mounted = false;
     };
-    // Eliminamos timeSlots de las dependencias para evitar recargas innecesarias si los slots globales cambian pero no la selección
-  }, [selectedDateSlots, loadBookingsForSlots]);
+  }, [selectedDate, currentDateSlots, loadBookingsForSlots]);
 
   // Convert database day_of_week (0=Sunday) to display index (0=Monday)
   const convertDayOfWeekToDisplayIndex = (dbDayOfWeek: number) => {
@@ -180,31 +186,37 @@ export function SlotsPage() {
 
   // Separate recurring and specific date slots
   const recurringSlots = timeSlots.filter(
-    (slot) => slot.slot_type === "recurring"
+    (slot) => slot.slot_type === "recurring",
   );
   const specificDateSlots = timeSlots.filter(
-    (slot) => slot.slot_type === "specific_date"
+    (slot) => slot.slot_type === "specific_date",
   );
 
   // Group recurring slots by day of week (converted to Monday-first display index)
-  const groupedRecurringSlots = recurringSlots.reduce((acc, slot) => {
-    const displayIndex = convertDayOfWeekToDisplayIndex(slot.day_of_week);
-    if (!acc[displayIndex]) {
-      acc[displayIndex] = [];
-    }
-    acc[displayIndex].push(slot);
-    return acc;
-  }, {} as Record<number, TimeSlot[]>);
+  const groupedRecurringSlots = recurringSlots.reduce(
+    (acc, slot) => {
+      const displayIndex = convertDayOfWeekToDisplayIndex(slot.day_of_week);
+      if (!acc[displayIndex]) {
+        acc[displayIndex] = [];
+      }
+      acc[displayIndex].push(slot);
+      return acc;
+    },
+    {} as Record<number, TimeSlot[]>,
+  );
 
   // Group specific date slots by date
-  const groupedSpecificSlots = specificDateSlots.reduce((acc, slot) => {
-    const date = slot.specific_date!;
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(slot);
-    return acc;
-  }, {} as Record<string, TimeSlot[]>);
+  const groupedSpecificSlots = specificDateSlots.reduce(
+    (acc, slot) => {
+      const date = slot.specific_date!;
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(slot);
+      return acc;
+    },
+    {} as Record<string, TimeSlot[]>,
+  );
 
   const TimeSlotCard = ({
     slot,
@@ -291,7 +303,7 @@ export function SlotsPage() {
                 <User className="size-3 text-muted-foreground" />
                 <span className="text-xs font-medium">Reservados:</span>
               </div>
-              {selectedDateSlots && (
+              {selectedDate && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -299,9 +311,9 @@ export function SlotsPage() {
                     setAddUserDialog({
                       isOpen: true,
                       slotId: slot.id,
-                      bookingDate: selectedDateSlots.date,
+                      bookingDate: selectedDate,
                       slotTime: `${formatTime(slot.start_time)} - ${formatTime(
-                        slot.end_time
+                        slot.end_time,
                       )}`,
                     })
                   }
@@ -346,7 +358,11 @@ export function SlotsPage() {
       isLoading={isLoading}
       loadingMessage="Cargando horarios..."
       actionButton={
-        <Button onClick={handleCreate} size="sm">
+        <Button
+          onClick={handleCreate}
+          size="sm"
+          className="flex-1 sm:flex-none"
+        >
           <Plus className="size-4 mr-2" />
           Nuevo
         </Button>
@@ -393,21 +409,21 @@ export function SlotsPage() {
               onDateClick={handleCalendarDateClick}
             />
 
-            {selectedDateSlots && (
+            {selectedDate && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">
-                    {formatDate(selectedDateSlots.date)}
+                    {formatDate(selectedDate)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {selectedDateSlots.slots.length === 0 ? (
+                  {currentDateSlots.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No hay horarios configurados para este día
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {selectedDateSlots.slots.map((slot) => (
+                      {currentDateSlots.map((slot) => (
                         <TimeSlotCard
                           key={slot.id}
                           slot={slot}
@@ -489,7 +505,7 @@ export function SlotsPage() {
               <div className="space-y-3">
                 {Object.entries(groupedSpecificSlots)
                   .sort(
-                    ([a], [b]) => new Date(a).getTime() - new Date(b).getTime()
+                    ([a], [b]) => new Date(a).getTime() - new Date(b).getTime(),
                   )
                   .map(([date, slots]) => (
                     <div key={date} className="space-y-2">
@@ -519,11 +535,8 @@ export function SlotsPage() {
         isOpen={addUserDialog.isOpen}
         onClose={() => setAddUserDialog({ ...addUserDialog, isOpen: false })}
         onSuccess={() => {
-          if (selectedDateSlots) {
-            loadBookingsForSlots(
-              selectedDateSlots.slots,
-              selectedDateSlots.date
-            );
+          if (selectedDate && currentDateSlots.length > 0) {
+            loadBookingsForSlots(currentDateSlots, selectedDate);
           }
         }}
         slotId={addUserDialog.slotId}
@@ -537,7 +550,7 @@ export function SlotsPage() {
           setIsDialogOpen(false);
           setEditingSlot(null);
         }}
-        onSuccess={refresh}
+        onSuccess={() => {}}
         editingSlot={editingSlot}
       />
     </StandardPage>

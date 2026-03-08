@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo, useCallback, startTransition } from "react";
 import { useWeightStatsStore, type TimeRange } from "@/stores/weightStatsStore";
 import { useProfile } from "@/features/auth";
 import { calculateRecommendations } from "@/utils/biometricsCalculators";
@@ -122,9 +122,11 @@ export const useWeightStatsLogic = () => {
   // Handlers
   const handleTimeRangeChange = useCallback(
     (range: TimeRange) => {
-      setTimeRange(range);
+      startTransition(() => {
+        setTimeRange(range);
+      });
     },
-    [setTimeRange]
+    [setTimeRange],
   );
 
   const refreshData = useCallback(async () => {

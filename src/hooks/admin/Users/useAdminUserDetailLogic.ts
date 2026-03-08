@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useProfileStore } from "@/stores/profileStore";
 import { useBookingStore } from "@/stores/bookingStore";
 import { usePaymentRequestStore } from "@/stores/paymentRequestStore";
+import { supabase } from "@/lib/supabase";
 
 export const useAdminUserDetailLogic = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -54,6 +55,13 @@ export const useAdminUserDetailLogic = () => {
 
   const isLoading = isUserLoading || isBookingsLoading || isPaymentsLoading;
 
+  const changePassword = async (userId: string, newPassword: string) => {
+    const { error } = await supabase.functions.invoke("admin-change-password", {
+      body: { userId, newPassword },
+    });
+    if (error) throw error;
+  };
+
   return {
     user,
     userBookings,
@@ -61,6 +69,7 @@ export const useAdminUserDetailLogic = () => {
     isLoading,
     updateCredits,
     updatePaymentStatus,
+    changePassword,
     navigate,
   };
 };

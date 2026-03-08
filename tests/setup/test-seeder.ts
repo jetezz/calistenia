@@ -41,6 +41,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const TEST_SLOT_IDS = {
   RECURRING: "00000000-0000-0000-0000-000000000001",
   SPECIFIC: "00000000-0000-0000-0000-000000000002",
+  BOOK10: "00000000-0000-0000-0000-000000000010", // Two-user booking flow test
 };
 
 // Configuración de horarios de test
@@ -55,6 +56,24 @@ export const TEST_SLOT_CONFIG = {
     endTime: "13:00:00",
     capacity: 5,
   },
+  BOOK10: {
+    dayOfWeek: 4, // Jueves (Thursday)
+    startTime: "14:00:00",
+    endTime: "15:00:00",
+    capacity: 6,
+  },
+};
+
+export const TEST_PENDING_USER = {
+  email: process.env.TEST_PENDING_USER_EMAIL || "pending.e2e.user@example.com",
+  password: process.env.TEST_PENDING_USER_PASSWORD || "Password123!",
+  fullName: process.env.TEST_PENDING_USER_FULL_NAME || "Pending E2E User",
+};
+
+export const TEST_CLIENT2_USER = {
+  email: process.env.CLIENT2_EMAIL || "client2.e2e.test@example.com",
+  password: process.env.CLIENT2_PASSWORD || "Password123!",
+  fullName: "Client Two E2E",
 };
 
 /**
@@ -116,6 +135,199 @@ async function authenticateAsAdmin(client: SupabaseClient): Promise<string> {
   return data.user.id;
 }
 
+async function ensurePendingTestUser(): Promise<{
+  email: string;
+  password: string;
+  fullName: string;
+  userId: string;
+}> {
+  console.log("👤 Ensuring pending test user...");
+
+  await authenticateAsAdmin(supabase);
+
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", TEST_PENDING_USER.email)
+    .maybeSingle();
+
+  let userId = existingProfile?.id as string | undefined;
+
+  if (!userId) {
+    const { data: createdUserId, error: createError } = await supabase.rpc(
+      "admin_create_user",
+      {
+        p_email: TEST_PENDING_USER.email,
+        p_password: TEST_PENDING_USER.password,
+        p_full_name: TEST_PENDING_USER.fullName,
+      },
+    );
+
+    if (createError || !createdUserId) {
+      throw new Error(
+        `Failed to create pending test user: ${createError?.message || "unknown error"}`,
+      );
+    }
+
+    userId = createdUserId;
+  }
+
+  const { error: normalizeError } = await supabase
+    .from("profiles")
+    .update({
+      approval_status: "pending",
+      role: "user",
+      full_name: TEST_PENDING_USER.fullName,
+      credits: 0,
+      payment_status: "none",
+    })
+    .eq("id", userId);
+
+  if (normalizeError) {
+    throw new Error(
+      `Failed to normalize pending test user profile: ${normalizeError.message}`,
+    );
+  }
+
+  await supabase.auth.signOut();
+  console.log(`✅ Pending test user ready: ${TEST_PENDING_USER.email}`);
+
+  return {
+    email: TEST_PENDING_USER.email,
+    password: TEST_PENDING_USER.password,
+    fullName: TEST_PENDING_USER.fullName,
+    userId,
+  };
+}
+
+async function cleanupPendingTestUser(): Promise<void> {
+  console.log("🧹 Cleaning pending test user...");
+
+  await authenticateAsAdmin(supabase);
+
+  const { data: pendingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", TEST_PENDING_USER.email)
+    .maybeSingle();
+
+  if (pendingProfile?.id) {
+    const { error: deleteError } = await supabase.rpc("admin_delete_user", {
+      p_user_id: pendingProfile.id,
+    });
+
+    if (deleteError) {
+      console.warn(
+        "⚠️  Warning cleaning pending test user:",
+        deleteError.message,
+      );
+    }
+  }
+
+  await supabase.auth.signOut();
+  console.log("✅ Pending test user cleaned");
+}
+
+/**
+ * Crea o normaliza el segundo usuario cliente de test (usado en BOOK-10)
+ */
+export async function ensureClient2User(): Promise<{
+  email: string;
+  password: string;
+  fullName: string;
+  userId: string;
+}> {
+  console.log("👤 Ensuring client2 test user...");
+
+  await authenticateAsAdmin(supabase);
+
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", TEST_CLIENT2_USER.email)
+    .maybeSingle();
+
+  let userId = existingProfile?.id as string | undefined;
+
+  if (!userId) {
+    const { data: createdUserId, error: createError } = await supabase.rpc(
+      "admin_create_user",
+      {
+        p_email: TEST_CLIENT2_USER.email,
+        p_password: TEST_CLIENT2_USER.password,
+        p_full_name: TEST_CLIENT2_USER.fullName,
+      },
+    );
+
+    if (createError || !createdUserId) {
+      throw new Error(
+        `Failed to create client2 test user: ${createError?.message || "unknown error"}`,
+      );
+    }
+
+    userId = createdUserId;
+  }
+
+  // Ensure client2 is approved with credits
+  const { error: normalizeError } = await supabase
+    .from("profiles")
+    .update({
+      approval_status: "approved",
+      role: "user",
+      full_name: TEST_CLIENT2_USER.fullName,
+      credits: 10,
+      payment_status: "paid",
+    })
+    .eq("id", userId);
+
+  if (normalizeError) {
+    throw new Error(
+      `Failed to normalize client2 test user profile: ${normalizeError.message}`,
+    );
+  }
+
+  await supabase.auth.signOut();
+  console.log(`✅ Client2 test user ready: ${TEST_CLIENT2_USER.email}`);
+
+  return {
+    email: TEST_CLIENT2_USER.email,
+    password: TEST_CLIENT2_USER.password,
+    fullName: TEST_CLIENT2_USER.fullName,
+    userId: userId!,
+  };
+}
+
+/**
+ * Limpia el usuario cliente2 de test
+ */
+export async function cleanupClient2User(): Promise<void> {
+  console.log("🧹 Cleaning client2 test user...");
+
+  await authenticateAsAdmin(supabase);
+
+  const { data: client2Profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", TEST_CLIENT2_USER.email)
+    .maybeSingle();
+
+  if (client2Profile?.id) {
+    const { error: deleteError } = await supabase.rpc("admin_delete_user", {
+      p_user_id: client2Profile.id,
+    });
+
+    if (deleteError) {
+      console.warn(
+        "⚠️  Warning cleaning client2 test user:",
+        deleteError.message,
+      );
+    }
+  }
+
+  await supabase.auth.signOut();
+  console.log("✅ Client2 test user cleaned");
+}
+
 /**
  * Limpia los slots de test existentes
  */
@@ -165,10 +377,12 @@ export async function cleanTestSlots(): Promise<void> {
  * Crea los slots de test necesarios
  * - Slot RECURRENTE: Sábado (día 6)
  * - Slot ESPECÍFICO: Próximo domingo (fecha específica)
+ * - Slot BOOK10: Jueves (día 4) - para test de flujo de reservas de dos usuarios
  */
 export async function seedTestSlots(): Promise<{
   recurringSlotId: string;
   specificSlotId: string;
+  book10SlotId: string;
   specificDate: string;
   recurringDay: number;
   specificDay: number;
@@ -247,15 +461,71 @@ export async function seedTestSlots(): Promise<{
     `✅ Created specific slot for ${specificDateStr} (Domingo): ${TEST_SLOT_CONFIG.SPECIFIC.startTime} - ${TEST_SLOT_CONFIG.SPECIFIC.endTime}`,
   );
 
+  // 3. Crear slot BOOK10 para JUEVES (día 4) a las 19:00-20:00
+  // Usado para el test BOOK-10: flujo de reserva con dos usuarios
+  const { data: book10Slot, error: book10Error } = await supabase
+    .from("time_slots")
+    .upsert(
+      {
+        id: TEST_SLOT_IDS.BOOK10,
+        day_of_week: TEST_SLOT_CONFIG.BOOK10.dayOfWeek, // Jueves (4)
+        start_time: TEST_SLOT_CONFIG.BOOK10.startTime,
+        end_time: TEST_SLOT_CONFIG.BOOK10.endTime,
+        capacity: TEST_SLOT_CONFIG.BOOK10.capacity,
+        is_active: true,
+        slot_type: "recurring",
+        specific_date: null,
+        created_by: adminId,
+      },
+      { onConflict: "id" },
+    )
+    .select()
+    .single();
+
+  if (book10Error) {
+    throw new Error(`Failed to create BOOK10 slot: ${book10Error.message}`);
+  }
+
+  console.log(
+    `✅ Created BOOK10 slot for Jueves (día ${TEST_SLOT_CONFIG.BOOK10.dayOfWeek}): ${TEST_SLOT_CONFIG.BOOK10.startTime} - ${TEST_SLOT_CONFIG.BOOK10.endTime}`,
+  );
+
   await supabase.auth.signOut();
 
   return {
     recurringSlotId: recurringSlot.id,
     specificSlotId: specificSlot.id,
+    book10SlotId: book10Slot.id,
     specificDate: specificDateStr,
     recurringDay,
     specificDay,
   };
+}
+
+/**
+ * Garantiza que el cliente principal de test (CLIENT_EMAIL) tiene créditos
+ * suficientes para poder completar reservas en el test BOOK-10.
+ */
+async function ensureClientHasCredits(): Promise<void> {
+  const clientEmail = process.env.CLIENT_EMAIL || process.env.VITE_CLIENT_EMAIL;
+  if (!clientEmail) return;
+
+  console.log("💳 Ensuring main client has credits...");
+  await authenticateAsAdmin(supabase);
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ credits: 10 })
+    .eq("email", clientEmail)
+    .lt("credits", 5); // Solo actualizar si tiene menos de 5 créditos
+
+  if (error) {
+    console.warn("⚠️  Warning ensuring client credits:", error.message);
+  } else {
+    console.log(`✅ Main client credits ensured for: ${clientEmail}`);
+  }
+
+  await supabase.auth.signOut();
 }
 
 /**
@@ -264,13 +534,22 @@ export async function seedTestSlots(): Promise<{
 export async function setupTestData(): Promise<{
   recurringSlotId: string;
   specificSlotId: string;
+  book10SlotId: string;
   specificDate: string;
   recurringDay: number;
   specificDay: number;
+  pendingUserEmail: string;
+  pendingUserPassword: string;
+  pendingUserFullName: string;
+  client2Email: string;
+  client2Password: string;
 }> {
   console.log("\n🚀 Setting up test data...\n");
 
   await cleanTestSlots();
+  const pendingUser = await ensurePendingTestUser();
+  const client2User = await ensureClient2User();
+  await ensureClientHasCredits();
   const result = await seedTestSlots();
 
   console.log("\n✨ Test data setup complete!\n");
@@ -283,7 +562,33 @@ export async function setupTestData(): Promise<{
   );
   console.log("");
 
-  return result;
+  return {
+    ...result,
+    pendingUserEmail: pendingUser.email,
+    pendingUserPassword: pendingUser.password,
+    pendingUserFullName: pendingUser.fullName,
+    client2Email: client2User.email,
+    client2Password: client2User.password,
+  };
+}
+
+/**
+ * Limpia solo las reservas del slot BOOK10 (sin eliminar el slot)
+ * Usado en beforeEach de BOOK-10 para empezar desde cero
+ */
+export async function cleanBook10Bookings(): Promise<void> {
+  await authenticateAsAdmin(supabase);
+
+  const { error } = await supabase
+    .from("bookings")
+    .delete()
+    .eq("time_slot_id", TEST_SLOT_IDS.BOOK10);
+
+  if (error) {
+    console.warn("⚠️  Warning cleaning BOOK10 bookings:", error.message);
+  }
+
+  await supabase.auth.signOut();
 }
 
 /**
@@ -292,6 +597,8 @@ export async function setupTestData(): Promise<{
 export async function teardownTestData(): Promise<void> {
   console.log("\n🧹 Tearing down test data...\n");
   await cleanTestSlots();
+  await cleanupPendingTestUser();
+  await cleanupClient2User();
   console.log("✅ Teardown complete!\n");
 }
 

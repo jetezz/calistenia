@@ -93,7 +93,7 @@ export function LandingPage() {
           "fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-in-out border-b", // Slower CSS transition
           isScrolled
             ? "border-emerald-100/20 py-3 shadow-lg shadow-emerald-900/5"
-            : "border-transparent py-6"
+            : "border-transparent py-6",
         )}
         style={{
           // Use CSS variables updated via JS ref for instant, lag-free updates
@@ -109,7 +109,7 @@ export function LandingPage() {
                 <div
                   className={cn(
                     "absolute inset-0 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-                    isScrolled ? "bg-emerald-500/20" : "bg-white/20"
+                    isScrolled ? "bg-emerald-500/20" : "bg-white/20",
                   )}
                 />
                 <img
@@ -124,7 +124,7 @@ export function LandingPage() {
                 "text-xl md:text-2xl font-bold tracking-tight transition-colors duration-300",
                 isScrolled
                   ? "text-gray-900 group-hover:text-emerald-700"
-                  : "text-white group-hover:text-emerald-200"
+                  : "text-white group-hover:text-emerald-200",
               )}
             >
               {settings.business_name || "Calistenia Emérita"}
@@ -137,7 +137,7 @@ export function LandingPage() {
               "hidden md:flex font-medium transition-colors hover:bg-white/10",
               isScrolled
                 ? "text-emerald-700 hover:bg-emerald-50"
-                : "text-white hover:text-emerald-200"
+                : "text-white hover:text-emerald-200",
             )}
             asChild
           >
@@ -280,13 +280,13 @@ export function LandingPage() {
                 key={i}
                 className={cn(
                   "group bg-white rounded-3xl p-8 shadow-lg shadow-gray-200/50 border border-gray-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl",
-                  item.border
+                  item.border,
                 )}
               >
                 <div
                   className={cn(
                     "w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110",
-                    item.bg
+                    item.bg,
                   )}
                 >
                   <item.icon className={cn("w-8 h-8", item.color)} />
@@ -613,7 +613,7 @@ export function LandingPage() {
                   <a
                     href={`https://instagram.com/${settings.instagram.replace(
                       "@",
-                      ""
+                      "",
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"

@@ -8,10 +8,29 @@ import {
 
 test.describe.serial("Flujo de Registro Completo", () => {
   let userEmail: string;
-  const userPassword = "Password123!";
-  const userFullName = "Test User Auto";
+  let userPassword = "Password123!";
+  let userFullName = "Test User Auto";
+  const preprovisionedPendingEmail =
+    process.env.TEST_PENDING_USER_EMAIL || process.env.CI_PENDING_USER_EMAIL;
+  const preprovisionedPendingPassword =
+    process.env.TEST_PENDING_USER_PASSWORD ||
+    process.env.CI_PENDING_USER_PASSWORD;
+  const preprovisionedPendingFullName =
+    process.env.TEST_PENDING_USER_FULL_NAME ||
+    process.env.CI_PENDING_USER_FULL_NAME ||
+    "Test User Auto";
+  const usePreprovisionedPendingUserInCI =
+    !!preprovisionedPendingEmail && !!preprovisionedPendingPassword;
 
   test.beforeAll(() => {
+    if (usePreprovisionedPendingUserInCI) {
+      userEmail = preprovisionedPendingEmail!;
+      userPassword = preprovisionedPendingPassword!;
+      userFullName = preprovisionedPendingFullName;
+      console.log(`Preprovisioned pending user: ${userEmail}`);
+      return;
+    }
+
     // Generar email único para evitar colisiones
     const timestamp = Date.now();
     userEmail = `test.user.${timestamp}@example.com`;
@@ -19,6 +38,23 @@ test.describe.serial("Flujo de Registro Completo", () => {
   });
 
   test("1. Registro de nuevo usuario", async ({ page }) => {
+    if (usePreprovisionedPendingUserInCI) {
+      await page.goto("/login");
+      await waitForPageLoad(page);
+
+      await page.fill("#email", userEmail);
+      await page.fill("#password", userPassword);
+      await page.click('button:has-text("Entrar")');
+
+      await expect(page).toHaveURL(/.*pending-approval/, { timeout: 15000 });
+      await expect(page.locator("text=Pendiente de Aprobación")).toBeVisible({
+        timeout: 10000,
+      });
+
+      await logout(page);
+      return;
+    }
+
     await page.goto("/login");
     await waitForPageLoad(page);
 
@@ -41,12 +77,20 @@ test.describe.serial("Flujo de Registro Completo", () => {
     // Esperar posible redirección o toast
     await page.waitForTimeout(2000);
 
-    // Si seguimos en /login (no hubo auto-login), procedemos a loguearnos manualmente
+    // Si seguimos en /login (no hubo auto-login), forzamos modo login y probamos acceso
     const url = page.url();
     if (url.includes("/login")) {
-      // Si el formulario se reseteó a login, usamos las credenciales
-      // Verificamos si estamos en login mode (buscando botón "Entrar")
       const loginBtn = page.locator('button:has-text("Entrar")');
+
+      // Si quedó en modo registro (p.ej. error en signup), cambiar manualmente a login
+      if (!(await loginBtn.isVisible())) {
+        const switchToLoginBtn = page.locator('button:has-text("Inicia sesion")');
+        if (await switchToLoginBtn.isVisible()) {
+          await switchToLoginBtn.click();
+          await expect(loginBtn).toBeVisible({ timeout: 5000 });
+        }
+      }
+
       if (await loginBtn.isVisible()) {
         await page.fill("#email", userEmail);
         await page.fill("#password", userPassword);

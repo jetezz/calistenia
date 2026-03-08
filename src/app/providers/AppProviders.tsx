@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { AuthProvider } from "@/features/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { UpdateRequiredModal } from "@/components/shared/UpdateRequiredModal/UpdateRequiredModal";
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -30,6 +31,7 @@ export function AppProviders({ children }: AppProvidersProps) {
     <AuthProvider>
       {children}
       <Toaster position="top-center" richColors duration={2000} />
+      <UpdateRequiredModal />
     </AuthProvider>
   );
 }
