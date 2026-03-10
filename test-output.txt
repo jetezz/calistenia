@@ -1,0 +1,95 @@
+[dotenv@17.2.3] injecting env (12) from .env.test -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.test -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+============================================================
+🎭 PLAYWRIGHT GLOBAL SETUP
+============================================================
+
+
+🚀 Setting up test data...
+
+🧹 Cleaning test slots...
+(node:26096) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✅ Test slots cleaned
+👤 Ensuring pending test user...
+✅ Pending test user ready: pending.e2e.user@example.com
+👤 Ensuring client2 test user...
+✅ Client2 test user ready: client2.e2e.test@example.com
+💳 Ensuring main client has credits...
+✅ Main client credits ensured for: jesuscuadra@gmail.com
+🌱 Seeding test slots...
+📅 Recurring slot: Sábado (día 6)
+📅 Specific slot: 2026-03-22 (Domingo, día 0)
+✅ Created recurring slot for Sábado (día 6): 10:00:00 - 11:00:00
+✅ Created specific slot for 2026-03-22 (Domingo): 12:00:00 - 13:00:00
+✅ Created BOOK10 slot for Jueves (día 4): 14:00:00 - 15:00:00
+
+✨ Test data setup complete!
+
+📋 Summary:
+   - Recurring slot: Sábado (día 6) at 10:00:00
+   - Specific slot: 2026-03-22 (Domingo, día 0) at 12:00:00
+
+✅ Global setup completed successfully
+============================================================
+
+
+Running 1 test using 1 worker
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.test -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+[1A[2K[1/1] [chromium] › tests\landing\update-required-modal.spec.ts:7:3 › Update Required Modal › UPDATE-01: en web forzado, el botón descarga APK directamente
+[1A[2K  1) [chromium] › tests\landing\update-required-modal.spec.ts:7:3 › Update Required Modal › UPDATE-01: en web forzado, el botón descarga APK directamente 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('dialog')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('dialog')[22m
+
+
+      49 |     });
+      50 |
+    > 51 |     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
+         |                                            ^
+      52 |     await expect(page.getByText("Actualización Necesaria")).toBeVisible();
+      53 |     await expect(updateButton).toBeVisible();
+      54 |
+        at C:\Users\cuadr\Desktop\calistenia\tests\landing\update-required-modal.spec.ts:51:44
+
+    Error Context: test-results\landing-update-required-mo-43b20-n-descarga-APK-directamente-chromium\error-context.md
+
+
+
+============================================================
+🎭 PLAYWRIGHT GLOBAL TEARDOWN
+============================================================
+
+
+🧹 Tearing down test data...
+
+🧹 Cleaning test slots...
+✅ Test slots cleaned
+🧹 Cleaning pending test user...
+✅ Pending test user cleaned
+🧹 Cleaning client2 test user...
+✅ Client2 test user cleaned
+✅ Teardown complete!
+
+✅ Global teardown completed successfully
+============================================================
+
+[1A[2K  1 failed
+    [chromium] › tests\landing\update-required-modal.spec.ts:7:3 › Update Required Modal › UPDATE-01: en web forzado, el botón descarga APK directamente 
+
+[36m  Serving HTML report at http://localhost:9323. Press Ctrl+C to quit.[39m

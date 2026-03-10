@@ -133,11 +133,54 @@ test.describe("Reserva de Clases - Cliente", () => {
     await expect(page.locator("main")).toBeVisible();
   });
 
-  test("BOOK-06: Slots muestran capacidad disponible", async ({
+  test("BOOK-11: Slots muestran capacidad disponible (no se queda en Cargando...)", async ({
     authenticatedClient: page,
   }) => {
     await waitForLoadingComplete(page);
     await expect(page.locator("main")).toBeVisible();
+
+    // Buscar y clickar el primer día de la semana actual habilitado.
+    // Si no hay ninguno habilitado (es domingo noche por ej), avanzamos de semana.
+    let dayButton = page
+      .locator("button")
+      .filter({ hasText: /^[0-9]{1,2}$/ })
+      .and(page.locator(":not([disabled])"))
+      .first();
+
+    if (!(await dayButton.isVisible().catch(() => false))) {
+      const nextWeekButton = page.locator("button.h-8").last();
+      if (await nextWeekButton.isVisible()) {
+        await nextWeekButton.click();
+        await page.waitForTimeout(1000);
+      }
+    }
+
+    dayButton = page
+      .locator("button")
+      .filter({ hasText: /^[0-9]{1,2}$/ })
+      .and(page.locator(":not([disabled])"))
+      .first();
+
+    if (await dayButton.isVisible().catch(() => false)) {
+      await dayButton.click();
+      await page.waitForTimeout(1500); // Esperar a que carguen los slots y la llamada batch
+
+      // Comprobar si se pintan slots (clases disponibles)
+      const slotCards = page.locator("[data-slot-id]");
+      if ((await slotCards.count()) > 0) {
+        // Asegurarse de que el texto "Cargando..." desaparece
+        await expect(
+          page.locator("span").filter({ hasText: "Cargando..." }),
+        ).toHaveCount(0, { timeout: 10000 });
+
+        // Verificar que al menos uno de los slots muestra la disponibilidad en el formato "X/Y plazas" o que no esté en Cargando
+        const firstSlot = slotCards.first();
+        const plazasText = firstSlot
+          .locator("span")
+          .filter({ hasText: /plazas|Completo/ });
+        await expect(plazasText).toBeVisible({ timeout: 5000 });
+      }
+    }
   });
 
   test("BOOK-07: Reservar una clase (si hay créditos)", async ({
